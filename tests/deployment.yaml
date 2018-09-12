@@ -1,0 +1,35 @@
+#
+# Sample Deployment for Synse Server
+#
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: synse-server
+  labels:
+    app: synse-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: synse-server
+  template:
+    metadata:
+      labels:
+        app: synse-server
+    spec:
+      terminationGracePeriodSeconds: 3
+      containers:
+      - name: synse-server
+        image: vaporio/synse-server:latest
+        ports:
+        - name: http
+          containerPort: 5000
+        args: [ 'enable-emulator' ]
+        env:
+        # Enable debug logging via ENV config
+        - name: SYNSE_LOGGING
+          value: debug
+        resources:
+          requests:
+            cpu: 25m
+            memory: 100Mi

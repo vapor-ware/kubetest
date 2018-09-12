@@ -10,7 +10,7 @@ HAS_PIP_COMPILE := $(shell which pip-compile)
 
 .PHONY: clean
 clean:  ## Clean up build artifacts
-	rm -rf build/ *.egg-info kubetest/__pycache__ tests/__pycache__
+	rm -rf build/ *.egg-info htmlcov/ kubetest/__pycache__ tests/__pycache__ .coverage .pytest_cache/
 
 .PHONY: deps
 deps:  ## Update the frozen pip dependencies (requirements.txt)
@@ -18,14 +18,6 @@ ifndef HAS_PIP_COMPILE
 	pip install pip-tools
 endif
 	pip-compile --output-file requirements.txt setup.py
-
-.PHONY: dev-install
-dev-install:  ## Install kubetest via pip for local development
-	pip install -e .
-
-.PHONY: dev-uninstall
-dev-uninstall:  ## Uninstall the development version of kubetest via pip
-	pip uninstall kubetest -y
 
 .PHONY: fmt
 fmt:  ## Run formatting checks on the project source code

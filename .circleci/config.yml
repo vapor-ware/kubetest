@@ -1,0 +1,124 @@
+# Defaults for our CircleCI jobs.
+defaults: &defaults
+  working_directory: ~/kubetest
+  docker:
+  - image: circleci/python:3.6
+
+
+# Common config for tag-triggered workflows.
+tag-filters: &tag-filters
+  filters:
+    branches:
+      ignore: /.*/
+    tags:
+      only: /^v?[0-9]*(\.[0-9]*)*(-(\S)*)?$/
+
+
+# CircleCI Config
+version: 2
+jobs:
+
+  # test
+  #
+  # This job runs for all commits. It makes sure that the source
+  # code is linted/formatted and that the unit tests pass. This
+  # job does not publish any build artifacts.
+  test:
+    <<: *defaults
+    steps:
+    - checkout
+    - run:
+        name: Install Dependencies
+        command: pip install tox>=2.9.0
+    - restore_cache:
+        keys:
+        - v1-test-{{ checksum "requirements.txt" }}-{{ checksum "tox.ini" }}
+    - run:
+        name: Formatting
+        command: make fmt
+    - run:
+        name: Unit Tests
+        command: make test
+    - save_cache:
+        key: v1-test-{{ checksum "requirements.txt" }}-{{ checksum "tox.ini" }}
+        paths:
+        - .tox/py36
+        - .tox/format
+
+  # publish
+  #
+  # This job runs upon release to publish a new version of the package
+  # to PyPi.
+  publish:
+    <<: *defaults
+    steps:
+    - checkout
+    - run:
+        name: Install Dependencies
+        command: |
+          pip install -r requirements.txt
+          pip install 'twine>=1.5.0'
+    - run:
+        name: Package
+        command: python setup.py sdist bdist_wheel
+    - run:
+        name: Upload
+        command: twine upload dist/*
+
+
+  # release
+  #
+  # This job creates a GitHub release draft for the tag that was pushed.
+  # This release draft should be manually published on GitHub.
+  release:
+    working_directory: ~/synse-server
+    docker:
+    - image: circleci/golang:latest
+    steps:
+    - checkout
+    - setup_remote_docker:
+        docker_layer_caching: true
+    - run:
+        name: Check Version matches Tag
+        command: PKG_VERSION=$(make version) ./bin/ci/check_version.sh
+    - run:
+        name: Generate Changelog
+        command: |
+          tag=$(git describe --abbrev=0 --tags `git rev-list --tags --skip=1 --max-count=1` || true)
+          since_tag=$(if [ "${tag}" ]; then echo "--since-tag ${tag}"; fi)
+          docker pull timfallmk/github-changelog-generator
+          docker run --name changelog timfallmk/github-changelog-generator \
+            -u ${CIRCLE_PROJECT_USERNAME} \
+            -p ${CIRCLE_PROJECT_REPONAME} \
+            -t ${GITHUB_TOKEN} \
+            ${since_tag}
+          docker cp changelog:/usr/local/src/your-app/CHANGELOG.md ./artifacts/
+    - run:
+        name: Create Release
+        command: |
+          go get -v github.com/tcnksm/ghr
+          if git describe --exact-match --tags HEAD; then
+            CIRCLE_TAG=$(git describe --exact-match --tags HEAD)
+          fi
+          ghr \
+            -u ${GITHUB_USER} \
+            -t ${GITHUB_TOKEN} \
+            -b "$(cat ./CHANGELOG.md)" \
+            -replace \
+            -draft \
+            ${CIRCLE_TAG} ./artifacts
+
+
+workflows:
+  version: 2
+  build:
+    jobs:
+    - test
+    - release:
+        context: vapor-auto
+        <<: *tag-filters
+    - publish:
+        context: vapor-auto
+        <<: *tag-filters
+        requires:
+        - release

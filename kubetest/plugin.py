@@ -56,6 +56,9 @@ def pytest_runtest_teardown(item):
     """
     client = manager.get_client(item.nodeid)
     if client is not None:
+        # teardown will delete the test client's namespace. deleting
+        # a namespace will delete all the things in the namespace, so
+        # that makes cleanup easier.
         client.teardown()
 
 

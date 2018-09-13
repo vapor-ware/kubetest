@@ -17,7 +17,7 @@ from kubetest import utils
     ]
 )
 def test_new_namespace(name, expected):
-    """Test casting values to the specified type successfully."""
+    """Test creating a new namespace for the given function name."""
 
     # mock the return of time.time() so we know what it will return
     utils.time.time = lambda: 1536849367.0

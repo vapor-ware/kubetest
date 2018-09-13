@@ -10,7 +10,6 @@ import pytest
 
 from kubetest.manager import KubetestManager
 
-
 # A global instance of the KubetestManager. This will be used by various
 # pytest hooks and fixtures in order to create and manage the TestClient
 # instances. The manager is in charge of creating new TestClients for each
@@ -66,7 +65,7 @@ def pytest_runtest_teardown(item):
 
 @pytest.fixture()
 def k8s(request):
-    """Create and setup a client that can be used for managing a Kubernetes cluster for tests."""
+    """Create and setup a client for managing a Kubernetes cluster for testing."""
     test_client = manager.new_client(
         node_id=request.node.nodeid,
         test_name=request.node.name

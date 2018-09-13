@@ -37,7 +37,8 @@ class TestClient:
         Args:
             name (str): The name of the namespace to create.
         """
-        return client.CoreV1Api(api_client=self.api_client).create_namespace(client.V1Namespace(
+        api = client.CoreV1Api(api_client=self.api_client)
+        return api.create_namespace(client.V1Namespace(
             metadata=client.V1ObjectMeta(
                 name=name
             )
@@ -49,7 +50,8 @@ class TestClient:
         Args:
             name (str): The name of the namespace to delete.
         """
-        return client.CoreV1Api(api_client=self.api_client).delete_namespace(
+        api = client.CoreV1Api(api_client=self.api_client)
+        return api.delete_namespace(
             name=name, body=client.V1DeleteOptions()
         )
 
@@ -62,6 +64,7 @@ class TestClient:
 
     def create_deployment(self, deployment):
         """"""
-        return client.AppsV1beta2Api(api_client=self.api_client).create_namespaced_deployment(
+        api = client.AppsV1beta2Api(api_client=self.api_client)
+        return api.create_namespaced_deployment(
             self.namespace, deployment.obj
         )

@@ -1,6 +1,6 @@
 """Utility functions for kubetest."""
 
-import datetime
+import time
 
 
 def new_namespace(test_name):
@@ -21,5 +21,5 @@ def new_namespace(test_name):
     """
     return 'kubetest-{}-{}'.format(
         test_name.replace('_', '-').lower(),
-        datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')
+        int(time.time())
     )

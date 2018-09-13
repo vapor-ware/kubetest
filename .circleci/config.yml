@@ -29,7 +29,10 @@ jobs:
     - checkout
     - run:
         name: Install Dependencies
-        command: pip install tox>=2.9.0
+        command: |
+          sudo chown -R circleci:circleci /usr/local/bin
+          sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
+          pip install tox>=2.9.0
     - restore_cache:
         keys:
         - v1-test-{{ checksum "requirements.txt" }}-{{ checksum "tox.ini" }}
@@ -56,6 +59,8 @@ jobs:
     - run:
         name: Install Dependencies
         command: |
+          sudo chown -R circleci:circleci /usr/local/bin
+          sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
           pip install -r requirements.txt
           pip install 'twine>=1.5.0'
     - run:

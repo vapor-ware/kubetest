@@ -35,6 +35,12 @@ def pytest_addoption(parser):
         default=None,
         help='the kubernetes config for kubetest'
     )
+    group.addoption(
+        '--kubedisable',
+        action='store_true',
+        default=False,
+        help='disable automatic configuration with the kubeconfig file'
+    )
 
 
 def pytest_configure(config):
@@ -43,8 +49,10 @@ def pytest_configure(config):
     See Also:
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_configure
     """
-    config_file = config.getvalue('kubeconfig')
-    kubernetes.config.load_kube_config(config_file=config_file)
+    disabled = config.getvalue('kubedisable')
+    if not disabled:
+        config_file = config.getvalue('kubeconfig')
+        kubernetes.config.load_kube_config(config_file=config_file)
 
 
 def pytest_runtest_teardown(item):

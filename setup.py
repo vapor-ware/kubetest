@@ -50,10 +50,10 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Framework :: Pytest',
     ],
-    # # this make a plugin available to pytest
-    # entry_points={
-    #     'pytest11': [
-    #         'kubetest = kubetest.plugin'
-    #     ]
-    # }
+    # this make a plugin available to pytest
+    entry_points={
+        'pytest11': [
+            'kubetest = kubetest.plugin'
+        ]
+    }
 )

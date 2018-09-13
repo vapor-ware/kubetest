@@ -10,7 +10,8 @@ HAS_PIP_COMPILE := $(shell which pip-compile)
 
 .PHONY: clean
 clean:  ## Clean up build artifacts
-	rm -rf build/ *.egg-info htmlcov/ kubetest/__pycache__ tests/__pycache__ .coverage .pytest_cache/
+	rm -rf build/ dist/ *.egg-info htmlcov/ .coverage .pytest_cache/ \
+		kubetest/__pycache__ tests/__pycache__
 
 .PHONY: deps
 deps:  ## Update the frozen pip dependencies (requirements.txt)

@@ -23,3 +23,15 @@ def new_namespace(test_name):
         test_name.replace('_', '-').lower(),
         int(time.time())
     )
+
+
+def label_string(labels):
+    """Create a label string from the given label dictionary.
+
+    Args:
+        labels (dict): The labels to stringify.
+
+    Returns:
+        str: The label string for the given label dictionary.
+    """
+    return ','.join(['{}={}'.format(k, v) for k, v in labels.items()])

@@ -24,3 +24,20 @@ def test_new_namespace(name, expected):
 
     actual = utils.new_namespace(name)
     assert actual == expected
+
+
+@pytest.mark.parametrize(
+    'labels,expected', [
+        ({}, ''),
+        ({'foo': 'bar'}, 'foo=bar'),
+        ({'foo': 2}, 'foo=2'),
+        ({'foo': 2.024}, 'foo=2.024'),
+        ({'foo': 'bar', 'abc': 'xyz'}, 'foo=bar,abc=xyz'),
+        ({'foo': 'bar', 'abc': 'xyz', 'app': 'synse'}, 'foo=bar,abc=xyz,app=synse'),
+    ]
+)
+def test_label_string(labels, expected):
+    """Test creating a string for a dictionary of labels."""
+
+    actual = utils.label_string(labels)
+    assert actual == expected

@@ -10,7 +10,7 @@ HAS_PIP_COMPILE := $(shell which pip-compile)
 
 .PHONY: clean
 clean:  ## Clean up build artifacts
-	rm -rf build/ dist/ *.egg-info htmlcov/ .coverage .pytest_cache/ \
+	rm -rf build/ dist/ *.egg-info htmlcov/ .coverage* .pytest_cache/ \
 		kubetest/__pycache__ tests/__pycache__
 
 .PHONY: deps
@@ -19,6 +19,10 @@ ifndef HAS_PIP_COMPILE
 	pip install pip-tools
 endif
 	pip-compile --output-file requirements.txt setup.py
+
+.PHONY: example-tests
+example-tests:  ## Run the example tests using kubetest
+	tox -e examples
 
 .PHONY: fmt
 fmt:  ## Run formatting checks on the project source code

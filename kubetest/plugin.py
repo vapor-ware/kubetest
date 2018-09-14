@@ -72,7 +72,7 @@ def pytest_runtest_teardown(item):
 # ********** pytest fixtures **********
 
 @pytest.fixture()
-def k8s(request):
+def kube(request):
     """Create and setup a client for managing a Kubernetes cluster for testing."""
     test_client = manager.new_client(
         node_id=request.node.nodeid,

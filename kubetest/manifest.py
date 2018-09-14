@@ -117,8 +117,8 @@ def cast_value(value, t):
     """Cast the given value to the specified type.
 
     There are two general cases for possible casts:
-      1.) A cast to a builtin type (int, str, etc.)
-      2.) A cast to a Kubernetes object (V1ObjectMeta, etc)
+      - A cast to a builtin type (int, str, etc.)
+      - A cast to a Kubernetes object (V1ObjectMeta, etc)
 
     In either case, check to see if the specified type exists in the
     correct type pool. If so, cast to that type, otherwise fail.

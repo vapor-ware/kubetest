@@ -20,6 +20,10 @@ ifndef HAS_PIP_COMPILE
 endif
 	pip-compile --output-file requirements.txt setup.py
 
+.PHONY: example-tests
+example-tests:  ## Run the example tests using kubetest
+	tox -e examples
+
 .PHONY: fmt
 fmt:  ## Run formatting checks on the project source code
 	tox -e format

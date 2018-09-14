@@ -10,7 +10,7 @@ HAS_PIP_COMPILE := $(shell which pip-compile)
 
 .PHONY: clean
 clean:  ## Clean up build artifacts
-	rm -rf build/ dist/ *.egg-info htmlcov/ .coverage .pytest_cache/ \
+	rm -rf build/ dist/ *.egg-info htmlcov/ .coverage* .pytest_cache/ \
 		kubetest/__pycache__ tests/__pycache__
 
 .PHONY: deps

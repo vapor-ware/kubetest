@@ -2,9 +2,11 @@
 """
 
 import abc
+import time
 
 import yaml
 from kubernetes import client
+from kubernetes.client.rest import ApiException
 
 from kubetest.manifest import new_object
 from kubetest.utils import label_string
@@ -82,6 +84,77 @@ class ApiObject(abc.ABC):
             self._api_client = c()
         return self._api_client
 
+    def wait_until_ready(self, timeout=None):
+        """Wait until the Api Object is in the ready state.
+
+        Args:
+            timeout (int): The maximum time to wait, in seconds, for
+                the Api Object to reach the ready state. If unspecified,
+                this will wait indefinitely. If specified and the timeout
+                is met or exceeded, a TimeoutError will be raised.
+
+        Raises:
+             TimeoutError: The specified timeout was exceeded.
+        """
+        # define the maximum time at which we should stop waiting, if set
+        max_time = None
+        if timeout is not None:
+            max_time = time.time() + timeout
+
+        # wait until the Api Object is either in the ready state or times out
+        while True:
+            if max_time and time.time() >= max_time:
+                raise TimeoutError(
+                    'timed out ({}s) while waiting for {} to be ready'
+                    .format(timeout, self.obj.type)
+                )
+
+            # if the object is ready, return
+            if self.is_ready():
+                return
+
+            # if the object is not ready, sleep for a bit and check again
+            time.sleep(1)
+
+    def wait_until_deleted(self, timeout=None):
+        """Wait until the Api Object is deleted from the cluster.
+
+        Args:
+            timeout (int): The maximum time to wait, in seconds, for
+                the Api Object to be deleted from the cluster. If
+                unspecified, this will wait indefinitely. If specified
+                and the timeout is met or exceeded, a TimeoutError will
+                be raised.
+
+        Raises:
+            TimeoutError: The specified timeout was exceeded.
+        """
+        # define the maximum time at which we should stop waiting, if set
+        max_time = None
+        if timeout is not None:
+            max_time = time.time() + timeout
+
+        # wait until the Api Object is either removed from the cluster or
+        # times out
+        while True:
+            if max_time and time.time() >= max_time:
+                raise TimeoutError(
+                    'timed out ({}s) while waiting for {} to be deleted'
+                    .format(timeout, self.obj.type)
+                )
+
+            try:
+                self.refresh()
+            except ApiException as e:
+                # If we can no longer find the deployment, it is deleted.
+                # If we get any other exception, raise it.
+                if e.status == 404 and e.reason == 'Not Found':
+                    return
+                else:
+                    raise e
+
+            time.sleep(1)
+
     @classmethod
     def load(cls, path):
         """Load the Kubernetes API Object from file.
@@ -131,19 +204,18 @@ class ApiObject(abc.ABC):
     def refresh(self):
         """Refresh the local state of the underlying Kubernetes Api Object."""
 
+    @abc.abstractmethod
+    def is_ready(self):
+        """Check if the Api Object is in the ready state.
+
+        Returns:
+            bool: True if in the ready state; False otherwise.
+        """
+
 
 class Configmap(ApiObject):
     """Kubetest wrapper around a Kubernetes ConfigMap API Object.
 
-    """
-
-    """
-    * create
-    * load
-    * get
-    * wait until ready?
-    * delete
-    * wait until deleted?
     """
 
     obj_type = client.V1ConfigMap
@@ -158,6 +230,9 @@ class Configmap(ApiObject):
         """"""
 
     def refresh(self):
+        """"""
+
+    def is_ready(self):
         """"""
 
 
@@ -246,19 +321,35 @@ class Deployment(ApiObject):
         )
         return [p for p in pods.items]
 
+    def is_ready(self):
+        """Check if the Deployment is in the ready state.
+
+        Returns:
+            bool: True if in the ready state; False otherwise.
+        """
+        self.refresh()
+
+        # if there is no status, the deployment is definitely not ready
+        status = self.obj.status
+        if status is None:
+            return False
+
+        # check the status for the number of total replicas and compare
+        # it to the number of ready replicas. if the numbers are
+        # equal, the deployment is ready; otherwise it is not ready.
+        # TODO (etd) - we may want some logging in here eventually
+        total = self.obj.status.replicas
+        ready = self.obj.status.ready_replicas
+
+        if total is None:
+            return False
+
+        return total == ready
+
 
 class Pod(ApiObject):
     """Kubetest wrapper around a Kubernetes Pod API Object.
 
-    """
-
-    """
-    * list
-    * list from deployment
-    * wait until ready
-    * get logs
-    * get state/status?
-    * proxy get?
     """
 
     obj_type = client.V1Pod
@@ -275,18 +366,13 @@ class Pod(ApiObject):
     def refresh(self):
         """"""
 
+    def is_ready(self):
+        """"""
+
 
 class Service(ApiObject):
     """Kubetest wrapper around a Kubernetes Service API Object.
 
-    """
-
-    """
-    * create
-    * load
-    * wait until ready
-    * delete
-    * wait until deleted
     """
 
     obj_type = client.V1Service
@@ -301,4 +387,7 @@ class Service(ApiObject):
         """"""
 
     def refresh(self):
+        """"""
+
+    def is_ready(self):
         """"""

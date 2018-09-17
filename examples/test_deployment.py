@@ -15,7 +15,11 @@ def test_something(kube):
     print('---------- created -------------')
     print(vars(d))
 
-    time.sleep(5)
+    print('---------- waiting ----------')
+    start = time.time()
+    d.wait_until_ready(timeout=10)
+    end = time.time()
+    print('---------- done ({}s) ----------'.format(end-start))
 
     d.refresh()
     print('---------- refreshed -------------')
@@ -35,6 +39,12 @@ def test_something(kube):
 
     print('---------- status -------------')
     print(status)
+
+    print('---------- waiting ----------')
+    start = time.time()
+    d.wait_until_deleted(timeout=20)
+    end = time.time()
+    print('---------- done ({}s) ----------'.format(end - start))
 
     # assert false to fail the test - this allows us to get the
     # captured stdout (e.g. the print statements above)

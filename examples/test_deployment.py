@@ -6,7 +6,12 @@ import time
 
 def test_something(kube):
 
-    f = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'configs', 'deployment.yaml')
+    f = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        'configs',
+        'deployment.yaml'
+    )
+
     d = kube.load_deployment(f)
     print('---------- loaded -------------')
     print(vars(d))
@@ -19,7 +24,7 @@ def test_something(kube):
     start = time.time()
     d.wait_until_ready(timeout=10)
     end = time.time()
-    print('---------- done ({}s) ----------'.format(end-start))
+    print('---------- done ({}s) ----------'.format(end - start))
 
     d.refresh()
     print('---------- refreshed -------------')

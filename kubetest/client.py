@@ -147,6 +147,9 @@ class TestClient:
     def create_deployment(self, deployment):
         """Create the given deployment on the Kubernetes cluster under the
         namespace generated for the test case.
+
+        Args:
+            deployment (objects.Deployment): The Deployment to create on the cluster.
         """
         if deployment.namespace is None:
             deployment.namespace = self.namespace
@@ -155,6 +158,9 @@ class TestClient:
     def delete_deployment(self, deployment):
         """Delete the given deployment from the Kubernetes cluster under the
         namespace generated for the test case.
+
+        Args:
+            deployment (objects.Deployment): The Deployment to delete from the cluster.
         """
         if deployment.namespace is None:
             deployment.namespace = self.namespace
@@ -162,6 +168,9 @@ class TestClient:
 
     def get_deployments(self):
         """Get all of the deployments under the test case namespace.
+
+        FIXME (etd): we should add filtering capabilities to this, e.g. 'get
+        deployments with name X' or 'get deployments with labels Y=Z'.
 
         Returns:
             dict: The deployments, where the key is the deployment name
@@ -175,3 +184,12 @@ class TestClient:
             deployments[d.name] = d
 
         return deployments
+
+    @staticmethod
+    def refresh_deployment(deployment):
+        """Refresh the underlying Kubernetes Api Deployment object.
+
+        Args:
+            deployment (objects.Deployment): The Deployment to refresh.
+        """
+        deployment.refresh()

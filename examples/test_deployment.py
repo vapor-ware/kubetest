@@ -36,7 +36,14 @@ def test_something(kube):
 
     pods = d.get_pods()
     print('---------- pods -------------')
-    print(pods)
+    # print(pods)
+    p = pods[0]
+
+    print('---------- waiting ----------')
+    start = time.time()
+    p.wait_until_ready(timeout=10)
+    end = time.time()
+    print('---------- done ({}s) ----------'.format(end - start))
 
     status = kube.delete(d)
     print('---------- deleted -------------')

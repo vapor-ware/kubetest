@@ -257,8 +257,8 @@ class Deployment(ApiObject):
         Args:
             namespace (str): The namespace to create the Deployment under.
                 If the Deployment was loaded via the Kubetest client, the
-                namespace will already be set, so it is not needed. Otherwise,
-                the namespace will need to be provided here.
+                namespace will already be set, so it is not needed here.
+                Otherwise, the namespace will need to be provided.
         """
         if namespace is None:
             namespace = self.namespace
@@ -276,7 +276,7 @@ class Deployment(ApiObject):
         to be set manually.
 
         Args:
-            options (client.V1DeleteOptions): Options for deployment deletion.
+            options (client.V1DeleteOptions): Options for Deployment deletion.
 
         Returns:
             client.V1Status: The status of the delete operation.
@@ -297,8 +297,33 @@ class Deployment(ApiObject):
             namespace=self.namespace,
         )
 
+    def is_ready(self):
+        """Check if the Deployment is in the ready state.
+
+        Returns:
+            bool: True if in the ready state; False otherwise.
+        """
+        self.refresh()
+
+        # if there is no status, the deployment is definitely not ready
+        status = self.obj.status
+        if status is None:
+            return False
+
+        # check the status for the number of total replicas and compare
+        # it to the number of ready replicas. if the numbers are
+        # equal, the deployment is ready; otherwise it is not ready.
+        # TODO (etd) - we may want some logging in here eventually
+        total = status.replicas
+        ready = status.ready_replicas
+
+        if total is None:
+            return False
+
+        return total == ready
+
     def status(self):
-        """Get the status of the deployment.
+        """Get the status of the Deployment.
 
         Returns:
             client.V1DeploymentStatus: The status of the Deployment.
@@ -319,32 +344,7 @@ class Deployment(ApiObject):
             namespace=self.namespace,
             label_selector=label_string(self.obj.metadata.labels),
         )
-        return [p for p in pods.items]
-
-    def is_ready(self):
-        """Check if the Deployment is in the ready state.
-
-        Returns:
-            bool: True if in the ready state; False otherwise.
-        """
-        self.refresh()
-
-        # if there is no status, the deployment is definitely not ready
-        status = self.obj.status
-        if status is None:
-            return False
-
-        # check the status for the number of total replicas and compare
-        # it to the number of ready replicas. if the numbers are
-        # equal, the deployment is ready; otherwise it is not ready.
-        # TODO (etd) - we may want some logging in here eventually
-        total = self.obj.status.replicas
-        ready = self.obj.status.ready_replicas
-
-        if total is None:
-            return False
-
-        return total == ready
+        return [Pod(p) for p in pods.items]
 
 
 class Pod(ApiObject):
@@ -358,16 +358,107 @@ class Pod(ApiObject):
         super().__init__(api_object)
 
     def create(self, namespace=None):
-        """"""
+        """Create the Pod under the given namespace.
+
+        Args:
+            namespace (str): The namespace to create the Pod under.
+                If the Pod was loaded via the Kubetest client, the
+                namespace will already be set, so it is not needed
+                here. Otherwise, the namespace will need to be provided.
+        """
+        if namespace is None:
+            namespace = self.namespace
+
+        self.obj = client.CoreV1Api().create_namespaced_pod(
+            namespace=namespace,
+            body=self.obj,
+        )
 
     def delete(self, options):
-        """"""
+        """Delete the Pod.
+
+        This method expects the Pod to have been loaded or otherwise
+        assigned a namespace already. If it has not, the namespace will
+        need to be set manually.
+
+        Args:
+            options (client.V1DeleteOptions): Options for Pod deletion.
+
+        Return:
+            client.V1Status: The status of the delete operation.
+        """
+        if options is None:
+            options = client.V1DeleteOptions()
+
+        return client.CoreV1Api().delete_namespaced_pod(
+            name=self.name,
+            namespace=self.namespace,
+            body=options,
+        )
 
     def refresh(self):
-        """"""
+        """Refresh the underlying Kubernetes Api Pod object."""
+        self.obj = client.CoreV1Api().read_namespaced_pod_status(
+            name=self.name,
+            namespace=self.namespace,
+        )
 
     def is_ready(self):
-        """"""
+        """Check if the Pod is in the ready state.
+
+        Returns:
+            bool: True if in the ready state; False otherwise.
+        """
+        self.refresh()
+
+        # if there is no status, the pod is definitely not ready
+        status = self.obj.status
+        if status is None:
+            return False
+
+        # check the pod phase to make sure it is running. a pod in
+        # the 'failed' or 'success' state will no longer be running,
+        # so we only care if the pod is in the 'running' state.
+        phase = status.phase
+        if phase.lower() != 'running':
+            return False
+
+        for condition in status.conditions:
+            # we only care about the condition type 'ready'
+            if condition.type.lower() != 'ready':
+                continue
+
+            # check that the readiness condition is True
+            return condition.status.lower() == 'true'
+
+        # Catchall
+        return False
+
+    def status(self):
+        """Get the status of the Pod.
+
+        Returns:
+            client.V1PodStatus: The status of the Pod.
+        """
+        # first, refresh the pod state to ensure latest status
+        self.refresh()
+
+        # return the status of the pod
+        return self.obj.status
+
+    def get_containers(self):
+        """Get the containers for the pod.
+
+        TODO (etd) - will probably eventually want a Container wrapper
+        for the return here
+
+        Returns:
+            list[client.V1Container]: A list of containers that
+                belong to the Pod.
+        """
+        self.refresh()
+
+        return self.obj.spec.containers
 
 
 class Service(ApiObject):

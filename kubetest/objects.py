@@ -216,6 +216,11 @@ class ApiObject(abc.ABC):
 class Configmap(ApiObject):
     """Kubetest wrapper around a Kubernetes ConfigMap API Object.
 
+    The actual `kubernetes.client.V1ConfigMap` instance that this
+    wraps can be accessed via the `obj` instance member.
+
+    This wrapper provides some convenient functionality around the
+    API Object and provides some state management for the ConfigMap.
     """
 
     obj_type = client.V1ConfigMap
@@ -224,16 +229,61 @@ class Configmap(ApiObject):
         super().__init__(api_object)
 
     def create(self, namespace=None):
-        """"""
+        """Create the ConfigMap under the given namespace.
+
+        Args:
+            namespace (str): The namespace to create the ConfigMap under.
+                If the ConfigMap was loaded via the Kubetest Client, the
+                namespace will already be set, so it is not needed here.
+                Otherwise, the namespace will need to be provided.
+        """
+        if namespace is None:
+            namespace = self.namespace
+
+        self.obj = client.CoreV1Api().create_namespaced_config_map(
+            namespace=namespace,
+            body=self.obj,
+        )
 
     def delete(self, options):
-        """"""
+        """Delete the ConfigMap.
+
+        This method expects the ConfigMap to have been loaded or otherwise
+        assigned a namespace already. If it has not, the namespace will need
+        to be set manually.
+
+        Args:
+             options (client.V1DeleteOptions): Options for ConfigMap deletion.
+
+        Returns:
+            client.V1Status: The status of the delete operation.
+        """
+        if options is None:
+            options = client.V1DeleteOptions()
+
+        return client.CoreV1Api().delete_namespaced_config_map(
+            name=self.name,
+            namespace=self.namespace,
+            body=options,
+        )
 
     def refresh(self):
-        """"""
+        """Refresh the underlying Kubernetes Api ConfigMap object."""
+        self.obj = client.CoreV1Api().read_namespaced_config_map(
+            name=self.name,
+            namespace=self.namespace,
+        )
 
     def is_ready(self):
-        """"""
+        """Check if the ConfigMap is in the ready state."""
+        self.refresh()
+
+        # if there is no status, the configmap is definitely not ready
+        status = self.obj.status
+        if status is None:
+            return False
+
+        # TODO: figure out what configmap status looks like
 
 
 class Deployment(ApiObject):

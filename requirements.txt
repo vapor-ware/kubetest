@@ -13,11 +13,15 @@ certifi==2018.8.24        # via kubernetes, requests
 cffi==1.11.5              # via cryptography
 chardet==3.0.4            # via requests
 cryptography==2.3.1       # via adal
+enum34==1.1.6             # via cryptography
+funcsigs==1.0.2           # via pytest
 google-auth==1.5.1        # via kubernetes
 idna==2.7                 # via cryptography, requests
+ipaddress==1.0.22         # via cryptography, kubernetes
 kubernetes==7.0.0
 more-itertools==4.3.0     # via pytest
 oauthlib==2.1.0           # via requests-oauthlib
+pathlib2==2.3.2           # via pytest
 pluggy==0.7.1             # via pytest
 py==1.6.0                 # via pytest
 pyasn1-modules==0.2.2     # via google-auth
@@ -30,6 +34,7 @@ pyyaml==3.13
 requests-oauthlib==1.0.0  # via kubernetes
 requests==2.19.1          # via adal, kubernetes, requests-oauthlib
 rsa==3.4.2                # via google-auth
-six==1.11.0               # via cryptography, google-auth, kubernetes, more-itertools, pytest, python-dateutil, websocket-client
+scandir==1.9.0            # via pathlib2
+six==1.11.0               # via cryptography, google-auth, kubernetes, more-itertools, pathlib2, pytest, python-dateutil, websocket-client
 urllib3==1.23             # via kubernetes, requests
 websocket-client==0.53.0  # via kubernetes

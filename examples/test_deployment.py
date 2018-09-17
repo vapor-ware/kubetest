@@ -21,6 +21,14 @@ def test_something(kube):
     print('---------- refreshed -------------')
     print(vars(d))
 
+    x = d.status()
+    print('---------- status -------------')
+    print(x)
+
+    pods = d.get_pods()
+    print('---------- pods -------------')
+    print(pods)
+
     status = kube.delete_deployment(d)
     print('---------- deleted -------------')
     print(vars(d))

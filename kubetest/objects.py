@@ -189,31 +189,35 @@ class Deployment(ApiObject):
         )
 
     def refresh(self):
-        """Refresh the underlying Kubernetes Api Deployment object.
-
-        Raises:
-            ValueError: No Deployment object was found with this Deployment's
-                name and labels in the namespace.
-        """
-        # FIXME (etd) - it looks like once this is refreshed, we lose the
-        # apiVersion and kind info? Investigate some more and add tests to verify.
-
-        deployment_list = self.api_client.list_namespaced_deployment(
+        """Refresh the underlying Kubernetes Api Deployment object."""
+        self.obj = self.api_client.read_namespaced_deployment_status(
+            name=self.name,
             namespace=self.namespace,
-            field_selector='metadata.name={}'.format(self.name),
-            label_selector=label_string(self.obj.metadata.labels),
         )
 
-        if len(deployment_list.items) != 1:
-            raise ValueError(
-                'deployment "{}::{}" not found - unable to refresh'
-                .format(self.namespace, self.name)
-            )
+    def status(self):
+        """Get the status of the deployment.
 
-        self.obj = deployment_list.items[0]
+        Returns:
+            client.V1DeploymentStatus: The status of the Deployment.
+        """
+        # first, refresh the deployment state to ensure the latest status
+        self.refresh()
+
+        # return the status from the deployment
+        return self.obj.status
 
     def get_pods(self):
-        """Get the pods for the deployment."""
+        """Get the pods for the deployment.
+
+        Returns:
+            list[Pod]: A list of pods that belong to the deployment.
+        """
+        pods = client.CoreV1Api().list_namespaced_pod(
+            namespace=self.namespace,
+            label_selector=label_string(self.obj.metadata.labels),
+        )
+        return [p for p in pods.items]
 
 
 class Node(ApiObject):

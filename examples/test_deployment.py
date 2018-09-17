@@ -11,7 +11,7 @@ def test_something(kube):
     print('---------- loaded -------------')
     print(vars(d))
 
-    kube.create_deployment(d)
+    kube.create(d)
     print('---------- created -------------')
     print(vars(d))
 
@@ -29,7 +29,7 @@ def test_something(kube):
     print('---------- pods -------------')
     print(pods)
 
-    status = kube.delete_deployment(d)
+    status = kube.delete(d)
     print('---------- deleted -------------')
     print(vars(d))
 

@@ -138,33 +138,50 @@ class TestClient:
             name=name, body=client.V1DeleteOptions()
         )
 
+    # ****** Generic Helpers on ApiObjects ******
+
+    def create(self, obj):
+        """Create the provided Api Object on the Kubernetes cluster.
+
+        If the object does not already have a namespace assigned to it,
+        the client's generated test case namespace will be used.
+
+        Args:
+            obj (objects.ApiObject): A kubetest Api Object wrapper.
+        """
+        if obj.namespace is None:
+            obj.namespace = self.namespace
+
+        obj.create()
+
+    def delete(self, obj, options=None):
+        """Delete the provided Api Object from the Kubernetes cluster.
+
+        If the object does not already have a namespaces assigned to it,
+        the client's generated test case namespace will be used.
+
+        Args:
+            obj (objects.ApiObject): A kubetest Api Object wrapper.
+            options (client.V1DeleteOptions): Additional options for
+                deleting the Api Object from the cluster.
+        """
+        if obj.namespace is None:
+            obj.namespace = self.namespace
+        if options is None:
+            options = client.V1DeleteOptions()
+
+        obj.delete(options=options)
+
+    @staticmethod
+    def refresh(obj):
+        """Refresh the underlying Kubernetes Api Object status and state.
+
+        Args:
+            obj (objects.ApiObject): A kubetest Api Object wrapper.
+        """
+        obj.refresh()
+
     # ****** Deployment ******
-
-    # TODO (etd): If we standardize on all objects having a create/delete fn, we could
-    # just have a `create` and `delete` here, with no need to have object-specific
-    # create/delete methods.
-
-    def create_deployment(self, deployment):
-        """Create the given deployment on the Kubernetes cluster under the
-        namespace generated for the test case.
-
-        Args:
-            deployment (objects.Deployment): The Deployment to create on the cluster.
-        """
-        if deployment.namespace is None:
-            deployment.namespace = self.namespace
-        deployment.create()
-
-    def delete_deployment(self, deployment):
-        """Delete the given deployment from the Kubernetes cluster under the
-        namespace generated for the test case.
-
-        Args:
-            deployment (objects.Deployment): The Deployment to delete from the cluster.
-        """
-        if deployment.namespace is None:
-            deployment.namespace = self.namespace
-        deployment.delete()
 
     def get_deployments(self):
         """Get all of the deployments under the test case namespace.
@@ -184,12 +201,3 @@ class TestClient:
             deployments[d.name] = d
 
         return deployments
-
-    @staticmethod
-    def refresh_deployment(deployment):
-        """Refresh the underlying Kubernetes Api Deployment object.
-
-        Args:
-            deployment (objects.Deployment): The Deployment to refresh.
-        """
-        deployment.refresh()

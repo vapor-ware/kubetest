@@ -323,7 +323,7 @@ class Deployment(ApiObject):
         return total == ready
 
     def status(self):
-        """Get the status of the deployment.
+        """Get the status of the Deployment.
 
         Returns:
             client.V1DeploymentStatus: The status of the Deployment.
@@ -433,6 +433,32 @@ class Pod(ApiObject):
 
         # Catchall
         return False
+
+    def status(self):
+        """Get the status of the Pod.
+
+        Returns:
+            client.V1PodStatus: The status of the Pod.
+        """
+        # first, refresh the pod state to ensure latest status
+        self.refresh()
+
+        # return the status of the pod
+        return self.obj.status
+
+    def get_containers(self):
+        """Get the containers for the pod.
+
+        TODO (etd) - will probably eventually want a Container wrapper
+        for the return here
+
+        Returns:
+            list[client.V1Container]: A list of containers that
+                belong to the Pod.
+        """
+        self.refresh()
+
+        return self.obj.spec.containers
 
 
 class Service(ApiObject):

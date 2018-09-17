@@ -1,6 +1,8 @@
 """
 """
 
+import abc
+
 import yaml
 from kubernetes import client
 
@@ -18,7 +20,7 @@ api_clients = {
 }
 
 
-class ApiObject:
+class ApiObject(abc.ABC):
     """ApiObject is the base class for all Kubernetes API objects."""
 
     # The Kubernetes API object type. Each subclass should
@@ -101,6 +103,34 @@ class ApiObject:
         obj = new_object(cls.obj_type, manifest)
         return cls(obj)
 
+    @abc.abstractmethod
+    def create(self, namespace=None):
+        """Create the underlying Kubernetes Api Object in the cluster
+        under the given namespace.
+
+        Args:
+            namespace (str): The namespace to create the Api Object under.
+                If no namespace is provided, it will use the instance's
+                namespace member, which is set when the object is created
+                via the Kubetest client. (optional)
+        """
+
+    @abc.abstractmethod
+    def delete(self, options):
+        """Delete the underlying Kubernetes Api Object from the cluster.
+
+        This method expects the Api Object to have been loaded or otherwise
+        assigned a namespace already. If it has not, the namespace will need
+        to be set manually.
+
+        Args:
+            options (client.V1DeleteOptions): Options for deployment deletion.
+        """
+
+    @abc.abstractmethod
+    def refresh(self):
+        """Refresh the local state of the underlying Kubernetes Api Object."""
+
 
 class Configmap(ApiObject):
     """Kubetest wrapper around a Kubernetes ConfigMap API Object.
@@ -121,16 +151,13 @@ class Configmap(ApiObject):
     def __init__(self, api_object):
         super().__init__(api_object)
 
-    def create(self):
+    def create(self, namespace=None):
         """"""
 
-    def delete(self):
+    def delete(self, options):
         """"""
 
-    def list(self):
-        """"""
-
-    def get(self):
+    def refresh(self):
         """"""
 
 
@@ -166,7 +193,7 @@ class Deployment(ApiObject):
             body=self.obj,
         )
 
-    def delete(self, options=None):
+    def delete(self, options):
         """Delete the Deployment.
 
         This method expects the Deployment to have been loaded or otherwise
@@ -220,25 +247,6 @@ class Deployment(ApiObject):
         return [p for p in pods.items]
 
 
-class Node(ApiObject):
-    """Kubetest wrapper around a Kubernetes Node API Object.
-
-    """
-
-    """
-    * list
-    * get state
-    * wait for ready
-    * delete?
-    * wait for delete?
-    """
-
-    obj_type = client.V1Node
-
-    def __init__(self, api_object):
-        super().__init__(api_object)
-
-
 class Pod(ApiObject):
     """Kubetest wrapper around a Kubernetes Pod API Object.
 
@@ -258,16 +266,13 @@ class Pod(ApiObject):
     def __init__(self, api_object):
         super().__init__(api_object)
 
-    def create(self):
+    def create(self, namespace=None):
         """"""
 
-    def delete(self):
+    def delete(self, options):
         """"""
 
-    def list(self):
-        """"""
-
-    def get(self):
+    def refresh(self):
         """"""
 
 
@@ -289,14 +294,11 @@ class Service(ApiObject):
     def __init__(self, api_object):
         super().__init__(api_object)
 
-    def create(self):
+    def create(self, namespace=None):
         """"""
 
-    def delete(self):
+    def delete(self, options):
         """"""
 
-    def list(self):
-        """"""
-
-    def get(self):
+    def refresh(self):
         """"""

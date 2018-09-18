@@ -1,5 +1,4 @@
-"""
-"""
+"""Kubetest wrappers for Kubernetes API Objects."""
 
 import abc
 import time
@@ -403,6 +402,11 @@ class Deployment(ApiObject):
 class Pod(ApiObject):
     """Kubetest wrapper around a Kubernetes Pod API Object.
 
+    The actual `kubernetes.client.V1Pod` instance that this
+    wraps can be accessed via the `obj` instance member.
+
+    This wrapper provides some convenient functionality around the
+    API Object and provides some state management for the Pod.
     """
 
     obj_type = client.V1Pod
@@ -517,6 +521,11 @@ class Pod(ApiObject):
 class Service(ApiObject):
     """Kubetest wrapper around a Kubernetes Service API Object.
 
+    The actual `kubernetes.client.V1Service` instance that this
+    wraps can be accessed via the `obj` instance member.
+
+    This wrapper provides some convenient functionality around the
+    API Object and provides some state management for the Service.
     """
 
     obj_type = client.V1Service
@@ -525,13 +534,132 @@ class Service(ApiObject):
         super().__init__(api_object)
 
     def create(self, namespace=None):
-        """"""
+        """Create the Service under the given namespace.
+
+        Args:
+            namespace (str): The namespace to create the Service under.
+                If the Service was loaded via the Kubetest client, the
+                namespace will already be set, so it is not needed here.
+                Otherwise, the namespace will need to be provided.
+        """
+        if namespace is None:
+            namespace = self.namespace
+
+        self.obj = client.CoreV1Api().create_namespaced_service(
+            namespace=namespace,
+            body=self.obj,
+        )
 
     def delete(self, options):
-        """"""
+        """Delete the Service.
+
+        This method expects the Service to have been loaded or otherwise
+        assigned a namespace already. If it has not, the namespace will need
+        to be set manually.
+
+        Args:
+            options (client.V1DeleteOptions): Options for Service deletion.
+
+        Returns:
+            client.V1Status: The status of the delete operation.
+        """
+        if options is None:
+            options = client.V1DeleteOptions()
+
+        return client.CoreV1Api().delete_namespaced_service(
+            name=self.name,
+            namespace=self.namespace,
+            body=options,
+        )
 
     def refresh(self):
-        """"""
+        """Refresh the underlying Kubernetes Api Service object."""
+        self.obj = client.CoreV1Api().read_namespaced_service(
+            name=self.name,
+            namespace=self.namespace,
+        )
 
     def is_ready(self):
-        """"""
+        """Check if the Service is in the ready state.
+
+        The readiness state is not clearly available from the Service
+        status, so to check whether or not the Service is ready, this
+        will check whether the endpoints of the Service are ready.
+
+        This comes with the caveat that in order for a Service to
+        have endpoints, there needs to be some backend hooked up to it.
+        If there is no backend, the Service will never have endpoints,
+        so this will never resolve to True.
+
+        Returns:
+            bool: True if in the ready state; False otherwise.
+        """
+        self.refresh()
+
+        # check the status. if there is no status, the service is
+        # definitely not ready.
+        if self.obj.status is None:
+            return False
+
+        endpoints = self.get_endpoints()
+
+        # if the Service has no endpoints, its not ready.
+        if len(endpoints) == 0:
+            return False
+
+        # get the service endpoints and check that they are all ready.
+        for endpoint in endpoints:
+            # if we have an endpoint, but there are no subsets, we
+            # consider the endpoint to be not ready.
+            if endpoint.subsets is None:
+                return False
+
+            for subset in endpoint.subsets:
+                # if the endpoint has no addresses setup yet, its not ready
+                if subset.addresses is None or len(subset.addresses) == 0:
+                    return False
+
+                # if there are still addresses that are not ready, the
+                # service is not ready
+                not_ready = subset.not_ready_addresses
+                if not_ready is not None and len(not_ready) > 0:
+                    return False
+
+        # if we got here, then all endpoints are ready, so the service
+        # must also be ready
+        return True
+
+    def status(self):
+        """Get the status of the Service.
+
+        Returns:
+            client.V1ServiceStatus: The status of the Service.
+        """
+        # first, refresh the service state to ensure the latest status
+        self.refresh()
+
+        # return the status from the service
+        return self.obj.status
+
+    def get_endpoints(self):
+        """Get the endpoints for the Service.
+
+        This can be useful for checking internal IP addresses used
+        in containers, e.g. for container auto-discovery.
+
+        Returns:
+            list[client.V1Endpoints]: A list of endpoints associated
+                with the Service.
+        """
+        endpoints = client.CoreV1Api().list_namespaced_endpoints(
+            namespace=self.namespace,
+        )
+
+        svc_endpoints = []
+        for endpoint in endpoints.items:
+            # filter to include only the endpoints with the same
+            # name as the service.
+            if endpoint.metadata.name == self.name:
+                svc_endpoints.append(endpoint)
+
+        return svc_endpoints

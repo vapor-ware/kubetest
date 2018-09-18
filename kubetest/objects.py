@@ -224,9 +224,6 @@ class Configmap(ApiObject):
 
     obj_type = client.V1ConfigMap
 
-    def __init__(self, api_object):
-        super().__init__(api_object)
-
     def create(self, namespace=None):
         """Create the ConfigMap under the given namespace.
 
@@ -288,6 +285,31 @@ class Configmap(ApiObject):
             return True
 
 
+class Container:
+    """Kubetest wrapper around a Kubernetes Container API Object.
+
+    The actual `kubernetes.client.V1Container` instance that this
+    wraps can be accessed via the `obj` instance member.
+
+    This wrapper provides some convenient functionality around the
+    API Object and provides some state management for the Container.
+
+    This wrapper does NOT subclass the kubetest.ApiObject like other
+    object wrappers, because it is not intended to be created or
+    managed from manifest file. It is merely meant to wrap the
+    Container spec for a Pod to make Container-targeted actions
+    easier.
+    """
+
+    def __init__(self, api_object, pod):
+        self.obj = api_object
+        self.pod = pod
+
+    # TODO:
+    #   - get logs (#8)
+    #   - container proxy (#6)
+
+
 class Deployment(ApiObject):
     """Kubetest wrapper around a Kubernetes Deployment API Object.
 
@@ -299,9 +321,6 @@ class Deployment(ApiObject):
     """
 
     obj_type = client.V1Deployment
-
-    def __init__(self, api_object):
-        super().__init__(api_object)
 
     def create(self, namespace=None):
         """Create the Deployment under the given namespace.
@@ -411,9 +430,6 @@ class Pod(ApiObject):
 
     obj_type = client.V1Pod
 
-    def __init__(self, api_object):
-        super().__init__(api_object)
-
     def create(self, namespace=None):
         """Create the Pod under the given namespace.
 
@@ -506,16 +522,12 @@ class Pod(ApiObject):
     def get_containers(self):
         """Get the containers for the pod.
 
-        TODO (etd) - will probably eventually want a Container wrapper
-        for the return here
-
         Returns:
-            list[client.V1Container]: A list of containers that
-                belong to the Pod.
+            list[Container]: A list of containers that belong to the Pod.
         """
         self.refresh()
 
-        return self.obj.spec.containers
+        return [Container(c, self) for c in self.obj.spec.containers]
 
 
 class Service(ApiObject):
@@ -529,9 +541,6 @@ class Service(ApiObject):
     """
 
     obj_type = client.V1Service
-
-    def __init__(self, api_object):
-        super().__init__(api_object)
 
     def create(self, namespace=None):
         """Create the Service under the given namespace.

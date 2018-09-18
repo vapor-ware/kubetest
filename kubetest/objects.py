@@ -8,7 +8,7 @@ from kubernetes import client
 from kubernetes.client.rest import ApiException
 
 from kubetest.manifest import new_object
-from kubetest.utils import label_string
+from kubetest.utils import selector_string
 
 # A global map that matches the Api Client class to its corresponding
 # apiVersion so we can get the correct client for the manifest version.
@@ -439,7 +439,7 @@ class Deployment(ApiObject):
         """
         pods = client.CoreV1Api().list_namespaced_pod(
             namespace=self.namespace,
-            label_selector=label_string(self.obj.metadata.labels),
+            label_selector=selector_string(self.obj.metadata.labels),
         )
         return [Pod(p) for p in pods.items]
 

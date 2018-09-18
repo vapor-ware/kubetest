@@ -25,13 +25,37 @@ def new_namespace(test_name):
     )
 
 
-def label_string(labels):
-    """Create a label string from the given label dictionary.
+def selector_string(selectors):
+    """Create a selector string from the given dictionary of selectors.
 
     Args:
-        labels (dict): The labels to stringify.
+        selectors (dict): The selectors to stringify.
 
     Returns:
-        str: The label string for the given label dictionary.
+        str: The selector string for the given dictionary.
     """
-    return ','.join(['{}={}'.format(k, v) for k, v in labels.items()])
+    return ','.join(['{}={}'.format(k, v) for k, v in selectors.items()])
+
+
+def selector_kwargs(fields=None, labels=None):
+    """Create a dictionary of kwargs for Kubernetes object selectors.
+
+    Args:
+        fields (dict[str, str]): A dictionary of fields used to restrict
+            the returned collection of Objects to only those which match
+            these field selectors. By default, no restricting is done.
+        labels (dict[str, str]): A dictionary of labels used to restrict
+            the returned collection of Objects to only those which match
+            these label selectors. By default, no restricting is done.
+
+    Returns:
+        dict[str, str]: A dictionary that can be used as kwargs for
+            many Kubernetes API calls for label and field selectors.
+    """
+    kwargs = {}
+    if fields is not None:
+        kwargs['field_selector'] = selector_string(fields)
+    if labels is not None:
+        kwargs['label_selector'] = selector_string(labels)
+
+    return kwargs

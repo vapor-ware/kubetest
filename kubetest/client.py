@@ -1,16 +1,21 @@
-"""Test client provided by kubetest for managing kubernetes objects."""
+"""Test client provided by kubetest for managing Kubernetes objects."""
 
 import logging
 
 from kubernetes import client
 
-from kubetest import objects
+from kubetest import objects, utils
 
 log = logging.getLogger('kubetest')
 
 
 class TestClient:
-    """Test client for managing kubernetes objects."""
+    """Test client for managing Kubernetes objects.
+
+    Args:
+        namespace (str): The namespace associated with the test client.
+            Each test case will have its own namespace assigned.
+    """
 
     def __init__(self, namespace):
         self.namespace = namespace
@@ -19,7 +24,7 @@ class TestClient:
         """Setup the test client.
 
         This performs all actions needed in order for the client to be
-        ready to use by a test case. This is called in the k8s fixture
+        ready to use by a test case. This is called in the `kube` fixture
         so the client is only initialized when the test actually requests
         it.
         """
@@ -41,7 +46,7 @@ class TestClient:
     def load_configmap(self, path, set_namespace=True):
         """Load a ConfigMap manifest into a Configmap object.
 
-        By default, this will augment the ConfigMap Api Object with
+        By default, this will augment the ConfigMap API Object with
         the generated test case namespace. This behavior can be
         disabled with the `set_namespace` flag.
 
@@ -51,7 +56,7 @@ class TestClient:
                 augmentation of the ConfigMap namespace.
 
         Returns:
-            Configmap: The ConfigMap for the specified manifest.
+            objects.Configmap: The ConfigMap for the specified manifest.
         """
         log.info('loading configmap from path: %s', path)
         configmap = objects.Configmap.load(path)
@@ -62,7 +67,7 @@ class TestClient:
     def load_deployment(self, path, set_namespace=True):
         """Load a Deployment manifest into a Deployment object.
 
-        By default, this will augment the Deployment Api Object with
+        By default, this will augment the Deployment API Object with
         the generated test case namespace. This behavior can be
         disabled with the `set_namespace` flag.
 
@@ -72,7 +77,7 @@ class TestClient:
                 augmentation of the Deployment namespace.
 
         Returns:
-            Deployment: The Deployment for the specified manifest.
+            objects.Deployment: The Deployment for the specified manifest.
         """
         log.info('loading deployment from path: %s', path)
         deployment = objects.Deployment.load(path)
@@ -83,7 +88,7 @@ class TestClient:
     def load_pod(self, path, set_namespace=True):
         """Load a Pod manifest into a Pod object.
 
-        By default, this will augment the Pod Api Object with
+        By default, this will augment the Pod API Object with
         the generated test case namespace. This behavior can be
         disabled with the `set_namespace` flag.
 
@@ -93,7 +98,7 @@ class TestClient:
                 augmentation of the Pod namespace.
 
         Returns:
-            Pod: The Pod for the specified manifest.
+            objects.Pod: The Pod for the specified manifest.
         """
         log.info('loading pod from path: %s', path)
         pod = objects.Pod.load(path)
@@ -104,7 +109,7 @@ class TestClient:
     def load_service(self, path, set_namespace=True):
         """Load a Service manifest into a Service object.
 
-        By default, this will augment the Service Api Object with
+        By default, this will augment the Service API Object with
         the generated test case namespace. This behavior can be
         disabled with the `set_namespace` flag.
 
@@ -151,13 +156,13 @@ class TestClient:
     # ****** Generic Helpers on ApiObjects ******
 
     def create(self, obj):
-        """Create the provided Api Object on the Kubernetes cluster.
+        """Create the provided API Object on the Kubernetes cluster.
 
         If the object does not already have a namespace assigned to it,
         the client's generated test case namespace will be used.
 
         Args:
-            obj (objects.ApiObject): A kubetest Api Object wrapper.
+            obj (objects.ApiObject): A kubetest API Object wrapper.
         """
         if obj.namespace is None:
             obj.namespace = self.namespace
@@ -165,15 +170,15 @@ class TestClient:
         obj.create()
 
     def delete(self, obj, options=None):
-        """Delete the provided Api Object from the Kubernetes cluster.
+        """Delete the provided API Object from the Kubernetes cluster.
 
-        If the object does not already have a namespaces assigned to it,
+        If the object does not already have a namespace assigned to it,
         the client's generated test case namespace will be used.
 
         Args:
-            obj (objects.ApiObject): A kubetest Api Object wrapper.
+            obj (objects.ApiObject): A kubetest API Object wrapper.
             options (client.V1DeleteOptions): Additional options for
-                deleting the Api Object from the cluster.
+                deleting the API Object from the cluster.
         """
         if obj.namespace is None:
             obj.namespace = self.namespace
@@ -184,30 +189,127 @@ class TestClient:
 
     @staticmethod
     def refresh(obj):
-        """Refresh the underlying Kubernetes Api Object status and state.
+        """Refresh the underlying Kubernetes API Object status and state.
 
         Args:
-            obj (objects.ApiObject): A kubetest Api Object wrapper.
+            obj (objects.ApiObject): A kubetest API Object wrapper.
         """
         obj.refresh()
 
-    # ****** Deployment ******
+    # ****** General Helpers ******
 
-    def get_deployments(self):
-        """Get all of the deployments under the test case namespace.
+    def get_deployments(self, fields=None, labels=None):
+        """Get Deployments under the test case namespace.
 
-        FIXME (etd): we should add filtering capabilities to this, e.g. 'get
-        deployments with name X' or 'get deployments with labels Y=Z'.
+        Args:
+            fields (dict[str, str]): A dictionary of fields used to restrict
+                the returned collection of Deployments to only those which match
+                these field selectors. By default, no restricting is done.
+            labels (dict[str, str]): A dictionary of labels used to restrict
+                the returned collection of Deployments to only those which match
+                these label selectors. By default, no restricting is done.
 
         Returns:
-            dict: The deployments, where the key is the deployment name
-                and the value is the Deployment.
+            dict[str, objects.Deployment]: The Deployments, where the key is
+                the Deployment name and the value is the Deployment.
         """
-        deployment_list = client.AppsV1Api().list_namespaced_deployment(self.namespace)
+        selectors = utils.selector_kwargs(fields, labels)
+
+        deployment_list = client.AppsV1Api().list_namespaced_deployment(
+            namespace=self.namespace,
+            **selectors,
+        )
 
         deployments = {}
-        for item in deployment_list.items:
-            d = objects.Deployment(item)
-            deployments[d.name] = d
+        for obj in deployment_list.items:
+            deployment = objects.Deployment(obj)
+            deployments[deployment.name] = deployment
 
         return deployments
+
+    def get_configmaps(self, fields=None, labels=None):
+        """Get ConfigMaps under the test case namespace.
+
+        Args:
+            fields (dict[str, str]): A dictionary of fields used to restrict
+                the returned collection of ConfigMaps to only those which match
+                these field selectors. By default, no restricting is done.
+            labels (dict[str, str]): A dictionary of labels used to restrict
+                the returned collection of ConfigMaps to only those which match
+                these label selectors. By default, no restricting is done.
+
+        Returns:
+            dict[str, objects.Configmap]: A dictionary where the key is the
+                ConfigMap name and the value is the ConfigMap itself.
+        """
+        selectors = utils.selector_kwargs(fields, labels)
+
+        configmap_list = client.CoreV1Api().list_namespaced_config_map(
+            namespace=self.namespace,
+            **selectors,
+        )
+
+        configmaps = {}
+        for obj in configmap_list.items:
+            cm = objects.Configmap(obj)
+            configmaps[cm.name] = cm
+
+        return configmaps
+
+    def get_pods(self, fields=None, labels=None):
+        """Get Pods under the test case namespace.
+
+        Args:
+            fields (dict[str, str]): A dictionary of fields used to restrict
+                the returned collection of Pods to only those which match
+                these field selectors. By default, no restricting is done.
+            labels (dict[str, str]): A dictionary of labels used to restrict
+                the returned collection of Pods to only those which match
+                these label selectors. By default, no restricting is done.
+
+        Returns:
+            dict[str, objects.Pod]: A dictionary where the key is the Pod
+                name and the value is the Pod itself.
+        """
+        selectors = utils.selector_kwargs(fields, labels)
+
+        pod_list = client.CoreV1Api().list_namespaced_pod(
+            namespace=self.namespace,
+            **selectors,
+        )
+
+        pods = {}
+        for obj in pod_list.items:
+            pod = objects.Pod(obj)
+            pods[pod.name] = pod
+
+        return pods
+
+    def get_services(self, fields=None, labels=None):
+        """Get Services under the test case namespace.
+
+        Args:
+            fields (dict[str, str]): A dictionary of fields used to restrict
+                the returned collection of Services to only those which match
+                these field selectors. By default, no restricting is done.
+            labels (dict[str, str]): A dictionary of labels used to restrict
+                the returned collection of Services to only those which match
+                these label selectors. By default, no restricting is done.
+
+        Returns:
+            dict[str, objects.Service]: A dictionary where the key is the
+                Service name and the value is the Service itself.
+        """
+        selectors = utils.selector_kwargs(fields, labels)
+
+        service_list = client.CoreV1Api().list_namespaced_service(
+            namespace=self.namespace,
+            **selectors,
+        )
+
+        services = {}
+        for obj in service_list.items:
+            service = objects.Service(obj)
+            services[service.name] = service
+
+        return services

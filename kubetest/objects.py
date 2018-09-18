@@ -306,8 +306,34 @@ class Container:
         self.pod = pod
 
     # TODO:
-    #   - get logs (#8)
     #   - container proxy (#6)
+
+    def get_logs(self):
+        """Get up-to-date stream logs of a given container.
+
+        Returns:
+            str: String of logs.
+        """
+        return self.obj.read_namespaced_pod_log(
+            name=self.pod.name,
+            namespace=self.pod.namespace,
+            container=self.obj.name,
+        )
+
+    def search_logs(self, keyword):
+        """Search for a keyword in the logs.
+
+        Args:
+            keyword (str): Keyword to search.
+
+        Returns:
+            Bool: True if found. False otherwise.
+        """
+        logs = self.get_logs()
+
+        if logs.find(keyword) != -1:
+            return False
+        return True
 
 
 class Deployment(ApiObject):

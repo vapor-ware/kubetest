@@ -9,7 +9,7 @@ from kubernetes import client
 from kubernetes.client.rest import ApiException
 
 from kubetest.manifest import new_object
-from kubetest.utils import label_string
+from kubetest.utils import selector_string
 
 log = logging.getLogger('kubetest')
 
@@ -457,7 +457,7 @@ class Deployment(ApiObject):
         log.info('getting pods for deployment "%s"', self.name)
         pods = client.CoreV1Api().list_namespaced_pod(
             namespace=self.namespace,
-            label_selector=label_string(self.obj.metadata.labels),
+            label_selector=selector_string(self.obj.metadata.labels),
         )
         pods = [Pod(p) for p in pods.items]
         log.debug('pods: %s', pods)

@@ -36,8 +36,8 @@ def test_new_namespace(name, expected):
         ({'foo': 'bar', 'abc': 'xyz', 'app': 'synse'}, 'foo=bar,abc=xyz,app=synse'),
     ]
 )
-def test_label_string(labels, expected):
-    """Test creating a string for a dictionary of labels."""
+def test_selector_string(labels, expected):
+    """Test creating a string for a dictionary of selectors."""
 
-    actual = utils.label_string(labels)
+    actual = utils.selector_string(labels)
     assert actual == expected

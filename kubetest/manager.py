@@ -1,6 +1,10 @@
 """Kubetest manager for test client instances and namespace management."""
 
+import logging
+
 from kubetest import client, utils
+
+log = logging.getLogger('kubetest')
 
 
 class KubetestManager:
@@ -31,6 +35,8 @@ class KubetestManager:
             TestClient: A test client configured for the named test case.
         """
         ns = utils.new_namespace(test_name)
+
+        log.info('creating test client for %s with namespace %s', node_id, ns)
         test_client = client.TestClient(ns)
 
         # Add the test client to the manager's client dictionary for tracking.

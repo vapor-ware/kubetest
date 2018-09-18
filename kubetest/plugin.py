@@ -6,6 +6,7 @@ the state of the cluster.
 """
 
 # import os
+import logging
 
 import kubernetes
 import pytest
@@ -57,6 +58,30 @@ def pytest_addoption(parser):
     #     help='google application credentials for GKE clusters'
     # )
 
+    group.addoption(
+        '--kube-log-level',
+        action='store',
+        default='warning',
+        help='log level for the kubetest logger'
+    )
+
+
+def pytest_report_header(config):
+    """Augment the pytest report header with kubetest info.
+
+    See Also:
+        https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_report_header
+    """
+    disabled = config.getvalue('kube_disable')
+    if not disabled:
+        config_file = config.getvalue('kube_config')
+        if config_file is None:
+            config_file = 'default'
+
+        return [
+            'kubetest config file: {}'.format(config_file),
+        ]
+
 
 def pytest_configure(config):
     """Configure kubetest by loading in the kube config file.
@@ -64,8 +89,13 @@ def pytest_configure(config):
     See Also:
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_configure
     """
-    disabled = config.getvalue('kube_disable')
+    # Setup the kubetest logger
+    log_level = config.getvalue('kube_log_level')
+    level = logging._nameToLevel.get(log_level.upper(), logging.WARNING)
+    logger = logging.getLogger('kubetest')
+    logger.setLevel(level)
 
+    disabled = config.getvalue('kube_disable')
     if not disabled:
         # # Set the GOOGLE_APPLICATION_CREDENTIALS environment variable. For more, see:
         # # https://cloud.google.com/docs/authentication/production

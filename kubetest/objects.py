@@ -1,6 +1,7 @@
 """Kubetest wrappers for Kubernetes API Objects."""
 
 import abc
+import logging
 import time
 
 import yaml
@@ -9,6 +10,8 @@ from kubernetes.client.rest import ApiException
 
 from kubetest.manifest import new_object
 from kubetest.utils import label_string
+
+log = logging.getLogger('kubetest')
 
 # A global map that matches the Api Client class to its corresponding
 # apiVersion so we can get the correct client for the manifest version.
@@ -95,25 +98,31 @@ class ApiObject(abc.ABC):
         Raises:
              TimeoutError: The specified timeout was exceeded.
         """
+        log.info('waiting until ready for "%s"', self.name)
         # define the maximum time at which we should stop waiting, if set
         max_time = None
         if timeout is not None:
             max_time = time.time() + timeout
 
+        start = time.time()
         # wait until the Api Object is either in the ready state or times out
         while True:
             if max_time and time.time() >= max_time:
+                log.error('timed out while waiting to be ready')
                 raise TimeoutError(
                     'timed out ({}s) while waiting for {} to be ready'
-                    .format(timeout, self.obj.type)
+                    .format(timeout, self.obj.kind)
                 )
 
             # if the object is ready, return
             if self.is_ready():
-                return
+                break
 
             # if the object is not ready, sleep for a bit and check again
             time.sleep(1)
+
+        end = time.time()
+        log.info('wait complete (total=%f)', end - start)
 
     def wait_until_deleted(self, timeout=None):
         """Wait until the Api Object is deleted from the cluster.
@@ -128,18 +137,21 @@ class ApiObject(abc.ABC):
         Raises:
             TimeoutError: The specified timeout was exceeded.
         """
+        log.info('waiting until deleted for "%s"', self.name)
         # define the maximum time at which we should stop waiting, if set
         max_time = None
         if timeout is not None:
             max_time = time.time() + timeout
 
+        start = time.time()
         # wait until the Api Object is either removed from the cluster or
         # times out
         while True:
             if max_time and time.time() >= max_time:
+                log.error('timed out while waiting to be deleted')
                 raise TimeoutError(
                     'timed out ({}s) while waiting for {} to be deleted'
-                    .format(timeout, self.obj.type)
+                    .format(timeout, self.obj.kind)
                 )
 
             try:
@@ -148,11 +160,15 @@ class ApiObject(abc.ABC):
                 # If we can no longer find the deployment, it is deleted.
                 # If we get any other exception, raise it.
                 if e.status == 404 and e.reason == 'Not Found':
-                    return
+                    break
                 else:
+                    log.error('error refreshing object state')
                     raise e
 
             time.sleep(1)
+
+        end = time.time()
+        log.info('wait complete (total=%f)', end - start)
 
     @classmethod
     def load(cls, path):
@@ -224,6 +240,12 @@ class Configmap(ApiObject):
 
     obj_type = client.V1ConfigMap
 
+    def __str__(self):
+        return str(self.obj)
+
+    def __repr__(self):
+        return self.__str__()
+
     def create(self, namespace=None):
         """Create the ConfigMap under the given namespace.
 
@@ -236,6 +258,8 @@ class Configmap(ApiObject):
         if namespace is None:
             namespace = self.namespace
 
+        log.info('creating configmap "%s" in namespace "%s"', self.name, self.namespace)
+        log.debug('configmap: %s', self.obj)
         self.obj = client.CoreV1Api().create_namespaced_config_map(
             namespace=namespace,
             body=self.obj,
@@ -257,6 +281,8 @@ class Configmap(ApiObject):
         if options is None:
             options = client.V1DeleteOptions()
 
+        log.info('deleting configmap "%s" with options "%s"', self.name, options)
+        log.debug('configmap: %s', self.obj)
         return client.CoreV1Api().delete_namespaced_config_map(
             name=self.name,
             namespace=self.namespace,
@@ -305,6 +331,12 @@ class Container:
         self.obj = api_object
         self.pod = pod
 
+    def __str__(self):
+        return str(self.obj)
+
+    def __repr__(self):
+        return self.__str__()
+
     # TODO:
     #   - container proxy (#6)
 
@@ -348,6 +380,12 @@ class Deployment(ApiObject):
 
     obj_type = client.V1Deployment
 
+    def __str__(self):
+        return str(self.obj)
+
+    def __repr__(self):
+        return self.__str__()
+
     def create(self, namespace=None):
         """Create the Deployment under the given namespace.
 
@@ -360,6 +398,8 @@ class Deployment(ApiObject):
         if namespace is None:
             namespace = self.namespace
 
+        log.info('creating deployment "%s" in namespace "%s"', self.name, self.namespace)
+        log.debug('deployment: %s', self.obj)
         self.obj = self.api_client.create_namespaced_deployment(
             namespace=namespace,
             body=self.obj,
@@ -381,6 +421,8 @@ class Deployment(ApiObject):
         if options is None:
             options = client.V1DeleteOptions()
 
+        log.info('deleting deployment "%s" with options "%s"', self.name, options)
+        log.debug('deployment: %s', self.obj)
         return self.api_client.delete_namespaced_deployment(
             name=self.name,
             namespace=self.namespace,
@@ -425,6 +467,7 @@ class Deployment(ApiObject):
         Returns:
             client.V1DeploymentStatus: The status of the Deployment.
         """
+        log.info('checking status of deployment "%s"', self.name)
         # first, refresh the deployment state to ensure the latest status
         self.refresh()
 
@@ -437,11 +480,14 @@ class Deployment(ApiObject):
         Returns:
             list[Pod]: A list of pods that belong to the deployment.
         """
+        log.info('getting pods for deployment "%s"', self.name)
         pods = client.CoreV1Api().list_namespaced_pod(
             namespace=self.namespace,
             label_selector=label_string(self.obj.metadata.labels),
         )
-        return [Pod(p) for p in pods.items]
+        pods = [Pod(p) for p in pods.items]
+        log.debug('pods: %s', pods)
+        return pods
 
 
 class Pod(ApiObject):
@@ -456,6 +502,12 @@ class Pod(ApiObject):
 
     obj_type = client.V1Pod
 
+    def __str__(self):
+        return str(self.obj)
+
+    def __repr__(self):
+        return self.__str__()
+
     def create(self, namespace=None):
         """Create the Pod under the given namespace.
 
@@ -468,6 +520,8 @@ class Pod(ApiObject):
         if namespace is None:
             namespace = self.namespace
 
+        log.info('creating pod "%s" in namespace "%s"', self.name, self.namespace)
+        log.debug('pod: %s', self.obj)
         self.obj = client.CoreV1Api().create_namespaced_pod(
             namespace=namespace,
             body=self.obj,
@@ -489,6 +543,8 @@ class Pod(ApiObject):
         if options is None:
             options = client.V1DeleteOptions()
 
+        log.info('deleting pod "%s" with options "%s"', self.name, options)
+        log.debug('pod: %s', self.obj)
         return client.CoreV1Api().delete_namespaced_pod(
             name=self.name,
             namespace=self.namespace,
@@ -539,6 +595,7 @@ class Pod(ApiObject):
         Returns:
             client.V1PodStatus: The status of the Pod.
         """
+        log.info('checking status of pod "%s"', self.name)
         # first, refresh the pod state to ensure latest status
         self.refresh()
 
@@ -551,9 +608,12 @@ class Pod(ApiObject):
         Returns:
             list[Container]: A list of containers that belong to the Pod.
         """
+        log.info('getting containers for pod "%s"', self.name)
         self.refresh()
 
-        return [Container(c, self) for c in self.obj.spec.containers]
+        containers = [Container(c, self) for c in self.obj.spec.containers]
+        log.debug('contianers: %s', containers)
+        return containers
 
 
 class Service(ApiObject):
@@ -568,6 +628,12 @@ class Service(ApiObject):
 
     obj_type = client.V1Service
 
+    def __str__(self):
+        return str(self.obj)
+
+    def __repr__(self):
+        return self.__str__()
+
     def create(self, namespace=None):
         """Create the Service under the given namespace.
 
@@ -580,6 +646,8 @@ class Service(ApiObject):
         if namespace is None:
             namespace = self.namespace
 
+        log.info('creating service "%s" in namespace "%s"', self.name, self.namespace)
+        log.debug('service: %s', self.obj)
         self.obj = client.CoreV1Api().create_namespaced_service(
             namespace=namespace,
             body=self.obj,
@@ -601,6 +669,8 @@ class Service(ApiObject):
         if options is None:
             options = client.V1DeleteOptions()
 
+        log.info('deleting service "%s" with options "%s"', self.name, options)
+        log.debug('service: %s', self.obj)
         return client.CoreV1Api().delete_namespaced_service(
             name=self.name,
             namespace=self.namespace,
@@ -670,6 +740,7 @@ class Service(ApiObject):
         Returns:
             client.V1ServiceStatus: The status of the Service.
         """
+        log.info('checking status of service "%s"', self.name)
         # first, refresh the service state to ensure the latest status
         self.refresh()
 
@@ -686,6 +757,7 @@ class Service(ApiObject):
             list[client.V1Endpoints]: A list of endpoints associated
                 with the Service.
         """
+        log.info('getting endpoints for service "%s"', self.name)
         endpoints = client.CoreV1Api().list_namespaced_endpoints(
             namespace=self.namespace,
         )
@@ -697,4 +769,5 @@ class Service(ApiObject):
             if endpoint.metadata.name == self.name:
                 svc_endpoints.append(endpoint)
 
+        log.debug('endpoints: %s', svc_endpoints)
         return svc_endpoints

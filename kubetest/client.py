@@ -1,8 +1,12 @@
 """Test client provided by kubetest for managing kubernetes objects."""
 
+import logging
+
 from kubernetes import client
 
 from kubetest import objects
+
+log = logging.getLogger('kubetest')
 
 
 class TestClient:
@@ -19,6 +23,7 @@ class TestClient:
         so the client is only initialized when the test actually requests
         it.
         """
+        log.info('creating namespace: %s', self.namespace)
         self.create_namespace(self.namespace)
 
     def teardown(self):
@@ -28,6 +33,7 @@ class TestClient:
         cleaned up after a test case has been run. This is called in the
         pytest runtest teardown hook.
         """
+        log.info('deleting namespace: %s', self.namespace)
         self.delete_namespace(self.namespace)
 
     # ****** Manifest Loaders ******
@@ -47,6 +53,7 @@ class TestClient:
         Returns:
             Configmap: The ConfigMap for the specified manifest.
         """
+        log.info('loading configmap from path: %s', path)
         configmap = objects.Configmap.load(path)
         if set_namespace:
             configmap.namespace = self.namespace
@@ -67,6 +74,7 @@ class TestClient:
         Returns:
             Deployment: The Deployment for the specified manifest.
         """
+        log.info('loading deployment from path: %s', path)
         deployment = objects.Deployment.load(path)
         if set_namespace:
             deployment.namespace = self.namespace
@@ -87,6 +95,7 @@ class TestClient:
         Returns:
             Pod: The Pod for the specified manifest.
         """
+        log.info('loading pod from path: %s', path)
         pod = objects.Pod.load(path)
         if set_namespace:
             pod.namespace = self.namespace
@@ -107,6 +116,7 @@ class TestClient:
         Returns:
             Service: The Service for the specified manifest.
         """
+        log.info('loading service from path: %s', path)
         service = objects.Service.load(path)
         if set_namespace:
             service.namespace = self.namespace

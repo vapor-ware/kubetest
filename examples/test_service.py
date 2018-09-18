@@ -1,60 +1,67 @@
-"""An example of using kubetest to manage a deployment."""
+"""An example of using kubetest to manage a service."""
 
 import os
 import time
 
 
-def test_deployment(kube):
+def test_service(kube):
 
     f = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)),
+        'configs',
+        'service.yaml'
+    )
+
+    d = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
         'configs',
         'deployment.yaml'
     )
 
-    d = kube.load_deployment(f)
-    print('---------- loaded -------------')
-    print(vars(d))
+    svc = kube.load_service(f)
+    print('---------- loaded svc -------------')
+    print(vars(svc))
 
-    kube.create(d)
+    dep = kube.load_deployment(d)
+
+    kube.create(svc)
     print('---------- created -------------')
-    print(vars(d))
+    print(vars(svc))
+
+    kube.create(dep)
 
     print('---------- waiting ----------')
     start = time.time()
-    d.wait_until_ready(timeout=10)
+    svc.wait_until_ready(timeout=10)
     end = time.time()
     print('---------- done ({}s) ----------'.format(end - start))
 
-    d.refresh()
+    svc.refresh()
     print('---------- refreshed -------------')
-    print(vars(d))
+    print(vars(svc))
 
-    x = d.status()
+    x = svc.status()
     print('---------- status -------------')
     print(x)
 
-    pods = d.get_pods()
-    print('---------- pods -------------')
-    # print(pods)
-    p = pods[0]
+    endpoints = svc.get_endpoints()
+    print('---------- endpoints -------------')
+    print(endpoints)
 
-    print('---------- waiting ----------')
-    start = time.time()
-    p.wait_until_ready(timeout=10)
-    end = time.time()
-    print('---------- done ({}s) ----------'.format(end - start))
+    x = svc.status()
+    print('---------- status -------------')
+    print(x)
 
-    status = kube.delete(d)
+    status = kube.delete(svc)
     print('---------- deleted -------------')
-    print(vars(d))
+    print(vars(svc))
 
     print('---------- status -------------')
     print(status)
 
     print('---------- waiting ----------')
     start = time.time()
-    d.wait_until_deleted(timeout=20)
+    svc.wait_until_deleted(timeout=20)
     end = time.time()
     print('---------- done ({}s) ----------'.format(end - start))
 

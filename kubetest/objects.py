@@ -1,8 +1,11 @@
-"""
-"""
+"""Kubetest wrappers for Kubernetes API Objects."""
+
+import abc
+import time
 
 import yaml
 from kubernetes import client
+from kubernetes.client.rest import ApiException
 
 from kubetest.manifest import new_object
 from kubetest.utils import label_string
@@ -18,7 +21,7 @@ api_clients = {
 }
 
 
-class ApiObject:
+class ApiObject(abc.ABC):
     """ApiObject is the base class for all Kubernetes API objects."""
 
     # The Kubernetes API object type. Each subclass should
@@ -80,6 +83,77 @@ class ApiObject:
             self._api_client = c()
         return self._api_client
 
+    def wait_until_ready(self, timeout=None):
+        """Wait until the Api Object is in the ready state.
+
+        Args:
+            timeout (int): The maximum time to wait, in seconds, for
+                the Api Object to reach the ready state. If unspecified,
+                this will wait indefinitely. If specified and the timeout
+                is met or exceeded, a TimeoutError will be raised.
+
+        Raises:
+             TimeoutError: The specified timeout was exceeded.
+        """
+        # define the maximum time at which we should stop waiting, if set
+        max_time = None
+        if timeout is not None:
+            max_time = time.time() + timeout
+
+        # wait until the Api Object is either in the ready state or times out
+        while True:
+            if max_time and time.time() >= max_time:
+                raise TimeoutError(
+                    'timed out ({}s) while waiting for {} to be ready'
+                    .format(timeout, self.obj.type)
+                )
+
+            # if the object is ready, return
+            if self.is_ready():
+                return
+
+            # if the object is not ready, sleep for a bit and check again
+            time.sleep(1)
+
+    def wait_until_deleted(self, timeout=None):
+        """Wait until the Api Object is deleted from the cluster.
+
+        Args:
+            timeout (int): The maximum time to wait, in seconds, for
+                the Api Object to be deleted from the cluster. If
+                unspecified, this will wait indefinitely. If specified
+                and the timeout is met or exceeded, a TimeoutError will
+                be raised.
+
+        Raises:
+            TimeoutError: The specified timeout was exceeded.
+        """
+        # define the maximum time at which we should stop waiting, if set
+        max_time = None
+        if timeout is not None:
+            max_time = time.time() + timeout
+
+        # wait until the Api Object is either removed from the cluster or
+        # times out
+        while True:
+            if max_time and time.time() >= max_time:
+                raise TimeoutError(
+                    'timed out ({}s) while waiting for {} to be deleted'
+                    .format(timeout, self.obj.type)
+                )
+
+            try:
+                self.refresh()
+            except ApiException as e:
+                # If we can no longer find the deployment, it is deleted.
+                # If we get any other exception, raise it.
+                if e.status == 404 and e.reason == 'Not Found':
+                    return
+                else:
+                    raise e
+
+            time.sleep(1)
+
     @classmethod
     def load(cls, path):
         """Load the Kubernetes API Object from file.
@@ -101,19 +175,51 @@ class ApiObject:
         obj = new_object(cls.obj_type, manifest)
         return cls(obj)
 
+    @abc.abstractmethod
+    def create(self, namespace=None):
+        """Create the underlying Kubernetes Api Object in the cluster
+        under the given namespace.
+
+        Args:
+            namespace (str): The namespace to create the Api Object under.
+                If no namespace is provided, it will use the instance's
+                namespace member, which is set when the object is created
+                via the Kubetest client. (optional)
+        """
+
+    @abc.abstractmethod
+    def delete(self, options):
+        """Delete the underlying Kubernetes Api Object from the cluster.
+
+        This method expects the Api Object to have been loaded or otherwise
+        assigned a namespace already. If it has not, the namespace will need
+        to be set manually.
+
+        Args:
+            options (client.V1DeleteOptions): Options for deployment deletion.
+        """
+
+    @abc.abstractmethod
+    def refresh(self):
+        """Refresh the local state of the underlying Kubernetes Api Object."""
+
+    @abc.abstractmethod
+    def is_ready(self):
+        """Check if the Api Object is in the ready state.
+
+        Returns:
+            bool: True if in the ready state; False otherwise.
+        """
+
 
 class Configmap(ApiObject):
     """Kubetest wrapper around a Kubernetes ConfigMap API Object.
 
-    """
+    The actual `kubernetes.client.V1ConfigMap` instance that this
+    wraps can be accessed via the `obj` instance member.
 
-    """
-    * create
-    * load
-    * get
-    * wait until ready?
-    * delete
-    * wait until deleted?
+    This wrapper provides some convenient functionality around the
+    API Object and provides some state management for the ConfigMap.
     """
 
     obj_type = client.V1ConfigMap
@@ -121,17 +227,65 @@ class Configmap(ApiObject):
     def __init__(self, api_object):
         super().__init__(api_object)
 
-    def create(self):
-        """"""
+    def create(self, namespace=None):
+        """Create the ConfigMap under the given namespace.
 
-    def delete(self):
-        """"""
+        Args:
+            namespace (str): The namespace to create the ConfigMap under.
+                If the ConfigMap was loaded via the Kubetest Client, the
+                namespace will already be set, so it is not needed here.
+                Otherwise, the namespace will need to be provided.
+        """
+        if namespace is None:
+            namespace = self.namespace
 
-    def list(self):
-        """"""
+        self.obj = client.CoreV1Api().create_namespaced_config_map(
+            namespace=namespace,
+            body=self.obj,
+        )
 
-    def get(self):
-        """"""
+    def delete(self, options):
+        """Delete the ConfigMap.
+
+        This method expects the ConfigMap to have been loaded or otherwise
+        assigned a namespace already. If it has not, the namespace will need
+        to be set manually.
+
+        Args:
+             options (client.V1DeleteOptions): Options for ConfigMap deletion.
+
+        Returns:
+            client.V1Status: The status of the delete operation.
+        """
+        if options is None:
+            options = client.V1DeleteOptions()
+
+        return client.CoreV1Api().delete_namespaced_config_map(
+            name=self.name,
+            namespace=self.namespace,
+            body=options,
+        )
+
+    def refresh(self):
+        """Refresh the underlying Kubernetes Api ConfigMap object."""
+        self.obj = client.CoreV1Api().read_namespaced_config_map(
+            name=self.name,
+            namespace=self.namespace,
+        )
+
+    def is_ready(self):
+        """Check if the ConfigMap is in the ready state.
+
+        ConfigMaps do not have a 'status' field to check, so we will
+        measure their readiness status by whether or not they exist
+        on the cluster.
+        """
+        try:
+            self.refresh()
+        except:  # noqa
+            return False
+        else:
+            return True
 
 
 class Deployment(ApiObject):
@@ -155,8 +309,8 @@ class Deployment(ApiObject):
         Args:
             namespace (str): The namespace to create the Deployment under.
                 If the Deployment was loaded via the Kubetest client, the
-                namespace will already be set, so it is not needed. Otherwise,
-                the namespace will need to be provided here.
+                namespace will already be set, so it is not needed here.
+                Otherwise, the namespace will need to be provided.
         """
         if namespace is None:
             namespace = self.namespace
@@ -166,7 +320,7 @@ class Deployment(ApiObject):
             body=self.obj,
         )
 
-    def delete(self, options=None):
+    def delete(self, options):
         """Delete the Deployment.
 
         This method expects the Deployment to have been loaded or otherwise
@@ -174,7 +328,7 @@ class Deployment(ApiObject):
         to be set manually.
 
         Args:
-            options (client.V1DeleteOptions): Options for deployment deletion.
+            options (client.V1DeleteOptions): Options for Deployment deletion.
 
         Returns:
             client.V1Status: The status of the delete operation.
@@ -195,8 +349,33 @@ class Deployment(ApiObject):
             namespace=self.namespace,
         )
 
+    def is_ready(self):
+        """Check if the Deployment is in the ready state.
+
+        Returns:
+            bool: True if in the ready state; False otherwise.
+        """
+        self.refresh()
+
+        # if there is no status, the deployment is definitely not ready
+        status = self.obj.status
+        if status is None:
+            return False
+
+        # check the status for the number of total replicas and compare
+        # it to the number of ready replicas. if the numbers are
+        # equal, the deployment is ready; otherwise it is not ready.
+        # TODO (etd) - we may want some logging in here eventually
+        total = status.replicas
+        ready = status.ready_replicas
+
+        if total is None:
+            return False
+
+        return total == ready
+
     def status(self):
-        """Get the status of the deployment.
+        """Get the status of the Deployment.
 
         Returns:
             client.V1DeploymentStatus: The status of the Deployment.
@@ -217,40 +396,17 @@ class Deployment(ApiObject):
             namespace=self.namespace,
             label_selector=label_string(self.obj.metadata.labels),
         )
-        return [p for p in pods.items]
-
-
-class Node(ApiObject):
-    """Kubetest wrapper around a Kubernetes Node API Object.
-
-    """
-
-    """
-    * list
-    * get state
-    * wait for ready
-    * delete?
-    * wait for delete?
-    """
-
-    obj_type = client.V1Node
-
-    def __init__(self, api_object):
-        super().__init__(api_object)
+        return [Pod(p) for p in pods.items]
 
 
 class Pod(ApiObject):
     """Kubetest wrapper around a Kubernetes Pod API Object.
 
-    """
+    The actual `kubernetes.client.V1Pod` instance that this
+    wraps can be accessed via the `obj` instance member.
 
-    """
-    * list
-    * list from deployment
-    * wait until ready
-    * get logs
-    * get state/status?
-    * proxy get?
+    This wrapper provides some convenient functionality around the
+    API Object and provides some state management for the Pod.
     """
 
     obj_type = client.V1Pod
@@ -258,30 +414,118 @@ class Pod(ApiObject):
     def __init__(self, api_object):
         super().__init__(api_object)
 
-    def create(self):
-        """"""
+    def create(self, namespace=None):
+        """Create the Pod under the given namespace.
 
-    def delete(self):
-        """"""
+        Args:
+            namespace (str): The namespace to create the Pod under.
+                If the Pod was loaded via the Kubetest client, the
+                namespace will already be set, so it is not needed
+                here. Otherwise, the namespace will need to be provided.
+        """
+        if namespace is None:
+            namespace = self.namespace
 
-    def list(self):
-        """"""
+        self.obj = client.CoreV1Api().create_namespaced_pod(
+            namespace=namespace,
+            body=self.obj,
+        )
 
-    def get(self):
-        """"""
+    def delete(self, options):
+        """Delete the Pod.
+
+        This method expects the Pod to have been loaded or otherwise
+        assigned a namespace already. If it has not, the namespace will
+        need to be set manually.
+
+        Args:
+            options (client.V1DeleteOptions): Options for Pod deletion.
+
+        Return:
+            client.V1Status: The status of the delete operation.
+        """
+        if options is None:
+            options = client.V1DeleteOptions()
+
+        return client.CoreV1Api().delete_namespaced_pod(
+            name=self.name,
+            namespace=self.namespace,
+            body=options,
+        )
+
+    def refresh(self):
+        """Refresh the underlying Kubernetes Api Pod object."""
+        self.obj = client.CoreV1Api().read_namespaced_pod_status(
+            name=self.name,
+            namespace=self.namespace,
+        )
+
+    def is_ready(self):
+        """Check if the Pod is in the ready state.
+
+        Returns:
+            bool: True if in the ready state; False otherwise.
+        """
+        self.refresh()
+
+        # if there is no status, the pod is definitely not ready
+        status = self.obj.status
+        if status is None:
+            return False
+
+        # check the pod phase to make sure it is running. a pod in
+        # the 'failed' or 'success' state will no longer be running,
+        # so we only care if the pod is in the 'running' state.
+        phase = status.phase
+        if phase.lower() != 'running':
+            return False
+
+        for condition in status.conditions:
+            # we only care about the condition type 'ready'
+            if condition.type.lower() != 'ready':
+                continue
+
+            # check that the readiness condition is True
+            return condition.status.lower() == 'true'
+
+        # Catchall
+        return False
+
+    def status(self):
+        """Get the status of the Pod.
+
+        Returns:
+            client.V1PodStatus: The status of the Pod.
+        """
+        # first, refresh the pod state to ensure latest status
+        self.refresh()
+
+        # return the status of the pod
+        return self.obj.status
+
+    def get_containers(self):
+        """Get the containers for the pod.
+
+        TODO (etd) - will probably eventually want a Container wrapper
+        for the return here
+
+        Returns:
+            list[client.V1Container]: A list of containers that
+                belong to the Pod.
+        """
+        self.refresh()
+
+        return self.obj.spec.containers
 
 
 class Service(ApiObject):
     """Kubetest wrapper around a Kubernetes Service API Object.
 
-    """
+    The actual `kubernetes.client.V1Service` instance that this
+    wraps can be accessed via the `obj` instance member.
 
-    """
-    * create
-    * load
-    * wait until ready
-    * delete
-    * wait until deleted
+    This wrapper provides some convenient functionality around the
+    API Object and provides some state management for the Service.
     """
 
     obj_type = client.V1Service
@@ -289,14 +533,133 @@ class Service(ApiObject):
     def __init__(self, api_object):
         super().__init__(api_object)
 
-    def create(self):
-        """"""
+    def create(self, namespace=None):
+        """Create the Service under the given namespace.
 
-    def delete(self):
-        """"""
+        Args:
+            namespace (str): The namespace to create the Service under.
+                If the Service was loaded via the Kubetest client, the
+                namespace will already be set, so it is not needed here.
+                Otherwise, the namespace will need to be provided.
+        """
+        if namespace is None:
+            namespace = self.namespace
 
-    def list(self):
-        """"""
+        self.obj = client.CoreV1Api().create_namespaced_service(
+            namespace=namespace,
+            body=self.obj,
+        )
 
-    def get(self):
-        """"""
+    def delete(self, options):
+        """Delete the Service.
+
+        This method expects the Service to have been loaded or otherwise
+        assigned a namespace already. If it has not, the namespace will need
+        to be set manually.
+
+        Args:
+            options (client.V1DeleteOptions): Options for Service deletion.
+
+        Returns:
+            client.V1Status: The status of the delete operation.
+        """
+        if options is None:
+            options = client.V1DeleteOptions()
+
+        return client.CoreV1Api().delete_namespaced_service(
+            name=self.name,
+            namespace=self.namespace,
+            body=options,
+        )
+
+    def refresh(self):
+        """Refresh the underlying Kubernetes Api Service object."""
+        self.obj = client.CoreV1Api().read_namespaced_service(
+            name=self.name,
+            namespace=self.namespace,
+        )
+
+    def is_ready(self):
+        """Check if the Service is in the ready state.
+
+        The readiness state is not clearly available from the Service
+        status, so to check whether or not the Service is ready, this
+        will check whether the endpoints of the Service are ready.
+
+        This comes with the caveat that in order for a Service to
+        have endpoints, there needs to be some backend hooked up to it.
+        If there is no backend, the Service will never have endpoints,
+        so this will never resolve to True.
+
+        Returns:
+            bool: True if in the ready state; False otherwise.
+        """
+        self.refresh()
+
+        # check the status. if there is no status, the service is
+        # definitely not ready.
+        if self.obj.status is None:
+            return False
+
+        endpoints = self.get_endpoints()
+
+        # if the Service has no endpoints, its not ready.
+        if len(endpoints) == 0:
+            return False
+
+        # get the service endpoints and check that they are all ready.
+        for endpoint in endpoints:
+            # if we have an endpoint, but there are no subsets, we
+            # consider the endpoint to be not ready.
+            if endpoint.subsets is None:
+                return False
+
+            for subset in endpoint.subsets:
+                # if the endpoint has no addresses setup yet, its not ready
+                if subset.addresses is None or len(subset.addresses) == 0:
+                    return False
+
+                # if there are still addresses that are not ready, the
+                # service is not ready
+                not_ready = subset.not_ready_addresses
+                if not_ready is not None and len(not_ready) > 0:
+                    return False
+
+        # if we got here, then all endpoints are ready, so the service
+        # must also be ready
+        return True
+
+    def status(self):
+        """Get the status of the Service.
+
+        Returns:
+            client.V1ServiceStatus: The status of the Service.
+        """
+        # first, refresh the service state to ensure the latest status
+        self.refresh()
+
+        # return the status from the service
+        return self.obj.status
+
+    def get_endpoints(self):
+        """Get the endpoints for the Service.
+
+        This can be useful for checking internal IP addresses used
+        in containers, e.g. for container auto-discovery.
+
+        Returns:
+            list[client.V1Endpoints]: A list of endpoints associated
+                with the Service.
+        """
+        endpoints = client.CoreV1Api().list_namespaced_endpoints(
+            namespace=self.namespace,
+        )
+
+        svc_endpoints = []
+        for endpoint in endpoints.items:
+            # filter to include only the endpoints with the same
+            # name as the service.
+            if endpoint.metadata.name == self.name:
+                svc_endpoints.append(endpoint)
+
+        return svc_endpoints

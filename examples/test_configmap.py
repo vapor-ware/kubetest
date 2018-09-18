@@ -1,60 +1,45 @@
-"""An example of using kubetest to manage a deployment."""
+"""An example of using kubetest to manage a configmap."""
 
 import os
 import time
 
 
-def test_deployment(kube):
+def test_configmap(kube):
 
     f = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
         'configs',
-        'deployment.yaml'
+        'configmap.yaml'
     )
 
-    d = kube.load_deployment(f)
+    cm = kube.load_configmap(f)
     print('---------- loaded -------------')
-    print(vars(d))
+    print(vars(cm))
 
-    kube.create(d)
+    kube.create(cm)
     print('---------- created -------------')
-    print(vars(d))
+    print(vars(cm))
 
     print('---------- waiting ----------')
     start = time.time()
-    d.wait_until_ready(timeout=10)
+    cm.wait_until_ready(timeout=10)
     end = time.time()
     print('---------- done ({}s) ----------'.format(end - start))
 
-    d.refresh()
+    cm.refresh()
     print('---------- refreshed -------------')
-    print(vars(d))
+    print(vars(cm))
 
-    x = d.status()
-    print('---------- status -------------')
-    print(x)
-
-    pods = d.get_pods()
-    print('---------- pods -------------')
-    # print(pods)
-    p = pods[0]
-
-    print('---------- waiting ----------')
-    start = time.time()
-    p.wait_until_ready(timeout=10)
-    end = time.time()
-    print('---------- done ({}s) ----------'.format(end - start))
-
-    status = kube.delete(d)
+    status = kube.delete(cm)
     print('---------- deleted -------------')
-    print(vars(d))
+    print(vars(cm))
 
     print('---------- status -------------')
     print(status)
 
     print('---------- waiting ----------')
     start = time.time()
-    d.wait_until_deleted(timeout=20)
+    cm.wait_until_deleted(timeout=20)
     end = time.time()
     print('---------- done ({}s) ----------'.format(end - start))
 

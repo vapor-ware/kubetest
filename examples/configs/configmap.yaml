@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-config
+  labels:
+    app: test
+data:
+  config.yml: |
+    version: 1.0
+    debug: true
+    foo: bar

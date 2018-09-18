@@ -275,15 +275,18 @@ class Configmap(ApiObject):
         )
 
     def is_ready(self):
-        """Check if the ConfigMap is in the ready state."""
-        self.refresh()
+        """Check if the ConfigMap is in the ready state.
 
-        # if there is no status, the configmap is definitely not ready
-        status = self.obj.status
-        if status is None:
+        ConfigMaps do not have a 'status' field to check, so we will
+        measure their readiness status by whether or not they exist
+        on the cluster.
+        """
+        try:
+            self.refresh()
+        except:  # noqa
             return False
-
-        # TODO: figure out what configmap status looks like
+        else:
+            return True
 
 
 class Deployment(ApiObject):

@@ -1,10 +1,11 @@
 """Test client provided by kubetest for managing Kubernetes objects."""
 
 import logging
+import time
 
 from kubernetes import client
 
-from kubetest import objects, utils
+from kubetest import condition, objects, utils
 
 log = logging.getLogger('kubetest')
 
@@ -313,3 +314,61 @@ class TestClient:
             services[service.name] = service
 
         return services
+
+    # ****** Test Helpers ******
+
+    @staticmethod
+    def wait_for_conditions(*args, timeout=None, interval=1):
+        """Wait for all of the provided Conditions to be met.
+
+        All Conditions must be met for this to unblock. If no Conditions are
+        provided, this method will do nothing.
+
+        Args:
+            *args (Condition): Conditions to check.
+            timeout (int): The maximum time to wait, in seconds, for the
+                provided Conditions to be met. If all of the Conditions are
+                not met within the given timeout, this will raise a TimeoutError.
+                By default, there is no timeout so this will wait indefinitely.
+            interval (float|int): The time, in seconds, to sleep before
+                re-evaluating the conditions. Default: 1s
+
+        Raises:
+            TimeoutError: The Conditions were not met within the specified
+                timeout period.
+            ValueError: Not all arguments are a Condition.
+        """
+        log.info('waiting for conditions: %s', args)
+
+        # If no Conditions were given, there is nothing to do.
+        if not args:
+            return
+
+        # If something was given, make sure they are all Conditions
+        if not all(map(lambda c: isinstance(c, condition.Condition), args)):
+            raise ValueError('All arguments must be a Condition')
+
+        max_time = None
+        if timeout is not None:
+            max_time = time.time() + timeout
+
+        start = time.time()
+
+        # Wait until all conditions are met.
+        while True:
+            if max_time and time.time() >= max_time:
+                log.error('timed out waiting for conditions')
+                raise TimeoutError(
+                    'timed out ({}s) while waiting for conditions to'
+                    'be met - {}'.format(timeout, args)
+                )
+
+            # check that all conditions were met
+            if condition.check_all(*args):
+                break
+
+            # if not all conditions are met, sleep then try again
+            time.sleep(interval)
+
+        end = time.time()
+        log.info('wait complete (total=%f)', end - start)

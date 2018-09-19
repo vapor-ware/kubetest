@@ -337,6 +337,23 @@ class Container:
     def __repr__(self):
         return self.__str__()
 
+    def get_restart_count(self):
+        """Get the number of times the Container has been restarted.
+
+        Returns:
+            int: The number of times the Container has been restarted.
+        """
+        container_name = self.obj.name
+        pod_status = self.pod.status()
+
+        for status in pod_status.container_statuses:
+            if status.name == container_name:
+                return status.restart_count
+
+        raise RuntimeError(
+            'Unable to determine container status for {}'.format(container_name)
+        )
+
     def get_logs(self):
         """Get up-to-date stream logs of a given container.
 
@@ -614,6 +631,20 @@ class Pod(ApiObject):
         containers = [Container(c, self) for c in self.obj.spec.containers]
         log.debug('contianers: %s', containers)
         return containers
+
+    def get_restart_count(self):
+        """Get the total number of Container restarts for the Pod.
+
+        Returns:
+            int: The total number of Container restarts.
+        """
+        status = self.status()
+
+        total = 0
+        for container_status in status.container_statuses:
+            total += container_status.restart_count
+
+        return total
 
 
 class Service(ApiObject):

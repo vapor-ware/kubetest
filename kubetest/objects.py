@@ -374,19 +374,20 @@ class Container:
             container=self.obj.name,
         )
 
-    def search_logs(self, keyword):
+    def search_logs(self, *keyword):
         """Search for a keyword in the logs.
 
         Args:
-            keyword (str): Keyword to search.
+            *keyword (str): Keyword to search.
 
         Returns:
             Bool: True if found. False otherwise.
         """
         logs = self.get_logs()
 
-        if logs.find(keyword) == -1:
-            return False
+        for k in keyword:
+            if logs.find(k) == -1:
+                return False
         return True
 
     # TODO:

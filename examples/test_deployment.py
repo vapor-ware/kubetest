@@ -24,5 +24,9 @@ def test_deployment(kube):
     p = pods[0]
     p.wait_until_ready(timeout=10)
 
+    containers = p.get_containers()
+    c = containers[0]
+    assert len(c.get_logs()) != 0
+
     kube.delete(d)
     d.wait_until_deleted(timeout=20)

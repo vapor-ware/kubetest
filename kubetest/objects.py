@@ -891,3 +891,28 @@ class Service(ApiObject):
 
         log.debug('endpoints: %s', svc_endpoints)
         return svc_endpoints
+
+    def proxy_http_get(self, path):
+        """Issue a GET request to proxy of a Service.
+
+        Args:
+            path (str): Part of URLs that include service endpoints,
+                suffixes, and parameters.
+
+        Returns:
+            str: Response in string format.
+
+        Sample usage:
+            Calling proxy_http_get(port='7000', path='test') on synse-blackbox
+            service is equivalent to
+            curling from `/api/v1/namespaces/default/services/synse-blackbox:7000/proxy/test` # noqa
+
+        See Also:
+            - https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/CoreV1Api.md#connect_get_namespaced_service_proxy_with_path # noqa
+            - https://kubernetes.io/docs/tasks/administer-cluster/access-cluster-services/#manually-constructing-apiserver-proxy-urls # noqa
+        """
+        return client.CoreV1Api().connect_get_namespaced_service_proxy_with_path(
+            name="{}:{}".format(self.name, self.obj.spec.ports[0].port),
+            namespace=self.namespace,
+            path=path,
+        )

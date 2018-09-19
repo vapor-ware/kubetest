@@ -771,3 +771,30 @@ class Service(ApiObject):
 
         log.debug('endpoints: %s', svc_endpoints)
         return svc_endpoints
+
+    def proxy_http_get(self, host, path):
+        """Issue a GET request to proxy of a Service.
+
+        Args:
+            host (str): Service name and port in format <service_name:port>.
+            path (str): Part of URLs that include service endpoints,
+            suffixes, and parameters.
+
+        Returns:
+            str: Response in string format.
+
+        Sample usage:
+            While enabling proxy at port 8080, `kubectl proxy --port=8080`
+            curling `http://localhost:8080/api/v1/namespaces/default/services/synse-blackbox:7000/proxy/test`
+            is equivalent to calling
+            proxy_http_get(name='synse-blackbox:7000', namespace='default', path='test')
+
+        See Also:
+            - https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/CoreV1Api.md#connect_get_namespaced_service_proxy
+            - https://kubernetes.io/docs/tasks/administer-cluster/access-cluster-services/#manually-constructing-apiserver-proxy-urls
+        """
+        return client.CoreV1Api().connect_get_namespaced_service_proxy(
+            name=host,
+            namespace=self.obj.namespace,
+            path=path,
+        )

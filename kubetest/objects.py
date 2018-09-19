@@ -819,7 +819,7 @@ class Service(ApiObject):
             curling from `/api/v1/namespaces/default/services/synse-blackbox:7000/proxy/test` # noqa
 
         See Also:
-            - https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/CoreV1Api.md#connect_get_namespaced_service_proxy # noqa
+            - https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/CoreV1Api.md#connect_get_namespaced_service_proxy_with_path # noqa
             - https://kubernetes.io/docs/tasks/administer-cluster/access-cluster-services/#manually-constructing-apiserver-proxy-urls # noqa
         """
         return client.CoreV1Api().connect_get_namespaced_service_proxy_with_path(

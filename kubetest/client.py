@@ -107,6 +107,27 @@ class TestClient:
             pod.namespace = self.namespace
         return pod
 
+    def load_secret(self, path, set_namespace=True):
+        """Load a Secret manifest into a Secret object.
+
+        By default, this will augment the Secret API Object with
+        the generated test case namespace. This behavior can be
+        disabled with the `set_namespace` flag.
+
+        Args:
+            path (str): The path to the Secret manifest.
+            set_namespace (bool): Enable/disable the automatic
+                augmentation of the Secret namespace.
+
+        Returns:
+            Secret: The Secret for the specified manifest.
+        """
+        log.info('loading secret from path: %s', path)
+        secret = objects.Secret.load(path)
+        if set_namespace:
+            secret.namespace = self.namespace
+        return secret
+
     def load_service(self, path, set_namespace=True):
         """Load a Service manifest into a Service object.
 

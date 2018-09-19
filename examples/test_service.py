@@ -1,6 +1,7 @@
 """An example of using kubetest to manage a service."""
 
 import os
+import ast
 
 
 def test_service(kube):
@@ -28,6 +29,13 @@ def test_service(kube):
 
     endpoints = svc.get_endpoints()
     assert len(endpoints) == 1
+
+    resp = svc.proxy_http_get("synse/test")
+    assert len(resp) != 0
+
+    d = ast.literal_eval(resp)
+    assert d.get("status") == "ok"
+    assert d.get("timestamp") is not None
 
     kube.delete(svc)
     kube.delete(dep)

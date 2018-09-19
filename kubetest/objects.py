@@ -784,10 +784,10 @@ class Service(ApiObject):
             str: Response in string format.
 
         Sample usage:
-            While enabling proxy at port 8080, `kubectl proxy --port=8080`
+            While enabling proxy at port 8080, `kubectl proxy --port=8080`,
             curling `http://localhost:8080/api/v1/namespaces/default/services/synse-blackbox:7000/proxy/test`
             is equivalent to calling
-            proxy_http_get(name='synse-blackbox:7000', namespace='default', path='test')
+            proxy_http_get(name='synse-blackbox:7000', path='test').
 
         See Also:
             - https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/CoreV1Api.md#connect_get_namespaced_service_proxy

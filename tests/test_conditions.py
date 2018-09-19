@@ -8,7 +8,7 @@ from kubetest import condition
 def test_condition_init_ok():
     """Test initializing a Condition with no errors."""
 
-    c = condition.Condition(lambda x: x == 'foo', 'foo')
+    c = condition.Condition('test', lambda x: x == 'foo', 'foo')
     assert c.fn is not None
     assert c.args == ('foo',)
     assert c.kwargs == {}
@@ -18,7 +18,7 @@ def test_condition_init_err():
     """Test initializing a Condition where the provided fn is not callable."""
 
     with pytest.raises(ValueError):
-        condition.Condition('not-callable')
+        condition.Condition('test', 'not-callable')
 
 
 @pytest.mark.parametrize(
@@ -38,7 +38,7 @@ def test_condition_init_err():
 def test_condition_check_true(fn, args, kwargs):
     """Test checking when the function returns Truthy values."""
 
-    c = condition.Condition(fn, *args, **kwargs)
+    c = condition.Condition('test', fn, *args, **kwargs)
     assert c.check()
 
 
@@ -60,18 +60,18 @@ def test_condition_check_true(fn, args, kwargs):
 def test_condition_check_false(fn, args, kwargs):
     """Test checking when the function returns Falsey values."""
 
-    c = condition.Condition(fn, *args, **kwargs)
+    c = condition.Condition('test', fn, *args, **kwargs)
     assert not c.check()
 
 
 @pytest.mark.parametrize(
     'conditions,expected', [
         ([], True),
-        ([condition.Condition(lambda: True)], True),
-        ([condition.Condition(lambda: False)], False),
-        ([condition.Condition(lambda: True), condition.Condition(lambda: True)], True),
-        ([condition.Condition(lambda: True), condition.Condition(lambda: False)], False),
-        ([condition.Condition(lambda: False), condition.Condition(lambda: False)], False),
+        ([condition.Condition('test', lambda: True)], True),
+        ([condition.Condition('test', lambda: False)], False),
+        ([condition.Condition('test', lambda: True), condition.Condition('test', lambda: True)], True),
+        ([condition.Condition('test', lambda: True), condition.Condition('test', lambda: False)], False),
+        ([condition.Condition('test', lambda: False), condition.Condition('test', lambda: False)], False),
     ]
 )
 def test_check_all(conditions, expected):

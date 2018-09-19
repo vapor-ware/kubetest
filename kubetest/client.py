@@ -380,7 +380,7 @@ class TestClient:
             if max_time and time.time() >= max_time:
                 log.error('timed out waiting for conditions')
                 raise TimeoutError(
-                    'timed out ({}s) while waiting for conditions to'
+                    'timed out ({}s) while waiting for conditions to '
                     'be met - {}'.format(timeout, args)
                 )
 

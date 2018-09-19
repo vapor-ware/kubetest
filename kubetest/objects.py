@@ -349,6 +349,11 @@ class Container:
         container_name = self.obj.name
         pod_status = self.pod.status()
 
+        # If there are no container status, the container hasn't started
+        # yet, so there cannot be any restarts.
+        if pod_status.container_statuses is None:
+            return 0
+
         for status in pod_status.container_statuses:
             if status.name == container_name:
                 return status.restart_count
@@ -641,10 +646,12 @@ class Pod(ApiObject):
         Returns:
             int: The total number of Container restarts.
         """
-        status = self.status()
+        container_statuses = self.status().container_statuses
+        if container_statuses is None:
+            return 0
 
         total = 0
-        for container_status in status.container_statuses:
+        for container_status in container_statuses:
             total += container_status.restart_count
 
         return total

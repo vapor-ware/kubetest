@@ -343,7 +343,7 @@ class Container:
         Returns:
             str: String of logs.
         """
-        return self.obj.read_namespaced_pod_log(
+        return client.CoreV1Api().read_namespaced_pod_log(
             name=self.pod.name,
             namespace=self.pod.namespace,
             container=self.obj.name,

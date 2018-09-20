@@ -190,7 +190,7 @@ class Pod(ApiObject):
         # TODO (etd) - define a wait helper -- this logic is used in a couple places.
         # define the maximum time at which we should stop waiting, if set
         max_time = None
-        if timeout is None:
+        if timeout is not None:
             max_time = time.time() + timeout
 
         start = time.time()
@@ -207,18 +207,19 @@ class Pod(ApiObject):
             # this to False if any container is not yet running.
             containers_started = True
             status = self.status()
-            for container_status in status.container_statuses:
-                if container_status.state is not None:
-                    if container_status.state.running is not None:
-                        if container_status.state.running.started_at is not None:
-                            # The container is started, so move on to check the
-                            # next container
-                            continue
-                # If we get here, then the container has not started
-                containers_started = containers_started and False
+            if status.container_statuses is not None:
+                for container_status in status.container_statuses:
+                    if container_status.state is not None:
+                        if container_status.state.running is not None:
+                            if container_status.state.running.started_at is not None:
+                                # The container is started, so move on to check the
+                                # next container
+                                continue
+                    # If we get here, then the container has not started
+                    containers_started = containers_started and False
 
-            if containers_started:
-                break
+                if containers_started:
+                    break
 
             # if the containers were not started, sleep for a bit and try again
             time.sleep(1)

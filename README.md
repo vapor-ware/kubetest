@@ -17,6 +17,7 @@ pod or deployment and inspect the aftermath).
 * Detailed logging to help debug error cases.
 * Wait functions for object readiness and for object deletion.
 * Get container logs and search for expected logging output.
+* Grant RBAC permissions at test case granularity using pytest markers
 
 For more information, see the [kubetest documentation][kubetest-docs].
 

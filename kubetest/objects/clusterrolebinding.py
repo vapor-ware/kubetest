@@ -9,10 +9,6 @@ from .api_object import ApiObject
 log = logging.getLogger('kubetest')
 
 
-# FIXME (etd) - ClusterRoleBindings are not tied to a namespace, so they will
-# not be automatically deleted when we delete the test namespace. We'll need a
-# different avenue for deleting resources from the cluster. It mostly depends on
-# the use cases for this resource (test-scope, session-scope, etc).
 class ClusterRoleBinding(ApiObject):
     """Kubetest wrapper around a Kubernetes ClusterRoleBinding API Object.
 
@@ -63,8 +59,8 @@ class ClusterRoleBinding(ApiObject):
         log.debug('clusterrolebinding: %s', self.obj)
 
         return client.RbacAuthorizationV1Api().delete_cluster_role_binding(
-            self.name,
-            options,
+            name=self.name,
+            body=options,
         )
 
     def refresh(self):

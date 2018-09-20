@@ -1,37 +1,38 @@
 """Unit tests for the kubetest.manager package."""
 
-from kubetest import client, manager
+from kubetest import manager
 
 
-def test_manager_new_client():
-    """Test creating a new TestClient from the manager."""
-
-    m = manager.KubetestManager()
-    assert len(m.clients) == 0
-
-    c = m.new_client('node-id', 'test-name')
-    assert isinstance(c, client.TestClient)
-    assert 'kubetest-test-name-' in c.namespace
-
-    assert len(m.clients) == 1
-    assert 'node-id' in m.clients
-
-
-def test_manager_get_client():
-    """Test getting an existing client from the manager."""
+def test_manager_new_test():
+    """Test creating a new TestMeta from the manager."""
 
     m = manager.KubetestManager()
-    m.clients['foobar'] = client.TestClient('xyz')
+    assert len(m.nodes) == 0
 
-    c = m.get_client('foobar')
-    assert isinstance(c, client.TestClient)
-    assert 'xyz' == c.namespace
+    c = m.new_test('node-id', 'test-name')
+    assert isinstance(c, manager.TestMeta)
+    assert 'kubetest-test-name-' in c.ns
+
+    assert len(m.nodes) == 1
+    assert 'node-id' in m.nodes
 
 
-def test_manager_get_client_none():
-    """Test getting a non-existent client from the manager."""
+def test_manager_get_test():
+    """Test getting an existing TestMeta from the manager."""
+
+    m = manager.KubetestManager()
+    m.nodes['foobar'] = manager.TestMeta('foo', 'bar')
+
+    c = m.get_test('foobar')
+    assert isinstance(c, manager.TestMeta)
+    assert 'foo' == c.name
+    assert 'bar' == c.node_id
+
+
+def test_manager_get_test_none():
+    """Test getting a non-existent test meta from the manager."""
 
     m = manager.KubetestManager()
 
-    c = m.get_client('foobar')
+    c = m.get_test('foobar')
     assert c is None

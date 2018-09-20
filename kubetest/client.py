@@ -76,7 +76,7 @@ class TestClient:
             objects.Configmap: The ConfigMap for the specified manifest.
         """
         log.info('loading configmap from path: %s', path)
-        configmap = objects.Configmap.load(path)
+        configmap = objects.ConfigMap.load(path)
         if set_namespace:
             configmap.namespace = self.namespace
         return configmap
@@ -289,7 +289,7 @@ class TestClient:
 
         configmaps = {}
         for obj in configmap_list.items:
-            cm = objects.Configmap(obj)
+            cm = objects.ConfigMap(obj)
             configmaps[cm.name] = cm
 
         return configmaps

@@ -5,7 +5,7 @@
 import os
 
 from codecs import open  # for consistent encoding
-from setuptools import setup
+from setuptools import setup, find_packages
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -30,9 +30,7 @@ setup(
     author=pkg['__author__'],
     author_email=pkg['__author_email__'],
     license=pkg['__license__'],
-    packages=[
-        'kubetest'
-    ],
+    packages=find_packages(),
     python_requires='>=3.6',
     install_requires=[
         'kubernetes',

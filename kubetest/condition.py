@@ -1,6 +1,5 @@
 """Test conditions for kubetest."""
 
-import datetime
 import enum
 
 

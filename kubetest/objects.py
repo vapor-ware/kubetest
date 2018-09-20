@@ -228,6 +228,88 @@ class ApiObject(abc.ABC):
         """
 
 
+# FIXME (etd) - ClusterRoleBindings are not tied to a namespace, so they will
+# not be automatically deleted when we delete the test namespace. We'll need a
+# different avenue for deleting resources from the cluster. It mostly depends on
+# the use cases for this resource (test-scope, session-scope, etc).
+class ClusterRoleBinding(ApiObject):
+    """Kubetest wrapper around a Kubernetes ClusterRoleBinding API Object.
+
+    The actual `kubernetes.client.V1ClusterRoleBinding` instance that this
+    wraps can be accessed via the `obj` instance member.
+
+    This wrapper provides some convenient functionality around the
+    API Object and provides some state management for the ClusterRoleBinding.
+    """
+
+    obj_type = client.V1ClusterRoleBinding
+
+    def __str__(self):
+        return str(self.obj)
+
+    def __repr__(self):
+        return self.__str__()
+
+    def create(self, namespace=None):
+        """Create the ClusterRoleBinding under the given namespace.
+
+        Args:
+            namespace (str): This argument is ignored for ClusterRoleBindings.
+        """
+        log.info('creating clusterrolebinding "%s" in namespace "%s"', self.name, self.namespace)  # noqa
+        log.debug('clusterrolebinding: %s', self.obj)
+        self.obj = client.RbacAuthorizationV1Api().create_cluster_role_binding(
+            body=self.obj,
+        )
+
+    def delete(self, options):
+        """Delete the ClusterRoleBinding.
+
+        This method expects the ClusterRoleBinding to have been loaded or otherwise
+        assigned a namespace already. If it has not, the namespace will need
+        to be set manually.
+
+        Args:
+             options (client.V1DeleteOptions): Options for ClusterRoleBinding deletion.
+
+        Returns:
+            client.V1Status: The status of the delete operation.
+        """
+        if options is None:
+            options = client.V1DeleteOptions()
+
+        log.info('deleting clusterrolebinding "%s" with options "%s"', self.name, options)
+        log.debug('clusterrolebinding: %s', self.obj)
+
+        return client.RbacAuthorizationV1Api().delete_cluster_role_binding(
+            self.name,
+            options,
+        )
+
+    def refresh(self):
+        """Refresh the underlying Kubernetes Api ClusterRoleBinding object."""
+        self.obj = client.RbacAuthorizationV1Api().read_cluster_role_binding(
+            name=self.name
+        )
+
+    def is_ready(self):
+        """Check if the ClusterRoleBinding is in the ready state.
+
+        ClusterRoleBindings do not have a 'status' field to check, so we
+        will measure their readiness status by whether or not they exist
+        on the cluster.
+
+        Returns:
+            bool: True if in the ready state; False otherwise.
+        """
+        try:
+            self.refresh()
+        except:  # noqa
+            return False
+        else:
+            return True
+
+
 class Configmap(ApiObject):
     """Kubetest wrapper around a Kubernetes ConfigMap API Object.
 
@@ -375,13 +457,13 @@ class Container:
         )
 
     def search_logs(self, *keyword):
-        """Search for a keyword in the logs.
+        """Search for keywords/phrases in the logs.
 
         Args:
-            *keyword (str): Keyword to search.
+            *keyword (str): Keywords to search for within the logs.
 
         Returns:
-            Bool: True if found. False otherwise.
+            bool: True if found; False otherwise.
         """
         logs = self.get_logs()
 
@@ -641,6 +723,21 @@ class Pod(ApiObject):
         log.debug('contianers: %s', containers)
         return containers
 
+    def get_container(self, name):
+        """Get a container in the Pod by name.
+
+        Args:
+            name (str): The name of the Container.
+
+        Returns:
+            Container: The Pod's Container with the matching name.
+            None: No Container with the given name was found.
+        """
+        for c in self.get_containers():
+            if c.obj.name == name:
+                return c
+        return None
+
     def get_restart_count(self):
         """Get the total number of Container restarts for the Pod.
 
@@ -656,6 +753,65 @@ class Pod(ApiObject):
             total += container_status.restart_count
 
         return total
+
+    def wait_until_containers_start(self, timeout=None):
+        """Wait until all containers in the Pod have started.
+
+        This will wait for the images to be pulled and for the containers
+        to be created and started. This will unblock once all pod containers
+        have been started.
+
+        This is different than waiting until ready, since a container may
+        not be ready immediately after it has been started.
+
+        Args:
+            timeout (int): The maximum time to wait, in seconds, for the
+                Pod's containers to be started. If unspecified, this will
+                wait indefinitely. If specified and the timeout is met or
+                exceeded, a TimeoutError will be raised.
+
+        Raises:
+            TimeoutError: The specified timeout was exceeded.
+        """
+        log.info('waiting until pod containers are started for "%s"', self.name)
+        # TODO (etd) - define a wait helper -- this logic is used in a couple places.
+        # define the maximum time at which we should stop waiting, if set
+        max_time = None
+        if timeout is None:
+            max_time = time.time() + timeout
+
+        start = time.time()
+        # wait until all Pod containers have been started.
+        while True:
+            if max_time and time.time() >= max_time:
+                log.error('timed out while waiting for containers to start')
+                raise TimeoutError(
+                    'timed out ({}s) while waiting for pod "%s" containers '
+                    'to be started'.format(timeout, self.name)
+                )
+
+            # start the flag as true - we will check the state and set
+            # this to False if any container is not yet running.
+            containers_started = True
+            status = self.status()
+            for container_status in status.container_statuses:
+                if container_status.state is not None:
+                    if container_status.state.running is not None:
+                        if container_status.state.running.started_at is not None:
+                            # The container is started, so move on to check the
+                            # next container
+                            continue
+                # If we get here, then the container has not started
+                containers_started = containers_started and False
+
+            if containers_started:
+                break
+
+            # if the containers were not started, sleep for a bit and try again
+            time.sleep(1)
+
+        end = time.time()
+        log.info('wait complete (total=%f)', end - start)
 
 
 class Secret(ApiObject):

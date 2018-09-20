@@ -5,7 +5,8 @@ import time
 
 from kubernetes import client
 
-from kubetest import condition, objects, utils
+from kubetest import objects, utils
+from kubetest.condition import Condition, Policy, check_and_sort
 
 log = logging.getLogger('kubetest')
 
@@ -43,6 +44,21 @@ class TestClient:
         self.delete_namespace(self.namespace)
 
     # ****** Manifest Loaders ******
+
+    @staticmethod
+    def load_clusterrolebinding(path):
+        """Load a ClusterRoleBinding manifest into a ClusterRoleBinding object.
+
+        Args:
+            path (str): The path to the ClusterRoleBinding manifest.
+
+        Returns:
+            objects.ClusterRoleBinding: The ClusterRoleBinding for the
+                specified manifest.
+        """
+        log.info('loading clusterrolebinding from path: %s', path)
+        clusterrolebinding = objects.ClusterRoleBinding.load(path)
+        return clusterrolebinding
 
     def load_configmap(self, path, set_namespace=True):
         """Load a ConfigMap manifest into a Configmap object.
@@ -339,7 +355,7 @@ class TestClient:
     # ****** Test Helpers ******
 
     @staticmethod
-    def wait_for_conditions(*args, timeout=None, interval=1, policy=condition.Policy.ONCE):
+    def wait_for_conditions(*args, timeout=None, interval=1, policy=Policy.ONCE):
         """Wait for all of the provided Conditions to be met.
 
         All Conditions must be met for this to unblock. If no Conditions are
@@ -368,7 +384,7 @@ class TestClient:
             return
 
         # If something was given, make sure they are all Conditions
-        if not all(map(lambda c: isinstance(c, condition.Condition), args)):
+        if not all(map(lambda c: isinstance(c, Condition), args)):
             raise ValueError('All arguments must be a Condition')
 
         max_time = None
@@ -390,13 +406,13 @@ class TestClient:
 
             # check that the conditions were met according to the
             # condition checking policy
-            met, unmet = condition.check_and_sort(*to_check)
-            if policy == condition.Policy.ONCE:
+            met, unmet = check_and_sort(*to_check)
+            if policy == Policy.ONCE:
                 if len(unmet) == 0:
                     break
                 to_check = unmet
 
-            elif policy == condition.Policy.SIMULTANEOUS:
+            elif policy == Policy.SIMULTANEOUS:
                 if len(unmet) == 0 and len(met) == len(args):
                     break
 

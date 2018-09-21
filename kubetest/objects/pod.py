@@ -1,9 +1,10 @@
 """Kubetest wrapper for the Kubernetes `Pod` API Object."""
 
 import logging
-import time
 
 from kubernetes import client
+
+from kubetest import condition, utils
 
 from .api_object import ApiObject
 from .container import Container
@@ -99,13 +100,13 @@ class Pod(ApiObject):
         if phase.lower() != 'running':
             return False
 
-        for condition in status.conditions:
+        for cond in status.conditions:
             # we only care about the condition type 'ready'
-            if condition.type.lower() != 'ready':
+            if cond.type.lower() != 'ready':
                 continue
 
             # check that the readiness condition is True
-            return condition.status.lower() == 'true'
+            return cond.status.lower() == 'true'
 
         # Catchall
         return False
@@ -167,6 +168,31 @@ class Pod(ApiObject):
 
         return total
 
+    def containers_started(self):
+        """Check if the Pod's Containers have all started.
+
+        Returns:
+            bool: True if all Containers have started; False otherwise.
+        """
+        # start the flag as true - we will check the state and set
+        # this to False if any container is not yet running.
+        containers_started = True
+
+        status = self.status()
+        if status.container_statuses is not None:
+            for container_status in status.container_statuses:
+                if container_status.state is not None:
+                    if container_status.state.running is not None:
+                        if container_status.state.running.started_at is not None:
+                            # The container is started, so move on to check the
+                            # next container
+                            continue
+                # If we get here, then the container has not started.
+                containers_started = containers_started and False
+                break
+
+        return containers_started
+
     def wait_until_containers_start(self, timeout=None):
         """Wait until all containers in the Pod have started.
 
@@ -186,43 +212,13 @@ class Pod(ApiObject):
         Raises:
             TimeoutError: The specified timeout was exceeded.
         """
-        log.info('waiting until pod containers are started for "%s"', self.name)
-        # TODO (etd) - define a wait helper -- this logic is used in a couple places.
-        # define the maximum time at which we should stop waiting, if set
-        max_time = None
-        if timeout is not None:
-            max_time = time.time() + timeout
+        wait_condition = condition.Condition(
+            'all pod containers started',
+            self.containers_started,
+        )
 
-        start = time.time()
-        # wait until all Pod containers have been started.
-        while True:
-            if max_time and time.time() >= max_time:
-                log.error('timed out while waiting for containers to start')
-                raise TimeoutError(
-                    'timed out ({}s) while waiting for pod "%s" containers '
-                    'to be started'.format(timeout, self.name)
-                )
-
-            # start the flag as true - we will check the state and set
-            # this to False if any container is not yet running.
-            containers_started = True
-            status = self.status()
-            if status.container_statuses is not None:
-                for container_status in status.container_statuses:
-                    if container_status.state is not None:
-                        if container_status.state.running is not None:
-                            if container_status.state.running.started_at is not None:
-                                # The container is started, so move on to check the
-                                # next container
-                                continue
-                    # If we get here, then the container has not started
-                    containers_started = containers_started and False
-
-                if containers_started:
-                    break
-
-            # if the containers were not started, sleep for a bit and try again
-            time.sleep(1)
-
-        end = time.time()
-        log.info('wait complete (total=%f)', end - start)
+        utils.wait_for_condition(
+            condition=wait_condition,
+            timeout=timeout,
+            interval=1,
+        )

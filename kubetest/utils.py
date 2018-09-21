@@ -1,6 +1,9 @@
 """Utility functions for kubetest."""
 
+import logging
 import time
+
+log = logging.getLogger('kubetest')
 
 
 def new_namespace(test_name):
@@ -59,3 +62,47 @@ def selector_kwargs(fields=None, labels=None):
         kwargs['label_selector'] = selector_string(labels)
 
     return kwargs
+
+
+def wait_for_condition(condition, timeout=None, interval=1):
+    """Wait for a condition to be met.
+
+    Args:
+        condition (condition.Condition): The Condition to wait for.
+        timeout (int): The maximum time to wait, in seconds, for the
+            condition to be met. If unspecified, this function will
+            wait indefinitely. If specified and the timeout is met
+            or exceeded, a TimeoutError will be raised.
+        interval (int|float): The time, in seconds, to wait before
+            re-checking the condition.
+
+    Raises:
+        TimeoutError: The specified timeout was exceeded.
+    """
+    log.info('waiting for condition: %s', condition)
+
+    # define the maximum time to wait. once this is met, we should
+    # stop waiting.
+    max_time = None
+    if timeout is not None:
+        max_time = time.time() + timeout
+
+    # start the wait block
+    start = time.time()
+    while True:
+        if max_time and time.time() >= max_time:
+            raise TimeoutError(
+                'timed out ({}s) while waiting for condition {}'
+                .format(timeout, condition)
+            )
+
+        # check if the condition is met and break out if it is
+        if condition.check():
+            break
+
+        # if the condition is not met, sleep for the interval
+        # to re-check later
+        time.sleep(interval)
+
+    end = time.time()
+    log.info('wait completed (total=%f) %s', end - start, condition)

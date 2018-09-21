@@ -74,23 +74,23 @@ class TestMeta:
         for crb in self.clusterrolebindings:
             self.client.delete(crb)
 
-    def register_rolebinding(self, rolebinding):
+    def register_rolebindings(self, *rolebindings):
         """Register a RoleBinding requirement with the test case.
 
         Args:
-            rolebinding (RoleBinding): The RoleBinding that is needed for the
-                test case.
+            *rolebinding (RoleBinding): The RoleBindings that are needed for
+                the test case.
         """
-        self.rolebindings.append(rolebinding)
+        self.rolebindings.extend(rolebindings)
 
-    def register_clusterrolebinding(self, clusterrolebinding):
+    def register_clusterrolebindings(self, *clusterrolebindings):
         """Register a ClusterRoleBinding requirement with the test case.
 
         Args:
-            clusterrolebinding (ClusterRoleBinding): The ClusterRoleBinding that
-                is needed for the test case.
+            *clusterrolebindings (ClusterRoleBinding): The ClusterRoleBindings
+                that are needed for the test case.
         """
-        self.clusterrolebindings.append(clusterrolebinding)
+        self.clusterrolebindings.extend(clusterrolebindings)
 
 
 class KubetestManager:

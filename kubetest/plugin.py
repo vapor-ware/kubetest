@@ -11,8 +11,8 @@ import logging
 import kubernetes
 import pytest
 
+from kubetest import markers
 from kubetest.manager import KubetestManager
-from kubetest.objects import ClusterRoleBinding, RoleBinding
 
 GOOGLE_APPLICATION_CREDENTIALS = 'GOOGLE_APPLICATION_CREDENTIALS'
 
@@ -187,147 +187,13 @@ def pytest_runtest_setup(item):
     disabled = item.config.getvalue('kube_disable')
     if not disabled:
 
-        # TODO - clean this up / break this logic out somewhere
-
-        #
-        # ROLE BINDINGS
-        #
-        for mark in item.iter_markers(name='rolebinding'):
-            kind = mark.args[0]
-            name = mark.args[1]
-            subj_kind = mark.kwargs.get('subject_kind')
-            subj_name = mark.kwargs.get('subject_name')
-
-            # Check that both subj_kind and subj_name are set. If one is and the
-            # other isn't, raise an error.
-            if (subj_kind and not subj_name) or (not subj_kind and subj_name):
-                raise ValueError(
-                    'One of subject_kind and subject_name were specified, but both must '
-                    'be specified when defining a custom RoleBinding subject.'
-                )
-
-            # If a custom subject is being specified, create it. Otherwise
-            # default to giving authorization to everyone on the namespace.
-            if subj_name is not None and subj_kind is not None:
-                subjects = [
-                    kubernetes.client.V1Subject(
-                        api_group='rbac.authorization.k8s.io',
-                        namespace=test_case.ns,
-                        kind=subj_kind,
-                        name=subj_name,
-                    )
-                ]
-            else:
-                subjects = [
-                    # Authenticated users
-                    kubernetes.client.V1Subject(
-                        api_group='rbac.authorization.k8s.io',
-                        namespace=test_case.ns,
-                        name='system:authenticated',
-                        kind='Group',
-                    ),
-                    # Unauthenticated users
-                    kubernetes.client.V1Subject(
-                        api_group='rbac.authorization.k8s.io',
-                        namespace=test_case.ns,
-                        name='system:unauthenticated',
-                        kind='Group',
-                    ),
-                    # Service accounts
-                    kubernetes.client.V1Subject(
-                        api_group='rbac.authorization.k8s.io',
-                        namespace=test_case.ns,
-                        name='system:serviceaccounts',
-                        kind='Group',
-                    ),
-                ]
-
-            # Create the rolebinding in the cluster under the test case namespace
-            rolebinding = RoleBinding(kubernetes.client.V1RoleBinding(
-                metadata=kubernetes.client.V1ObjectMeta(
-                    name='kubetest:'.format(item.name),
-                    namespace=test_case.ns,
-                ),
-                role_ref=kubernetes.client.V1RoleRef(
-                    api_group='rbac.authorization.k8s.io',
-                    kind=kind,
-                    name=name,
-                ),
-                subjects=subjects,
-            ))
-            test_case.register_rolebinding(rolebinding)
-
-        #
-        # CLUSTER ROLE BINDINGS
-        #
-        for mark in item.iter_markers(name='clusterrolebinding'):
-            name = mark.args[0]
-            subj_kind = mark.kwargs.get('subject_kind')
-            subj_name = mark.kwargs.get('subject_name')
-
-            # Check that both subj_kind and subj_name are set. If one is and the
-            # other isn't, raise an error.
-            if (subj_kind and not subj_name) or (not subj_kind and subj_name):
-                raise ValueError(
-                    'One of subject_kind and subject_name were specified, but both must '
-                    'be specified when defining a custom RoleBinding subject.'
-                )
-
-            # If a custom subject is being specified, create it. Otherwise
-            # default to giving authorization to everyone on the namespace.
-            if subj_name is not None and subj_kind is not None:
-                subjects = [
-                    kubernetes.client.V1Subject(
-                        api_group='rbac.authorization.k8s.io',
-                        namespace=test_case.ns,
-                        kind=subj_kind,
-                        name=subj_name,
-                    )
-                ]
-            else:
-                subjects = [
-                    # Authenticated users
-                    kubernetes.client.V1Subject(
-                        api_group='rbac.authorization.k8s.io',
-                        namespace=test_case.ns,
-                        name='system:authenticated',
-                        kind='Group',
-                    ),
-                    # Unauthenticated users
-                    kubernetes.client.V1Subject(
-                        api_group='rbac.authorization.k8s.io',
-                        namespace=test_case.ns,
-                        name='system:unauthenticated',
-                        kind='Group',
-                    ),
-                    # Service accounts
-                    kubernetes.client.V1Subject(
-                        api_group='rbac.authorization.k8s.io',
-                        namespace=test_case.ns,
-                        name='system:serviceaccounts',
-                        kind='Group',
-                    ),
-                ]
-
-            # Create the clusterrolebinding in the cluster under the test case namespace
-            clusterrolebinding = ClusterRoleBinding(
-                kubernetes.client.V1ClusterRoleBinding(
-                    metadata=kubernetes.client.V1ObjectMeta(
-                        name='kubetest:{}'.format(item.name),
-                    ),
-                    role_ref=kubernetes.client.V1RoleRef(
-                        api_group='rbac.authorization.k8s.io',
-                        kind='ClusterRole',
-                        name=name,
-                    ),
-                    subjects=subjects,
-                )
-            )
-            test_case.register_clusterrolebinding(clusterrolebinding)
-
-        # Setup the test case. This will create the namespace and any other
-        # objects (e.g. role bindings) that the test case will need.
-        test_case.setup()
+        # Register test case state based on markers on the test case
+        test_case.register_rolebindings(
+            *markers.rolebindings_from_marker(item, test_case.ns)
+        )
+        test_case.register_clusterrolebindings(
+            *markers.clusterrolebindings_from_marker(item, test_case.ns)
+        )
 
 
 def pytest_runtest_teardown(item):
@@ -358,5 +224,9 @@ def kube(request):
             '(are you running with the --kube-disable flag?)'
         )
         return None
+
+    # Setup the test case. This will create the namespace and any other
+    # objects (e.g. role bindings) that the test case will need.
+    test_case.setup()
 
     return test_case.client

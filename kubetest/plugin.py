@@ -11,6 +11,7 @@ import logging
 import kubernetes
 import pytest
 
+from kubetest import markers
 from kubetest.manager import KubetestManager
 
 GOOGLE_APPLICATION_CREDENTIALS = 'GOOGLE_APPLICATION_CREDENTIALS'
@@ -95,6 +96,40 @@ def pytest_configure(config):
     logger = logging.getLogger('kubetest')
     logger.setLevel(level)
 
+    # Register kubetest markers
+    config.addinivalue_line(
+        'markers',
+        'rolebinding(kind, name, subject_kind=None, subject_name=None): create and use '
+        'a Kubernetes RoleBinding for the test case. The generated role binding will '
+        'use the generated test-case namespace and will be automatically removed once '
+        'the test completes. The role kind (Role, ClusterRole) must be specified along '
+        'with the name of the role. Only existing Roles or ClusterRoles can be used. '
+        'Optionally, the subject_kind (User, Group, ServiceAccount) and subject_name '
+        'can be specified to set a target subject for the RoleBinding. If no subject '
+        'is specified, it will default to all users in the namespace and all service '
+        'accounts. If a subject is specified, both the subject kind and name must be '
+        'present. The RoleBinding will always use the apiGroup '
+        '"rbac.authorization.k8s.io" for both subjects and roleRefs. For more '
+        'information, see '
+        'https://kubernetes.io/docs/reference/access-authn-authz/rbac/'
+    )
+    config.addinivalue_line(
+        'markers',
+        'clusterrolebinding(name, subject_kind=None, subject_name=None): create and use '
+        'a Kubernetes ClusterRoleBinding for the test case. The generated cluster role '
+        'binding will be automatically created and removed for each marked test. The '
+        'name of the role must be specified. Only existing ClusterRoles can be used. '
+        'Optionally, the subject_kind (User, Group, ServiceAccount) and subject_name '
+        'can be specified to set a target subject for the ClusterRoleBinding. If no '
+        'subject is specified, it will default to all users in the namespace and all '
+        'service accounts. If a subject is specified, both the subject kind and name '
+        'must be present. The ClusterRoleBinding will always use the apiGroup '
+        '"rbac.authorization.k8s.io" for both subjects and roleRefs. For more '
+        'information, see '
+        'https://kubernetes.io/docs/reference/access-authn-authz/rbac/'
+    )
+
+    # Configure kubetest with the kubernetes config, if not disabled.
     disabled = config.getvalue('kube_disable')
     if not disabled:
         # # Set the GOOGLE_APPLICATION_CREDENTIALS environment variable. For more, see:
@@ -133,29 +168,65 @@ def pytest_configure(config):
 #             del os.environ[GOOGLE_APPLICATION_CREDENTIALS]
 
 
+def pytest_runtest_setup(item):
+    """Run setup actions to prepare the test case.
+
+    See Also:
+        https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_runtest_setup
+    """
+    # Register a new test case with the manager and setup the test case state.
+    test_case = manager.new_test(
+        node_id=item.nodeid,
+        test_name=item.name,
+    )
+
+    # FIXME (etd) - not sure this is really what we want to do. does it make sense
+    # to entirely disable the plugin just be specifying the disable flag? probably..
+    # but there must be a better way than adding this check (perhaps unregistering the
+    # plugin in the pytest_configure hook?)
+    disabled = item.config.getvalue('kube_disable')
+    if not disabled:
+
+        # Register test case state based on markers on the test case
+        test_case.register_rolebindings(
+            *markers.rolebindings_from_marker(item, test_case.ns)
+        )
+        test_case.register_clusterrolebindings(
+            *markers.clusterrolebindings_from_marker(item, test_case.ns)
+        )
+
+
 def pytest_runtest_teardown(item):
     """Run teardown actions to clean up the test client.
 
     See Also:
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_runtest_teardown
     """
-    client = manager.get_client(item.nodeid)
-    if client is not None:
-        # teardown will delete the test client's namespace. deleting
-        # a namespace will delete all the things in the namespace, so
-        # that makes cleanup easier.
-        client.teardown()
+    disabled = item.config.getvalue('kube_disable')
+    if not disabled:
+        test_case = manager.get_test(item.nodeid)
+        if test_case is not None:
+            # teardown will delete the test client's namespace. deleting
+            # a namespace will delete all the things in the namespace, so
+            # that makes cleanup easier.
+            test_case.teardown()
 
 
 # ********** pytest fixtures **********
 
 @pytest.fixture()
 def kube(request):
-    """Create and setup a client for managing a Kubernetes cluster for testing."""
-    test_client = manager.new_client(
-        node_id=request.node.nodeid,
-        test_name=request.node.name
-    )
+    """Return a client for managing a Kubernetes cluster for testing."""
+    test_case = manager.get_test(request.node.nodeid)
+    if test_case is None:
+        logging.getLogger('kubetest').warning(
+            'No kubetest test client found for test using the "kube" fixture. '
+            '(are you running with the --kube-disable flag?)'
+        )
+        return None
 
-    test_client.setup()
-    return test_client
+    # Setup the test case. This will create the namespace and any other
+    # objects (e.g. role bindings) that the test case will need.
+    test_case.setup()
+
+    return test_case.client

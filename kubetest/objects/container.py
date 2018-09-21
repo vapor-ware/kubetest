@@ -17,7 +17,7 @@ class Container:
     API Object and provides some state management for the Container.
 
     This wrapper does NOT subclass the kubetest.ApiObject like other
-    object wrappers, because it is not intended to be created or
+    object wrappers because it is not intended to be created or
     managed from manifest file. It is merely meant to wrap the
     Container spec for a Pod to make Container-targeted actions
     easier.

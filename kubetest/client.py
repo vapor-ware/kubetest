@@ -22,27 +22,6 @@ class TestClient:
     def __init__(self, namespace):
         self.namespace = namespace
 
-    def setup(self):
-        """Setup the test client.
-
-        This performs all actions needed in order for the client to be
-        ready to use by a test case. This is called in the `kube` fixture
-        so the client is only initialized when the test actually requests
-        it.
-        """
-        log.info('creating namespace: %s', self.namespace)
-        self.create_namespace(self.namespace)
-
-    def teardown(self):
-        """Teardown the test client.
-
-        This performs all actions needed in order for the client to be
-        cleaned up after a test case has been run. This is called in the
-        pytest runtest teardown hook.
-        """
-        log.info('deleting namespace: %s', self.namespace)
-        self.delete_namespace(self.namespace)
-
     # ****** Manifest Loaders ******
 
     @staticmethod
@@ -123,6 +102,27 @@ class TestClient:
             pod.namespace = self.namespace
         return pod
 
+    def load_rolebinding(self, path, set_namespace=True):
+        """Load a RoleBinding manifest into a RoleBinding object.
+
+        By default, this will augment the RoleBinding API Object with
+        the generated test case namespace. This behavior can be
+        disabled with the `set_namespace` flag.
+
+        Args:
+            path (str): The path to the RoleBinding manifest.
+            set_namespace (bool): Enable/disable the automatic
+                augmentation of the RoleBinding namespace.
+
+        Returns:
+            RoleBinding: The RoleBinding for the specified manifest.
+        """
+        log.info('loading rolebinding from path: %s', path)
+        rolebinding = objects.RoleBinding.load(path)
+        if set_namespace:
+            rolebinding.namespace = self.namespace
+        return rolebinding
+
     def load_secret(self, path, set_namespace=True):
         """Load a Secret manifest into a Secret object.
 
@@ -164,32 +164,6 @@ class TestClient:
         if set_namespace:
             service.namespace = self.namespace
         return service
-
-    # ****** Namespace ******
-
-    @staticmethod
-    def create_namespace(name):
-        """Create a namespace with the given name in the cluster.
-
-        Args:
-            name (str): The name of the namespace to create.
-        """
-        return client.CoreV1Api().create_namespace(client.V1Namespace(
-            metadata=client.V1ObjectMeta(
-                name=name
-            )
-        ))
-
-    @staticmethod
-    def delete_namespace(name):
-        """Delete a namespace with the given name in the cluster.
-
-        Args:
-            name (str): The name of the namespace to delete.
-        """
-        return client.CoreV1Api().delete_namespace(
-            name=name, body=client.V1DeleteOptions()
-        )
 
     # ****** Generic Helpers on ApiObjects ******
 
@@ -408,6 +382,7 @@ class TestClient:
             # condition checking policy
             met, unmet = check_and_sort(*to_check)
             if policy == Policy.ONCE:
+                log.info('check met: %s', met)
                 if len(unmet) == 0:
                     break
                 to_check = unmet

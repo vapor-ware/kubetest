@@ -408,16 +408,24 @@ class TestClient:
                 )
 
         wait_condition = Condition(
-            'wait for conditions to be met',
+            'wait for conditions',
             condition_checker,
             to_check,
         )
 
-        utils.wait_for_condition(
-            condition=wait_condition,
-            timeout=timeout,
-            interval=interval,
-        )
+        try:
+            utils.wait_for_condition(
+                condition=wait_condition,
+                timeout=timeout,
+                interval=interval,
+            )
+        except TimeoutError:
+            # If we time out here, we want to show all the conditions
+            # that we weren't able to resolve in the error message, not
+            # the 'wait for conditions' wrapper.
+            raise TimeoutError(
+                'timed out wile waiting for conditions to be met: {}'.format(to_check)
+            )
 
     def wait_for_ready_nodes(self, count, timeout=None, interval=1):
         """Wait until there are at least `count` number of nodes available

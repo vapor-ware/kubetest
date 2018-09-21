@@ -325,6 +325,35 @@ class TestClient:
 
         return services
 
+    @staticmethod
+    def get_nodes(fields=None, labels=None):
+        """Get the Nodes that make up the cluster.
+
+        Args:
+            fields (dict[str, str]): A dictionary of fields used to restrict
+                the returned collection of Nodes to only those which match
+                these field selectors. By default, no restricting is done.
+            labels (dict[str, str]): A dictionary of labels used to restrict
+                the returned collection of Nodes to only those which match
+                these label selectors. By default, no restricting is done.
+
+        Returns:
+            dict[str, objects.Node]: A dictionary where the key is the Node
+                name and the value is the Node itself.
+        """
+        selectors = utils.selector_kwargs(fields, labels)
+
+        node_list = client.CoreV1Api().list_node(
+            **selectors,
+        )
+
+        nodes = {}
+        for obj in node_list.items:
+            node = objects.Node(obj)
+            nodes[node.name] = node
+
+        return nodes
+
     # ****** Test Helpers ******
 
     @staticmethod
@@ -382,6 +411,35 @@ class TestClient:
             'wait for conditions to be met',
             condition_checker,
             to_check,
+        )
+
+        utils.wait_for_condition(
+            condition=wait_condition,
+            timeout=timeout,
+            interval=interval,
+        )
+
+    def wait_for_ready_nodes(self, count, timeout=None, interval=1):
+        """Wait until there are at least `count` number of nodes available
+        in the cluster.
+
+        Note that this should only be used for clusters that auto-scale the
+        nodes. This will not create/delete nodes on its own.
+
+        Args:
+            count (int): The number of nodes to wait for.
+            timeout (int): The maximum time to wait, in seconds.
+            interval (int|float): The time, in seconds, to sleep before
+                re-checking the number of nodes.
+        """
+        def node_count_match(node_count):
+            nodes = self.get_nodes()
+            return [n.is_ready() for n in nodes.values()].count(True) >= node_count
+
+        wait_condition = Condition(
+            'wait for {} nodes'.format(count),
+            node_count_match,
+            count,
         )
 
         utils.wait_for_condition(

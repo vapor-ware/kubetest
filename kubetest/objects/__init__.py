@@ -8,6 +8,7 @@ from .configmap import ConfigMap
 from .container import Container
 from .deployment import Deployment
 from .namespace import Namespace
+from .node import Node
 from .pod import Pod
 from .rolebinding import RoleBinding
 from .secret import Secret

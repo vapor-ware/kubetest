@@ -1,7 +1,6 @@
 """Test client provided by kubetest for managing Kubernetes objects."""
 
 import logging
-import time
 
 from kubernetes import client
 
@@ -351,8 +350,6 @@ class TestClient:
                 timeout period.
             ValueError: Not all arguments are a Condition.
         """
-        log.info('waiting for conditions: %s', args)
-
         # If no Conditions were given, there is nothing to do.
         if not args:
             return
@@ -361,43 +358,34 @@ class TestClient:
         if not all(map(lambda c: isinstance(c, Condition), args)):
             raise ValueError('All arguments must be a Condition')
 
-        max_time = None
-        if timeout is not None:
-            max_time = time.time() + timeout
-
         # make a copy of the conditions
-        to_check = args[:]
+        to_check = list(args)
 
-        # Wait until all conditions are met.
-        start = time.time()
-        while True:
-            if max_time and time.time() >= max_time:
-                log.error('timed out waiting for conditions')
-                raise TimeoutError(
-                    'timed out ({}s) while waiting for conditions to '
-                    'be met - {}'.format(timeout, args)
-                )
-
+        def condition_checker(conditions):
             # check that the conditions were met according to the
             # condition checking policy
-            met, unmet = check_and_sort(*to_check)
+            met, unmet = check_and_sort(*conditions)
             if policy == Policy.ONCE:
                 log.info('check met: %s', met)
-                if len(unmet) == 0:
-                    break
-                to_check = unmet
+                conditions[:] = unmet
+                return len(unmet) == 0
 
             elif policy == Policy.SIMULTANEOUS:
-                if len(unmet) == 0 and len(met) == len(args):
-                    break
+                return len(unmet) == 0 and len(met) == len(args)
 
             else:
                 raise ValueError(
                     'Invalid condition policy specified: {}'.format(policy)
                 )
 
-            # if not all conditions are met, sleep then try again
-            time.sleep(interval)
+        wait_condition = Condition(
+            'wait for conditions to be met',
+            condition_checker,
+            to_check,
+        )
 
-        end = time.time()
-        log.info('wait complete (total=%f)', end - start)
+        utils.wait_for_condition(
+            condition=wait_condition,
+            timeout=timeout,
+            interval=interval,
+        )

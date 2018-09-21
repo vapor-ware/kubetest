@@ -2,12 +2,12 @@
 
 import abc
 import logging
-import time
 
 import yaml
 from kubernetes import client
 from kubernetes.client.rest import ApiException
 
+from kubetest import condition, utils
 from kubetest.manifest import new_object
 
 log = logging.getLogger('kubetest')
@@ -97,31 +97,16 @@ class ApiObject(abc.ABC):
         Raises:
              TimeoutError: The specified timeout was exceeded.
         """
-        log.info('waiting until ready for "%s"', self.name)
-        # define the maximum time at which we should stop waiting, if set
-        max_time = None
-        if timeout is not None:
-            max_time = time.time() + timeout
+        ready_condition = condition.Condition(
+            'api object ready',
+            self.is_ready,
+        )
 
-        start = time.time()
-        # wait until the Api Object is either in the ready state or times out
-        while True:
-            if max_time and time.time() >= max_time:
-                log.error('timed out while waiting to be ready')
-                raise TimeoutError(
-                    'timed out ({}s) while waiting for {} to be ready'
-                    .format(timeout, self.obj.kind)
-                )
-
-            # if the object is ready, return
-            if self.is_ready():
-                break
-
-            # if the object is not ready, sleep for a bit and check again
-            time.sleep(1)
-
-        end = time.time()
-        log.info('wait complete (total=%f)', end - start)
+        utils.wait_for_condition(
+            condition=ready_condition,
+            timeout=timeout,
+            interval=1,
+        )
 
     def wait_until_deleted(self, timeout=None):
         """Wait until the Api Object is deleted from the cluster.
@@ -136,38 +121,31 @@ class ApiObject(abc.ABC):
         Raises:
             TimeoutError: The specified timeout was exceeded.
         """
-        log.info('waiting until deleted for "%s"', self.name)
-        # define the maximum time at which we should stop waiting, if set
-        max_time = None
-        if timeout is not None:
-            max_time = time.time() + timeout
-
-        start = time.time()
-        # wait until the Api Object is either removed from the cluster or
-        # times out
-        while True:
-            if max_time and time.time() >= max_time:
-                log.error('timed out while waiting to be deleted')
-                raise TimeoutError(
-                    'timed out ({}s) while waiting for {} to be deleted'
-                    .format(timeout, self.obj.kind)
-                )
-
+        def deleted_fn():
             try:
                 self.refresh()
             except ApiException as e:
                 # If we can no longer find the deployment, it is deleted.
                 # If we get any other exception, raise it.
                 if e.status == 404 and e.reason == 'Not Found':
-                    break
+                    return True
                 else:
                     log.error('error refreshing object state')
                     raise e
+            else:
+                # The object was still found, so it has not been deleted
+                return False
 
-            time.sleep(1)
+        delete_condition = condition.Condition(
+            'api object deleted',
+            deleted_fn
+        )
 
-        end = time.time()
-        log.info('wait complete (total=%f)', end - start)
+        utils.wait_for_condition(
+            condition=delete_condition,
+            timeout=timeout,
+            interval=1,
+        )
 
     @classmethod
     def load(cls, path):

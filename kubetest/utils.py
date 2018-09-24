@@ -3,6 +3,8 @@
 import logging
 import time
 
+from kubernetes.client.rest import ApiException
+
 log = logging.getLogger('kubetest')
 
 
@@ -64,7 +66,7 @@ def selector_kwargs(fields=None, labels=None):
     return kwargs
 
 
-def wait_for_condition(condition, timeout=None, interval=1):
+def wait_for_condition(condition, timeout=None, interval=1, fail_on_api_error=True):
     """Wait for a condition to be met.
 
     Args:
@@ -75,6 +77,12 @@ def wait_for_condition(condition, timeout=None, interval=1):
             or exceeded, a TimeoutError will be raised.
         interval (int|float): The time, in seconds, to wait before
             re-checking the condition.
+        fail_on_api_error (bool): Fail the condition checks if a Kubernetes
+            API error is incurred. An API error can be raised for a number
+            of reasons, including a Pod being restarted and temporarily
+            unavailable. Disabling this will cause those errors to be
+            ignored, allowing the check to continue until timeout or
+            resolution. (default: True).
 
     Raises:
         TimeoutError: The specified timeout was exceeded.
@@ -97,8 +105,13 @@ def wait_for_condition(condition, timeout=None, interval=1):
             )
 
         # check if the condition is met and break out if it is
-        if condition.check():
-            break
+        try:
+            if condition.check():
+                break
+        except ApiException as e:
+            log.warning('got api exception while waiting: {}'.format(e))
+            if fail_on_api_error:
+                raise
 
         # if the condition is not met, sleep for the interval
         # to re-check later

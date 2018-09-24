@@ -1,5 +1,6 @@
 """Kubetest wrapper for the Kubernetes `Pod` API Object."""
 
+import json
 import logging
 
 from kubernetes import client
@@ -167,6 +168,35 @@ class Pod(ApiObject):
             total += container_status.restart_count
 
         return total
+
+    def http_proxy_get(self, path):
+        """Issue a GET request to a proxy for the Pod.
+
+        Args:
+            path (str): The URI to hit on the Pod.
+
+        Returns:
+            str: The response data.
+        """
+        return client.CoreV1Api().connect_get_namespaced_pod_proxy_with_path(
+            name=self.name,
+            namespace=self.namespace,
+            path=path,
+        )
+
+    def http_proxy_get_json(self, path):
+        """Issue a GET request to a proxy for the Pod and return
+        the JSON response as a dictionary.
+
+        Args:
+            path (str): The URI to hit on the Pod.
+
+        Returns:
+            dict: The response data.
+        """
+        data = self.http_proxy_get(path)
+        data = data.replace("'", '"')
+        return json.loads(data)
 
     def containers_started(self):
         """Check if the Pod's Containers have all started.

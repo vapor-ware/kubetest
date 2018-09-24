@@ -357,7 +357,9 @@ class TestClient:
     # ****** Test Helpers ******
 
     @staticmethod
-    def wait_for_conditions(*args, timeout=None, interval=1, policy=Policy.ONCE):
+    def wait_for_conditions(
+            *args, timeout=None, interval=1, policy=Policy.ONCE, fail_on_api_error=True
+    ):
         """Wait for all of the provided Conditions to be met.
 
         All Conditions must be met for this to unblock. If no Conditions are
@@ -373,6 +375,12 @@ class TestClient:
                 re-evaluating the conditions. Default: 1s
             policy (condition.Policy): The condition checking policy that defines
                 the checking behavior. Default: ONCE
+            fail_on_api_error (bool): Fail the condition checks if a Kubernetes
+                API error is incurred. An API error can be raised for a number
+                of reasons, including a Pod being restarted and temporarily
+                unavailable. Disabling this will cause those errors to be
+                ignored, allowing the check to continue until timeout or
+                resolution. (default: True).
 
         Raises:
             TimeoutError: The Conditions were not met within the specified
@@ -418,6 +426,7 @@ class TestClient:
                 condition=wait_condition,
                 timeout=timeout,
                 interval=interval,
+                fail_on_api_error=fail_on_api_error,
             )
         except TimeoutError:
             # If we time out here, we want to show all the conditions

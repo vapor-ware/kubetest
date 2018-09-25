@@ -17,7 +17,7 @@ def test_configmap(kube):
 
     cm.wait_until_ready(timeout=10)
     cm.refresh()
-
+    assert False
     kube.delete(cm)
 
     cm.wait_until_deleted(timeout=20)

@@ -2,6 +2,8 @@
 
 import logging
 
+import kubernetes
+
 from kubetest import client, utils
 from kubetest.objects import Namespace
 
@@ -74,6 +76,63 @@ class TestMeta:
         for crb in self.clusterrolebindings:
             self.client.delete(crb)
 
+    def dump_container_logs(self, tail_lines=None):
+        """Cache the container logs for the test case.
+
+        These logs will be printed out if the test was in error to provide
+        more context and make it easier to debug the issue.
+
+        Args:
+            tail_lines (int): The number of container log lines to print.
+        """
+        try:
+            # prior to tearing down the namespace and cleaning up all of the
+            # objects in the namespace, get the logs for the containers in the
+            # namespace.
+            pods_list = kubernetes.client.CoreV1Api().list_namespaced_pod(
+                namespace=self.ns
+            )
+            print('GOT PODS LIST')
+        except Exception as e:
+            log.warning(
+                'Unable to get pods for namespace "%s" to cache logs (%s)',
+                self.ns, e
+            )
+            return
+        else:
+            log_kwargs = {}
+            if tail_lines is not None and tail_lines > 0:
+                log_kwargs['tail_lines'] = tail_lines
+
+            print('podslist: {}'.format(pods_list.items))
+            for pod in pods_list.items:
+                print('-- pod --')
+                for container in pod.spec.containers:
+                    print('-- container --')
+                    pod_name = pod.metadata.name
+                    pod_ns = pod.metadata.namespace
+                    container_name = container.name
+                    try:
+                        logs = kubernetes.client.CoreV1Api().read_namespaced_pod_log(
+                            name=pod_name,
+                            namespace=pod_ns,
+                            container=container_name,
+                            **log_kwargs,
+                        )
+                    except Exception as e:
+                        print('):')
+                        log.warning(
+                            'Unable to cache logs for %s::%s (%s)',
+                            pod_name, container_name, e
+                        )
+                        continue
+                    else:
+                        print('logs...')
+                        if logs != '':
+                            print('has logs!')
+                            print('==== {}::{} =========='.format(pod_name, container_name))
+                            print(logs)
+
     def register_rolebindings(self, *rolebindings):
         """Register a RoleBinding requirement with the test case.
 
@@ -107,6 +166,22 @@ class KubetestManager:
         # object. Each test node will have a TestMeta created when the client
         # is created for the test node.
         self.nodes = {}
+
+        # Pytest config values that are of interest to test cases. This is
+        # populated in the `configure` method.
+        self.config = {}
+
+    def configure(self, config):
+        """Configure the Manager with pytest configurations so it can pass
+        them to the test case clients, as needed.
+
+        Args:
+            config (Config): The pytest Config object.
+        """
+        # The number of log lines to show on error. If this is <0, show all.
+        error_log_lines = config.getvalue('kube_error_log_lines')
+        if error_log_lines and error_log_lines > 0:
+            self.config['kube_error_log_lines'] = error_log_lines
 
     def new_test(self, node_id, test_name):
         """Create a new TestMeta for a test case.

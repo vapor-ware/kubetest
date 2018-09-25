@@ -169,32 +169,78 @@ class Pod(ApiObject):
 
         return total
 
-    def http_proxy_get(self, path):
+    def http_proxy_get(self, path, query_params=None):
         """Issue a GET request to a proxy for the Pod.
 
+        This function does not use the kubernetes
+        `connect_get_namespaced_pod_proxy_with_path` function because there
+        appears to be lack of support for custom query parameters (as of
+        the kubernetes==7.0.0 package version). To bypass this, parts of
+        the core functionality from the above function are used here with
+        the modification of allowing user-defined query parameters to be
+        passed along.
+
         Args:
-            path (str): The URI to hit on the Pod.
+            path (str): The URI path for the request.
+            query_params (dict[str, str]): Any query parameters for
+                the request. (default: None)
 
         Returns:
             str: The response data.
         """
-        return client.CoreV1Api().connect_get_namespaced_pod_proxy_with_path(
-            name=self.name,
-            namespace=self.namespace,
-            path=path,
+        c = client.CoreV1Api()
+
+        if query_params is None:
+            query_params = {}
+
+        path_params = {
+            'name': self.name,
+            'namespace': self.namespace
+        }
+        header_params = {
+            'Accept': c.api_client.select_header_accept(['*/*']),
+            'Content-Type': c.api_client.select_header_content_type(['*/*'])
+        }
+        auth_settings = ['BearerToken']
+
+        return c.api_client.call_api(
+            '/api/v1/namespaces/{namespace}/pods/{name}/proxy/' + path, 'GET',
+            path_params=path_params,
+            query_params=query_params,
+            header_params=header_params,
+            body=None,
+            post_params=[],
+            files={},
+            response_type='str',
+            auth_settings=auth_settings,
+            async=None,
+            _return_http_data_only=True,
+            _preload_content=True,
+            _request_timeout=None,
+            collection_formats={}
         )
 
-    def http_proxy_get_json(self, path):
-        """Issue a GET request to a proxy for the Pod and return
-        the JSON response as a dictionary.
+    def http_proxy_get_json(self, path, query_params=None):
+        """Issue a GET request to a proxy for the Pod and return the
+        JSON response as a dictionary.
+
+        This function does not use the kubernetes
+        `connect_get_namespaced_pod_proxy_with_path` function because there
+        appears to be lack of support for custom query parameters (as of
+        the kubernetes==7.0.0 package version). To bypass this, parts of
+        the core functionality from the above function are used here with
+        the modification of allowing user-defined query parameters to be
+        passed along.
 
         Args:
-            path (str): The URI to hit on the Pod.
+            path (str): The URI path for the request.
+            query_params (dict[str, str]): Any query parameters for
+                the request. (default: None)
 
         Returns:
             dict: The response data.
         """
-        data = self.http_proxy_get(path)
+        data = self.http_proxy_get(path, query_params)
         data = data.replace("'", '"')
         return json.loads(data)
 

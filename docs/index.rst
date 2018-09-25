@@ -31,6 +31,8 @@ Documentation
 See :ref:`Contents <toc>` for full documentation. This includes installation,
 setup, example usage, and API reference.
 
+See also the :ref:`Reference <reference>` docs.
+
 Bugs/Features
 -------------
 If you encounter a bug or have an idea for a new feature, open a new issue on

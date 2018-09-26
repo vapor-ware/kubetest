@@ -102,9 +102,7 @@ def apply_manifest_from_marker(item, client):
         for obj in objs:
             found = False
             for klass in ApiObject.__subclasses__():
-                print('TYPE(OBJ)  -> {}'.format(type(obj)))
-                print('SUBCLASS   -> {}'.format(klass.obj_type))
-                if type(obj) == klass.obj_type:
+                if obj.kind == klass.__name__:
                     wrapped.append(klass(obj))
                     found = True
                     break

@@ -35,6 +35,7 @@ Once installed, the following `pytest` command-line parameters become available:
 pytest \
     [--google-application-credentials <path-to-credentials-json>] \
     [--kube-config <path-to-config>] \
+    [--kube-error-log-lines <count>] \
     [--kube-log-level <level>] \
     [--kube-disable]
 ```
@@ -44,6 +45,9 @@ pytest \
   when your test cluster is hosted on GKE.
 - **`--kube-config`**: The path to the config file to use for your cluster. If not specified,
   it defaults to the same config that `kubectl` uses at `~/.kube/config`
+- **`--kube-error-log-lines`**: Set the number of lines to tail from the container logs for
+  a test namespace when a test fails. By default this is set to 50. If you want to show all
+  container logs, set this to -1. If you do not wish to show container logs, set this to 0.
 - **`--kube-log-level`**: Set the logging level for kubetest. The default log level is *warning*.
   Setting the log level to *info* will provide logging for kubetest actions. Setting the log level
   to *debug* will log out the Kubernetes object state for various actions as well.

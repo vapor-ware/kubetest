@@ -66,6 +66,14 @@ def pytest_addoption(parser):
         help='log level for the kubetest logger'
     )
 
+    group.addoption(
+        '--kube-error-log-lines',
+        action='store',
+        default=50,
+        help='set the number of lines to tail from container logs on error. '
+             'to show all lines, set this to -1.'
+    )
+
 
 def pytest_report_header(config):
     """Augment the pytest report header with kubetest info.
@@ -210,6 +218,31 @@ def pytest_runtest_teardown(item):
             # a namespace will delete all the things in the namespace, so
             # that makes cleanup easier.
             test_case.teardown()
+
+
+def pytest_runtest_makereport(item, call):
+    """Create a test report for the test case. If the test case was found
+    to fail, this will log out the container logs to provide more debugging
+    context.
+
+    See Also:
+        https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_runtest_makereport
+    """
+    if call.when == 'call':
+        if call.excinfo is not None:
+            tail_lines = item.config.getvalue('kube_error_log_lines')
+            if tail_lines != 0:
+                test_case = manager.get_test(item.nodeid)
+                logs = test_case.yield_container_logs(
+                    tail_lines=tail_lines
+                )
+                for container_log in logs:
+                    # Add a report section to the test output
+                    item.add_report_section(
+                        when=call.when,
+                        key='kubernetes container logs',
+                        content=container_log
+                    )
 
 
 # ********** pytest fixtures **********

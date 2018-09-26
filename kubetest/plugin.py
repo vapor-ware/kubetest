@@ -231,15 +231,21 @@ def pytest_runtest_makereport(item, call):
     See Also:
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_runtest_makereport
     """
-    print('MAKE REPORT')
     if call.when == 'call':
-        print('-->CALL')
         if call.excinfo is not None:
-            print('----> NOT NONE')
-            test_case = manager.get_test(item.nodeid)
-            test_case.dump_container_logs(
-                tail_lines=item.config.getvalue('kube_error_log_lines')
-            )
+            tail_lines = item.config.getvalue('kube_error_log_lines')
+            if tail_lines != 0:
+                test_case = manager.get_test(item.nodeid)
+                logs = test_case.yield_container_logs(
+                    tail_lines=tail_lines
+                )
+                for container_log in logs:
+                    # Add a report section to the test output
+                    item.add_report_section(
+                        when=call.when,
+                        key='kubernetes container logs',
+                        content=container_log
+                    )
 
 
 # ********** pytest fixtures **********

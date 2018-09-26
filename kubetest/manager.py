@@ -76,14 +76,17 @@ class TestMeta:
         for crb in self.clusterrolebindings:
             self.client.delete(crb)
 
-    def dump_container_logs(self, tail_lines=None):
-        """Cache the container logs for the test case.
+    def yield_container_logs(self, tail_lines=None):
+        """Yield the container logs for the test case.
 
         These logs will be printed out if the test was in error to provide
         more context and make it easier to debug the issue.
 
         Args:
             tail_lines (int): The number of container log lines to print.
+
+        Yields:
+            str: Logs for the running containers on the cluster.
         """
         try:
             # prior to tearing down the namespace and cleaning up all of the
@@ -92,52 +95,49 @@ class TestMeta:
             pods_list = kubernetes.client.CoreV1Api().list_namespaced_pod(
                 namespace=self.ns
             )
-            print('GOT PODS LIST')
         except Exception as e:
             log.warning(
                 'Unable to get pods for namespace "%s" to cache logs (%s)',
                 self.ns, e
             )
             return
-        else:
-            log_kwargs = {}
-            if tail_lines is not None and tail_lines > 0:
-                log_kwargs['tail_lines'] = tail_lines
 
-            print('podslist: {}'.format(pods_list.items))
-            for pod in pods_list.items:
-                print('-- pod --')
-                for container in pod.spec.containers:
-                    print('-- container --')
-                    pod_name = pod.metadata.name
-                    pod_ns = pod.metadata.namespace
-                    container_name = container.name
-                    try:
-                        logs = kubernetes.client.CoreV1Api().read_namespaced_pod_log(
-                            name=pod_name,
-                            namespace=pod_ns,
-                            container=container_name,
-                            **log_kwargs,
-                        )
-                    except Exception as e:
-                        print('):')
-                        log.warning(
-                            'Unable to cache logs for %s::%s (%s)',
-                            pod_name, container_name, e
-                        )
-                        continue
-                    else:
-                        print('logs...')
-                        if logs != '':
-                            print('has logs!')
-                            print('==== {}::{} =========='.format(pod_name, container_name))
-                            print(logs)
+        log_kwargs = {}
+        if tail_lines is not None and tail_lines > 0:
+            log_kwargs['tail_lines'] = tail_lines
+
+        for pod in pods_list.items:
+            for container in pod.spec.containers:
+                pod_name = pod.metadata.name
+                pod_ns = pod.metadata.namespace
+                container_name = container.name
+                try:
+                    logs = kubernetes.client.CoreV1Api().read_namespaced_pod_log(
+                        name=pod_name,
+                        namespace=pod_ns,
+                        container=container_name,
+                        **log_kwargs,
+                    )
+                except Exception as e:
+                    log.warning(
+                        'Unable to cache logs for %s::%s (%s)',
+                        pod_name, container_name, e
+                    )
+                    continue
+
+                if logs != '':
+                    _id = '=== {} -> {}::{} ==='.format(
+                        self.node_id, pod_name, container_name
+                    )
+                    border = '=' * len(_id)
+                    yield '\n'.join([border, _id, border, logs, '\n'])
+        return
 
     def register_rolebindings(self, *rolebindings):
         """Register a RoleBinding requirement with the test case.
 
         Args:
-            *rolebinding (RoleBinding): The RoleBindings that are needed for
+            *rolebindings (RoleBinding): The RoleBindings that are needed for
                 the test case.
         """
         self.rolebindings.extend(rolebindings)

@@ -65,6 +65,13 @@ class TestMeta:
         # if any objects were registered with the test case via the
         # `applymanifests` marker, register them to the test client
         # and add them to the cluster now
+        # TODO: we should be smarter about the order we create things. it
+        #  seems like kubernetes dns is unhappy if services are created second
+        #  or they aren't ready when the corresponding deployment is created.
+        #  similarly, we'd want configmaps to be created before the things that
+        #  use them.. need to figure out the correct ordering and then implement
+        #  logic to correctly sort and create (and wait for created between
+        #  groups)
         for obj in self.test_objects:
             self.client.create(obj)
             self.client.pre_registered.append(obj)

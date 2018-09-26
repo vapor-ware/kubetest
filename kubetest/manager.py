@@ -167,22 +167,6 @@ class KubetestManager:
         # is created for the test node.
         self.nodes = {}
 
-        # Pytest config values that are of interest to test cases. This is
-        # populated in the `configure` method.
-        self.config = {}
-
-    def configure(self, config):
-        """Configure the Manager with pytest configurations so it can pass
-        them to the test case clients, as needed.
-
-        Args:
-            config (Config): The pytest Config object.
-        """
-        # The number of log lines to show on error. If this is <0, show all.
-        error_log_lines = config.getvalue('kube_error_log_lines')
-        if error_log_lines and error_log_lines > 0:
-            self.config['kube_error_log_lines'] = error_log_lines
-
     def new_test(self, node_id, test_name):
         """Create a new TestMeta for a test case.
 

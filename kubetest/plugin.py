@@ -98,9 +98,6 @@ def pytest_configure(config):
     See Also:
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_configure
     """
-    # Pass the config to the manager
-    manager.configure(config)
-
     # Setup the kubetest logger
     log_level = config.getvalue('kube_log_level')
     level = logging._nameToLevel.get(log_level.upper(), logging.WARNING)

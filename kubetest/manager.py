@@ -29,6 +29,7 @@ class TestMeta:
 
         self.rolebindings = []
         self.clusterrolebindings = []
+        self.test_objects = []
 
     @property
     def client(self):
@@ -60,6 +61,13 @@ class TestMeta:
         # if there are any cluster role bindings, create them.
         for crb in self.clusterrolebindings:
             self.client.create(crb)
+
+        # if any objects were registered with the test case via the
+        # `applymanifests` marker, register them to the test client
+        # and add them to the cluster now
+        for obj in self.test_objects:
+            self.client.create(obj)
+            self.client.pre_registered.append(obj)
 
     def teardown(self):
         """Clean up the cluster state for the given test case.
@@ -150,6 +158,17 @@ class TestMeta:
                 that are needed for the test case.
         """
         self.clusterrolebindings.extend(clusterrolebindings)
+
+    def register_objects(self, objects):
+        """Register the provided objects with the test case.
+
+        These objects will be registered to the test client and applied to
+        the namespace on test setup.
+
+        Args:
+            objects: The wrapped Kubernetes API objects to create on the cluster.
+        """
+        self.test_objects.extend(objects)
 
 
 class KubetestManager:

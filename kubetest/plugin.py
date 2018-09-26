@@ -105,37 +105,7 @@ def pytest_configure(config):
     logger.setLevel(level)
 
     # Register kubetest markers
-    config.addinivalue_line(
-        'markers',
-        'rolebinding(kind, name, subject_kind=None, subject_name=None): create and use '
-        'a Kubernetes RoleBinding for the test case. The generated role binding will '
-        'use the generated test-case namespace and will be automatically removed once '
-        'the test completes. The role kind (Role, ClusterRole) must be specified along '
-        'with the name of the role. Only existing Roles or ClusterRoles can be used. '
-        'Optionally, the subject_kind (User, Group, ServiceAccount) and subject_name '
-        'can be specified to set a target subject for the RoleBinding. If no subject '
-        'is specified, it will default to all users in the namespace and all service '
-        'accounts. If a subject is specified, both the subject kind and name must be '
-        'present. The RoleBinding will always use the apiGroup '
-        '"rbac.authorization.k8s.io" for both subjects and roleRefs. For more '
-        'information, see '
-        'https://kubernetes.io/docs/reference/access-authn-authz/rbac/'
-    )
-    config.addinivalue_line(
-        'markers',
-        'clusterrolebinding(name, subject_kind=None, subject_name=None): create and use '
-        'a Kubernetes ClusterRoleBinding for the test case. The generated cluster role '
-        'binding will be automatically created and removed for each marked test. The '
-        'name of the role must be specified. Only existing ClusterRoles can be used. '
-        'Optionally, the subject_kind (User, Group, ServiceAccount) and subject_name '
-        'can be specified to set a target subject for the ClusterRoleBinding. If no '
-        'subject is specified, it will default to all users in the namespace and all '
-        'service accounts. If a subject is specified, both the subject kind and name '
-        'must be present. The ClusterRoleBinding will always use the apiGroup '
-        '"rbac.authorization.k8s.io" for both subjects and roleRefs. For more '
-        'information, see '
-        'https://kubernetes.io/docs/reference/access-authn-authz/rbac/'
-    )
+    markers.register(config)
 
     # Configure kubetest with the kubernetes config, if not disabled.
     disabled = config.getvalue('kube_disable')
@@ -203,6 +173,9 @@ def pytest_runtest_setup(item):
             *markers.clusterrolebindings_from_marker(item, test_case.ns)
         )
 
+        # Apply manifests for the test case, if any are specified.
+        markers.apply_manifest_from_marker(item, test_case)
+
 
 def pytest_runtest_teardown(item):
     """Run teardown actions to clean up the test client.
@@ -228,21 +201,23 @@ def pytest_runtest_makereport(item, call):
     See Also:
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_runtest_makereport
     """
-    if call.when == 'call':
-        if call.excinfo is not None:
-            tail_lines = item.config.getvalue('kube_error_log_lines')
-            if tail_lines != 0:
-                test_case = manager.get_test(item.nodeid)
-                logs = test_case.yield_container_logs(
-                    tail_lines=tail_lines
-                )
-                for container_log in logs:
-                    # Add a report section to the test output
-                    item.add_report_section(
-                        when=call.when,
-                        key='kubernetes container logs',
-                        content=container_log
+    disabled = item.config.getvalue('kube_disable')
+    if not disabled:
+        if call.when == 'call':
+            if call.excinfo is not None:
+                tail_lines = item.config.getvalue('kube_error_log_lines')
+                if tail_lines != 0:
+                    test_case = manager.get_test(item.nodeid)
+                    logs = test_case.yield_container_logs(
+                        tail_lines=tail_lines
                     )
+                    for container_log in logs:
+                        # Add a report section to the test output
+                        item.add_report_section(
+                            when=call.when,
+                            key='kubernetes container logs',
+                            content=container_log
+                        )
 
 
 # ********** pytest fixtures **********

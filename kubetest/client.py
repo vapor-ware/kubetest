@@ -20,6 +20,7 @@ class TestClient:
 
     def __init__(self, namespace):
         self.namespace = namespace
+        self.pre_registered = []
 
     # ****** Manifest Loaders ******
 
@@ -457,6 +458,37 @@ class TestClient:
             'wait for {} nodes'.format(count),
             node_count_match,
             count,
+        )
+
+        utils.wait_for_condition(
+            condition=wait_condition,
+            timeout=timeout,
+            interval=interval,
+        )
+
+    def wait_for_registered(self, timeout=None, interval=1):
+        """Wait for all of the pre-registered objects to be ready on the cluster.
+
+        An object is pre-registered with the test client if it is specified
+        to the test via the `applymanifests` pytest marker. The marker will load
+        the manifest and add the object to the cluster, and register it with
+        the test client. This method waits until all such loaded manifest objects
+        are in the ready state simultaneously.
+
+        Args:
+            timeout (int): The maximum time to wait, in seconds.
+            interval (int|float): The time, in seconds, to sleep before
+                re-checking the ready state for pre-registered objects.
+        """
+        def check_registered():
+            for obj in self.pre_registered:
+                if not obj.is_ready():
+                    return False
+            return True
+
+        wait_condition = Condition(
+            'wait for pre-registered objects to be ready',
+            check_registered,
         )
 
         utils.wait_for_condition(

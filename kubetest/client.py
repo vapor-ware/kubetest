@@ -514,7 +514,7 @@ class TestClient:
         def check_ready(api_obj):
             try:
                 api_obj.refresh()
-            except:
+            except:  # noqa
                 return False
             return True
 

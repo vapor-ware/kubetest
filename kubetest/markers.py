@@ -4,11 +4,11 @@ import os
 
 from kubernetes import client
 
-from kubetest.manifest import load_path, load_file
+from kubetest.manifest import load_file, load_path
 from kubetest.objects import ApiObject, ClusterRoleBinding, RoleBinding
 
 ROLEBINDING_INI = (
-    'rolebinding(kind, name, subject_kind=None, subject_name=None): ' 
+    'rolebinding(kind, name, subject_kind=None, subject_name=None): '
     'create and use a Kubernetes RoleBinding for the test case. The generated role '
     'binding will use the generated test-case namespace and will be automatically '
     'removed once the test completes. The role kind (Role, ClusterRole) must be '
@@ -72,8 +72,9 @@ def apply_manifest_from_marker(item, client):
     the "kube" fixture, such as waiting for all objects to be created.
 
     Args:
-        item:
-        client (manager.TestMeta):
+        item: The pytest test item.
+        client (manager.TestMeta): The metainfo object for the marked
+            test case.
     """
     for mark in item.iter_markers(name='applymanifests'):
         dir_path = mark.args[0]

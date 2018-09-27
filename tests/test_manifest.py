@@ -166,11 +166,17 @@ class TestGetType:
                 client.ExtensionsV1beta1Deployment
             ),
             (
-                {'apiVersion': 'rbac.authorization.k8s.io/v1', 'kind': 'ClusterRoleBinding'},
+                {
+                    'apiVersion': 'rbac.authorization.k8s.io/v1',
+                    'kind': 'ClusterRoleBinding'
+                },
                 client.V1ClusterRoleBinding
             ),
             (
-                {'apiVersion': 'rbac.authorization.k8s.io/v1beta1', 'kind': 'ClusterRoleBinding'},
+                {
+                    'apiVersion': 'rbac.authorization.k8s.io/v1beta1',
+                    'kind': 'ClusterRoleBinding'
+                },
                 client.V1beta1ClusterRoleBinding
             ),
         ]

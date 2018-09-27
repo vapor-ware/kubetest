@@ -3,7 +3,6 @@
 import abc
 import logging
 
-import yaml
 from kubernetes import client
 from kubernetes.client.rest import ApiException
 

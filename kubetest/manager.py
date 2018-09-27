@@ -4,7 +4,7 @@ import logging
 
 import kubernetes
 
-from kubetest import client, utils, objects
+from kubetest import client, objects, utils
 
 log = logging.getLogger('kubetest')
 

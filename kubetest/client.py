@@ -20,6 +20,7 @@ class TestClient:
 
     def __init__(self, namespace):
         self.namespace = namespace
+        self.pre_registered = []
 
     # ****** Manifest Loaders ******
 
@@ -463,4 +464,68 @@ class TestClient:
             condition=wait_condition,
             timeout=timeout,
             interval=interval,
+        )
+
+    def wait_for_registered(self, timeout=None, interval=1):
+        """Wait for all of the pre-registered objects to be ready on the cluster.
+
+        An object is pre-registered with the test client if it is specified
+        to the test via the `applymanifests` pytest marker. The marker will load
+        the manifest and add the object to the cluster, and register it with
+        the test client. This method waits until all such loaded manifest objects
+        are in the ready state simultaneously.
+
+        Args:
+            timeout (int): The maximum time to wait, in seconds.
+            interval (int|float): The time, in seconds, to sleep before
+                re-checking the ready state for pre-registered objects.
+        """
+        def check_registered():
+            for obj in self.pre_registered:
+                if not obj.is_ready():
+                    return False
+            return True
+
+        wait_condition = Condition(
+            'wait for pre-registered objects to be ready',
+            check_registered,
+        )
+
+        utils.wait_for_condition(
+            condition=wait_condition,
+            timeout=timeout,
+            interval=interval,
+        )
+
+    @staticmethod
+    def wait_until_created(obj, timeout=None, interval=1):
+        """Wait until the specified object has been created.
+
+        Here, creation is judged on whether or not refreshing the
+        object (e.g. getting it) returns an object (created) or
+        an error (not yet created).
+
+        Args:
+            obj (objects.ApiObject): The ApiObject to wait on.
+            timeout (int): The maximum time to wait, in seconds.
+            interval (int|float): The time, in seconds, to sleep before
+                re-checking the created state of the object.
+        """
+        def check_ready(api_obj):
+            try:
+                api_obj.refresh()
+            except:  # noqa
+                return False
+            return True
+
+        wait_condition = Condition(
+            'wait for {}:{} to be created'.format(type(obj), obj.name),
+            check_ready,
+            obj,
+        )
+
+        utils.wait_for_condition(
+            condition=wait_condition,
+            timeout=timeout,
+            interval=interval
         )

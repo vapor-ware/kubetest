@@ -16,6 +16,8 @@ from kubetest.manager import KubetestManager
 
 GOOGLE_APPLICATION_CREDENTIALS = 'GOOGLE_APPLICATION_CREDENTIALS'
 
+log = logging.getLogger('kubetest')
+
 # A global instance of the KubetestManager. This will be used by various
 # pytest hooks and fixtures in order to create and manage the TestClient
 # instances. The manager is in charge of creating new TestClients for each
@@ -213,6 +215,51 @@ def pytest_runtest_makereport(item, call):
                             key='kubernetes container logs',
                             content=container_log
                         )
+
+
+def pytest_keyboard_interrupt():
+    """Clean up the cluster from kubetest artifacts if the tests
+    are manually terminated via keyboard interrupt.
+
+    See Also:
+        https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_keyboard_interrupt
+    """
+    try:
+        namespaces = kubernetes.client.CoreV1Api().list_namespace()
+        for ns in namespaces.items:
+            # if the namespace has a 'kubetest-' prefix, remove it.
+            name = ns.metadata.name
+            status = ns.status
+            if (
+                    name.startswith('kubetest-') and
+                    status is not None and
+                    status.phase.lower() == 'active'
+            ):
+                print('keyboard interrupt: cleaning up namespace "{}"'.format(name))
+                kubernetes.client.CoreV1Api().delete_namespace(
+                    body=kubernetes.client.V1DeleteOptions(),
+                    name=name,
+                )
+
+        crbs = kubernetes.client.RbacAuthorizationV1Api().list_cluster_role_binding()
+        for crb in crbs.items:
+            # if the cluster role binding has a 'kubetest:' prefix, remove it.
+            name = crb.metadata.name
+            if name.startswith('kubetest:'):
+                print(
+                    'keyboard interrupt: cleaning up clusterrolebinding "{}"'.format(crb)
+                )
+                kubernetes.client.RbacAuthorizationV1Api().delete_cluster_role_binding(
+                    body=kubernetes.client.V1DeleteOptions(),
+                    name=name,
+                )
+    except Exception as e:
+        log.error(
+            'Failed to clean up kubetest artifacts from cluster on keyboard interrupt. '
+            'You may need to manually remove items from your cluster. Check for '
+            'namespaces with the "kubetest-" prefix and cluster role bindings with '
+            'the "kubetest:" prefix. ({})'.format(e)
+        )
 
 
 # ********** pytest fixtures **********

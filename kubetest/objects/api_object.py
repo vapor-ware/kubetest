@@ -3,12 +3,11 @@
 import abc
 import logging
 
-import yaml
 from kubernetes import client
 from kubernetes.client.rest import ApiException
 
 from kubetest import condition, utils
-from kubetest.manifest import new_object
+from kubetest.manifest import load_file
 
 log = logging.getLogger('kubetest')
 
@@ -47,6 +46,11 @@ class ApiObject(abc.ABC):
     def name(self):
         """The name of the Kubernetes object (metadata.name)."""
         return self.obj.metadata.name
+
+    @name.setter
+    def name(self, name):
+        """Set the name of the Kubernetes objects (metadata.name)."""
+        self.obj.metadata.name = name
 
     @property
     def namespace(self):
@@ -162,10 +166,7 @@ class ApiObject(abc.ABC):
             ApiObject: The API object corresponding to the configuration
                 loaded from YAML file.
         """
-        with open(path, 'r') as f:
-            manifest = yaml.load(f)
-
-        obj = new_object(cls.obj_type, manifest)
+        obj = load_file(path, cls.obj_type)
         return cls(obj)
 
     @abc.abstractmethod

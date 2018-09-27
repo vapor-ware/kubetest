@@ -3,10 +3,119 @@ the corresponding Kubernetes API models.
 """
 
 import builtins
+import os
 import re
 
 import kubernetes
 import yaml
+from kubernetes.client import models
+
+
+def load_file(path, obj_type=None):
+    """Load an individual Kubernetes manifest YAML file.
+
+    Args:
+        path (str): The fully qualified path to the file.
+        obj_type: The type of the object to load. If not specified,
+            this will attempt to auto-detect the type.
+
+    Returns:
+        The Kubernetes API object for the manifest file.
+    """
+    with open(path, 'r') as f:
+        manifest = yaml.load(f)
+
+    if obj_type is None:
+        obj_type = get_type(manifest)
+        if obj_type is None:
+            raise ValueError(
+                'Unable to determine object type for manifest: {}'.format(manifest)
+            )
+
+    return new_object(obj_type, manifest)
+
+
+def load_path(path):
+    """Load all of the Kubernetes YAML manifest files found in the
+    specified directory path.
+
+    Args:
+        path (str): The path to the directory of manifest files.
+
+    Returns:
+        list: A list of all the Kubernetes objects loaded from
+            manifest file.
+
+    Raises:
+        ValueError: The provided path is not a directory.
+    """
+    if not os.path.isdir(path):
+        raise ValueError('{} is not a directory'.format(path))
+
+    objs = []
+    for f in os.listdir(path):
+        if os.path.splitext(f)[1].lower() in ['.yaml', '.yml']:
+            obj = load_file(os.path.join(path, f))
+            objs.append(obj)
+    return objs
+
+
+def get_type(manifest):
+    """Get the Kubernetes object type from the manifest kind and
+    version.
+
+    There is no easy way for determining the internal model that a
+    manifest should use. What this tries to do is use the version
+    info and the kind info to create a potential internal object
+    name for the pair and look that up in the kubernetes package
+    locals.
+
+    Args:
+        manifest (dict): The manifest file, loaded into a dictionary.
+
+    Returns:
+        object: The Kubernetes API object for the manifest.
+        None: No Kubernetes API object type could be determined.
+
+    Raises:
+        ValueError: The manifest dictionary does not have a
+            `version` or `kind` specified.
+    """
+    version = manifest.get('apiVersion')
+    if version is None:
+        raise ValueError('manifest has no "version" field specified')
+
+    kind = manifest.get('kind')
+    if kind is None:
+        raise ValueError('manifest has no "kind" field specified')
+
+    # create a map of the kubernetes client model locals where the key is the
+    # lower cased name (so we don't have to mess with getting the capitalization
+    # of components correct) and the value is the correctly cased name.
+    lookup = {k.lower(): k for k in models.__dict__.keys()}
+
+    # if the version has a '/' (e.g. apps/v1, extensions/v1beta1), remove it.
+
+    # there are generally two possibilities - we include the version minus
+    # the slash (e.g. extensions/v1beta1 -> extensionsv1beta1), or we do not
+    # use the prefix (e.g. apps/v1 -> v1). By default we will always try with
+    # the prefix first and only try the secondary check if the first check
+    # yields nothing.
+    possibilities = [
+        # add the default case
+        version.replace('/', '').replace('.', '') + kind
+    ]
+
+    # if the prefix exists, add the non-prefixed version as a secondary check
+    if version.count('/') == 1:
+        possibilities.append(version.split('/')[1] + kind)
+
+    for to_check in possibilities:
+        type_name = lookup.get(to_check.lower())
+        if type_name is None:
+            continue
+        return models.__dict__.get(type_name)
+    return None
 
 
 def load_type(obj_type, path):

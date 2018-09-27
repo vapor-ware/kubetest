@@ -134,3 +134,108 @@ class TestLoadType:
                 client.V1Container,
                 os.path.join(manifest_dir, 'invalid.yaml')
             )
+
+
+class TestGetType:
+    """Tests for kubetest.manifest.get_type"""
+
+    @pytest.mark.parametrize(
+        'data,expected', [
+            (
+                {'apiVersion': 'v1', 'kind': 'Secret'},
+                client.V1Secret
+            ),
+            (
+                {'apiVersion': 'v1', 'kind': 'Deployment'},
+                client.V1Deployment
+            ),
+            (
+                {'apiVersion': 'apps/v1', 'kind': 'Deployment'},
+                client.V1Deployment
+            ),
+            (
+                {'apiVersion': 'apps/v1beta1', 'kind': 'Deployment'},
+                client.AppsV1beta1Deployment
+            ),
+            (
+                {'apiVersion': 'apps/v1beta2', 'kind': 'Deployment'},
+                client.V1beta2Deployment
+            ),
+            (
+                {'apiVersion': 'extensions/v1beta1', 'kind': 'Deployment'},
+                client.ExtensionsV1beta1Deployment
+            ),
+            (
+                {
+                    'apiVersion': 'rbac.authorization.k8s.io/v1',
+                    'kind': 'ClusterRoleBinding'
+                },
+                client.V1ClusterRoleBinding
+            ),
+            (
+                {
+                    'apiVersion': 'rbac.authorization.k8s.io/v1beta1',
+                    'kind': 'ClusterRoleBinding'
+                },
+                client.V1beta1ClusterRoleBinding
+            ),
+        ]
+    )
+    def test_ok(self, data, expected):
+        """Test getting Kubernetes object types correctly."""
+
+        actual = manifest.get_type(data)
+        assert actual == expected
+
+    def test_nonexistent_type(self):
+        """Test getting a type that Kubernetes does not have."""
+
+        t = manifest.get_type({
+            'apiVersion': 'v1',
+            'kind': 'foobar'
+        })
+        assert t is None
+
+    def test_no_version(self):
+        """Test getting a type when no version is given."""
+
+        with pytest.raises(ValueError):
+            manifest.get_type({'kind': 'Deployment'})
+
+    def test_no_kind(self):
+        """Test getting a type when no kind is given."""
+
+        with pytest.raises(ValueError):
+            manifest.get_type({'version': 'v1'})
+
+
+class TestLoadPath:
+    """Tests for kubetest.manifest.load_path"""
+
+    def test_ok(self, manifest_dir):
+        """Test loading the manifests into API objects successfully."""
+
+        objs = manifest.load_path(os.path.join(manifest_dir, 'manifests'))
+        assert len(objs) == 3
+
+        for obj in objs:
+            assert obj.kind in ['Deployment', 'ConfigMap', 'Service']
+
+    def test_no_dir(self):
+        """Test loading manifests when the specified path is not a directory."""
+
+        with pytest.raises(ValueError):
+            manifest.load_path('foobar')
+
+    def test_empty_dir(self, tmpdir):
+        """Test loading manifests from an empty directory."""
+
+        d = tmpdir.mkdir('foo')
+        objs = manifest.load_path(d)
+        assert len(objs) == 0
+
+    def test_invalid_yaml(self, manifest_dir):
+        """Test loading manifests when one of the files has invalid YAML."""
+
+        with pytest.raises(yaml.YAMLError):
+            manifest.load_path(manifest_dir)

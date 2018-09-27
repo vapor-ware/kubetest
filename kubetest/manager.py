@@ -4,10 +4,113 @@ import logging
 
 import kubernetes
 
-from kubetest import client, utils
-from kubetest.objects import Namespace
+from kubetest import client, utils, objects
 
 log = logging.getLogger('kubetest')
+
+
+class ObjectManager:
+    """ObjectManager is a convenience class used to manage Kubernetes API
+    objects that are registered with a test case.
+
+    The core usage of the ObjectManager is to sort each of the registered
+    objects into different buckets by type. An "apply order" is also
+    defined here so we can get the bucketed objects in the order that they
+    should be applied onto the cluster.
+
+    This manager will only be used for API objects loaded from manifests
+    that are specified by the `pytest.mark.applymanifests` marker on a
+    test case by default.
+    """
+
+    # The ApiObject buckets in the order that that should be
+    # applied when creating them on the cluster.
+    ordered_buckets = [
+        'namespace',
+        'rolebinding',
+        'clusterrolebinding',
+        'secret',
+        'service',
+        'configmap',
+        'deployment',
+        'pod',
+    ]
+
+    def __init__(self):
+        # Add attributes with the bucket names to the instance.
+        # By default they will all be empty lists. While this could
+        # be done in a more readable way by explicitly setting the
+        # buckets as members, e.g. self.pod = [], but by tying the
+        # creation to the ordered_buckets list (which the other
+        # instance methods use), adding and removing buckets means
+        # only adding to the list, not updating in numerous locations.
+        for bucket in self.ordered_buckets:
+            self.__setattr__(bucket, [])
+
+    def add(self, *args):
+        """Add API objects to the object manager.
+
+        This method will take in any number of ApiObjects and sort
+        them into the correct buckets. It will not check for duplicates.
+        If a non-ApiObject is passed in, an error will be raised.
+
+        Args:
+            *args (objects.ApiObject): Any subclass of the kubetest
+                ApiObject wrapping a Kubernetes API object.
+
+        Raises:
+            ValueError: One or more arguments passed to the function
+                are not ApiObject subclasses.
+        """
+        for arg in args:
+            if not isinstance(arg, objects.ApiObject):
+                raise ValueError(
+                    'Only ApiObject instances can be added to the ObjectManager, '
+                    'but was given: {}'.format(arg)
+                )
+
+            # Get the type name of the ApiObject wrapper and lower case it,
+            # e.g. ClusterRoleBinding -> clusterrolebinding. This will be
+            # used to compare to the buckets.
+            name = type(arg).__name__.lower()
+
+            # Check if we have a bucket for the name, if so, add it to the
+            # bucket. If not, raise an error.
+            if name in self.ordered_buckets:
+                self.__getattribute__(name).append(arg)
+            else:
+                raise ValueError(
+                    'Unable to determine bucket for ApiObject: {}'.format(arg)
+                )
+
+    def get_objects_in_apply_order(self):
+        """Get all of the managed objects in the order that they
+        should be applied onto the cluster.
+
+        Within the buckets themselves, API objects are not sorted.
+        This function only yields the buckets in the correct order.
+
+        Each of the buckets corresponds to an ApiObject wrapper that
+        is supported by kubetest. As more ApiObject wrappers are added,
+        the buckets here should be updated to reflect that.
+
+        The bucket order in which objects are yielded are:
+          - Namespace
+          - RoleBinding
+          - ClusterRoleBinding
+          - Secret
+          - Service
+          - ConfigMap
+          - Deployment
+          - Pod
+
+        Yields:
+            ApiObject: The kubetest ApiObject wrapper to be created
+                on the cluster.
+        """
+        for bucket in self.ordered_buckets:
+            for obj in self.__getattribute__(bucket):
+                yield obj
 
 
 class TestMeta:
@@ -29,7 +132,8 @@ class TestMeta:
 
         self.rolebindings = []
         self.clusterrolebindings = []
-        self.test_objects = []
+
+        self.test_objects = ObjectManager()
 
     @property
     def client(self):
@@ -42,7 +146,7 @@ class TestMeta:
     def namespace(self):
         """Get the Namespace API Object associated with the test case."""
         if self._namespace is None:
-            self._namespace = Namespace.new(self.ns)
+            self._namespace = objects.Namespace.new(self.ns)
         return self._namespace
 
     def setup(self):
@@ -65,15 +169,9 @@ class TestMeta:
         # if any objects were registered with the test case via the
         # `applymanifests` marker, register them to the test client
         # and add them to the cluster now
-        # TODO: we should be smarter about the order we create things. it
-        #  seems like kubernetes dns is unhappy if services are created second
-        #  or they aren't ready when the corresponding deployment is created.
-        #  similarly, we'd want configmaps to be created before the things that
-        #  use them.. need to figure out the correct ordering and then implement
-        #  logic to correctly sort and create (and wait for created between
-        #  groups)
-        for obj in self.test_objects:
+        for obj in self.test_objects.get_objects_in_apply_order():
             self.client.create(obj)
+            self.client.wait_until_created(obj, timeout=10, interval=0.5)
             self.client.pre_registered.append(obj)
 
     def teardown(self):
@@ -166,16 +264,17 @@ class TestMeta:
         """
         self.clusterrolebindings.extend(clusterrolebindings)
 
-    def register_objects(self, objects):
+    def register_objects(self, api_objects):
         """Register the provided objects with the test case.
 
         These objects will be registered to the test client and applied to
         the namespace on test setup.
 
         Args:
-            objects: The wrapped Kubernetes API objects to create on the cluster.
+            api_objects (list): The wrapped Kubernetes API objects to create
+                on the cluster.
         """
-        self.test_objects.extend(objects)
+        self.test_objects.add(*api_objects)
 
 
 class KubetestManager:
@@ -225,3 +324,21 @@ class KubetestManager:
             None: No test metadata was found for the given node.
         """
         return self.nodes.get(node_id)
+
+    def teardown(self, node_id):
+        """Tear down the test case.
+
+        This is effectively a wrapper around the `teardown` method of the
+        test client. It will also remove the test client from the manager.
+
+        Test client teardown will delete the test client's namespace from
+        the cluster. Deleting a namespace will delete all the things in the
+        namespace (e.g. API objects bound to the namespace).
+
+        Args:
+            node_id (str): The id of the test node.
+        """
+        test_case = self.nodes.get(node_id)
+        if test_case is not None:
+            test_case.teardown()
+            del self.nodes[node_id]

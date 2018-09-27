@@ -496,3 +496,36 @@ class TestClient:
             timeout=timeout,
             interval=interval,
         )
+
+    @staticmethod
+    def wait_until_created(obj, timeout=None, interval=1):
+        """Wait until the specified object has been created.
+
+        Here, creation is judged on whether or not refreshing the
+        object (e.g. getting it) returns an object (created) or
+        an error (not yet created).
+
+        Args:
+            obj (objects.ApiObject): The ApiObject to wait on.
+            timeout (int): The maximum time to wait, in seconds.
+            interval (int|float): The time, in seconds, to sleep before
+                re-checking the created state of the object.
+        """
+        def check_ready(api_obj):
+            try:
+                api_obj.refresh()
+            except:
+                return False
+            return True
+
+        wait_condition = Condition(
+            'wait for {}:{} to be created'.format(type(obj), obj.name),
+            check_ready,
+            obj,
+        )
+
+        utils.wait_for_condition(
+            condition=wait_condition,
+            timeout=timeout,
+            interval=interval
+        )

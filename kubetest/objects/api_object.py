@@ -48,6 +48,11 @@ class ApiObject(abc.ABC):
         """The name of the Kubernetes object (metadata.name)."""
         return self.obj.metadata.name
 
+    @name.setter
+    def name(self, name):
+        """Set the name of the Kubernetes objects (metadata.name)."""
+        self.obj.metadata.name = name
+
     @property
     def namespace(self):
         """The namespace of the Kubernetes object (metadata.namespace)."""

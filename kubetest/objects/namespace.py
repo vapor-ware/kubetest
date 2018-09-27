@@ -4,10 +4,12 @@ import logging
 
 from kubernetes import client
 
+from kubetest.objects import ApiObject
+
 log = logging.getLogger('kubetest')
 
 
-class Namespace:
+class Namespace(ApiObject):
     """Kubetest wrapper around a Kubernetes Namespace API Object.
 
     The actual `kubernetes.client.V1Namespace` instance that this
@@ -15,32 +17,15 @@ class Namespace:
 
     This wrapper provides some convenient functionality around the
     API Object and provides some state management for the Namespace.
-
-    This wrapper does NOT subclass the kubetest.ApiObject like other
-    object wrappers because it is not intended to be created or
-    managed from manifest file. It is just meant to wrap the
-    Namespace spec to make Namespace actions easier and the API
-    more consistent.
     """
 
-    def __init__(self, api_object):
-        self.obj = api_object
+    obj_type = client.V1Namespace
 
     def __str__(self):
         return str(self.obj)
 
     def __repr__(self):
         return self.__str__()
-
-    @property
-    def name(self):
-        """The name of the Namespace (metadata.name)."""
-        return self.obj.metadata.name
-
-    @name.setter
-    def name(self, name):
-        """Set the name of the Namespace"""
-        self.obj.metadata.name = name
 
     @classmethod
     def new(cls, name):
@@ -95,3 +80,23 @@ class Namespace:
             name=self.name,
             body=options,
         )
+
+    def refresh(self):
+        """Refresh the underlying Kubernetes API Namespace object."""
+        self.obj = client.CoreV1Api().read_namespace(
+            name=self.name,
+        )
+
+    def is_ready(self):
+        """Check if the Namespace is in the ready state.
+
+        Returns:
+            bool: True if in the ready state; False otherwise.
+        """
+        self.refresh()
+
+        status = self.obj.status
+        if status is None:
+            return False
+
+        return status.phase.lower() == 'active'

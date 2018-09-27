@@ -185,12 +185,7 @@ def pytest_runtest_teardown(item):
     """
     disabled = item.config.getvalue('kube_disable')
     if not disabled:
-        test_case = manager.get_test(item.nodeid)
-        if test_case is not None:
-            # teardown will delete the test client's namespace. deleting
-            # a namespace will delete all the things in the namespace, so
-            # that makes cleanup easier.
-            test_case.teardown()
+        manager.teardown(item.nodeid)
 
 
 def pytest_runtest_makereport(item, call):

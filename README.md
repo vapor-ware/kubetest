@@ -1,4 +1,8 @@
 # kubetest
+
+[![CircleCI](https://circleci.com/gh/vapor-ware/kubetest.svg?style=shield&circle-token=56a800b7205681b0543c145f4e168d08d3048433)](https://circleci.com/gh/vapor-ware/kubetest)
+[![PyPI](https://img.shields.io/pypi/v/kubetest.svg)](https://pypi.org/project/kubetest/)
+
 Kubetest is a [pytest][pytest] plugin that makes it easier to manage a Kubernetes
 cluster within your integration tests. While you can use the [Kubernetes Python client][k8s-py]
 directly, this plugin provides some cluster and object management on top of that so you can
@@ -8,7 +12,7 @@ it deploys and behaves correctly) and for testing disaster recovery scenarios (e
 pod or deployment and inspect the aftermath).
 
 **Features:**
-* Simple API for interacting with your cluster.
+* Simple API for common cluster interactions.
 * Uses the Kubernetes Python client as the backend, so more complex custom
   actions are possible.
 * Load Kubernetes manifest YAMLs into their Kubernetes models.
@@ -27,6 +31,14 @@ This plugin can be installed with `pip`
 ```
 pip install kubetest
 ```
+
+Note that the `kubetest` package has entrypoint hooks defined in its [`setup.py`](setup.py)
+which allow it to be automatically made available to pytest. This means that it will run
+whenever pytest is run. Since `kubetest` expects a cluster to be set up and to be given
+configuration for that cluster, pytest will fail if those are not present. It is therefore
+recommended to only install `kubetest` in a virtual environment or other managed environment,
+such as a CI pipeline, where you can assure that cluster access and configuration are
+available.
 
 ## Usage
 Once installed, the following `pytest` command-line parameters become available:
@@ -56,11 +68,15 @@ pytest \
 Note that kubetest expects a cluster to be available and requires some form of configuration
 in order to interface with that cluster.
 
-## Fixtures
+## Pytest Integration
+Below, a brief overview is given for the various components of kubetest exposed via pytest.
+For more detailed information, see the [kubetest documentation][kubetest-docs].
 
-### `kube`
+### Fixtures
+
+#### `kube`
 The `kube` fixture is the "entrypoint" into using kubetest. It provides a basic API for
-managing your cluster. For more info, see the [kubetest documentation][kubetest-docs].
+managing your cluster.
 
 ```python
 def test_deployment(kube):
@@ -68,12 +84,12 @@ def test_deployment(kube):
     
     d = kube.load_deployment('path/to/deployment.yaml')
     
-    kube.create(d)
+    d.create()
     d.wait_until_ready(timeout=10)
     
     # test some deployment state
     
-    kube.delete(d)
+    d.delete()
     d.wait_until_deleted(timeout=10)
 ```
 
@@ -86,6 +102,44 @@ a failure scenario, but does not need to be specified at the end of a test case 
 a means of cluster cleanup. Because each test will run in its own namespace, once the
 test completes, the namespace will be deleted from the cluster, which will in turn
 delete all objects in that namespace, cleaning out all test artifacts.
+
+### Markers
+To see all markers, run `pytest --kube-disable --markers` with kubetest installed.
+This will list the kubetest-provided markers along with a detailed description of
+what they do.
+
+#### `applymanifests`
+Allows you to specify manifest directories or files that should be used for the test
+case. This will automatically load the manifest and create the API object on the cluster.
+
+*Example:*
+```python
+@pytest.mark.applymanifests('manifests')
+def test_something(kube):
+    ...
+```
+
+#### `clusterrolebinding`
+Allows you to specify different [cluster roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
+that should be applied to the cluster for the test case.
+
+*Example:*
+```python
+@pytest.mark.clusterrolebinding('cluster-admin')
+def test_something(kube):
+    ...
+```
+
+#### `rolebinding`
+Allows you to specify different [roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
+that should be applied to the cluster for the test namespace of the test case.
+
+*Example:*
+```python
+@pytest.mark.rolebinding('custom-role')
+def test_something(kube):
+    ...
+```
 
 ## Feedback
 Feedback for kubetest is greatly appreciated! If you experience any issues, find the

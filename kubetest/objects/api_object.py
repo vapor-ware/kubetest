@@ -164,7 +164,7 @@ class ApiObject(abc.ABC):
 
         Returns:
             ApiObject: The API object corresponding to the configuration
-                loaded from YAML file.
+            loaded from YAML file.
         """
         obj = load_file(path, cls.obj_type)
         return cls(obj)

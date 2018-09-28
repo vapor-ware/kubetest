@@ -145,8 +145,8 @@ class Pod(ApiObject):
             name (str): The name of the Container.
 
         Returns:
-            Container: The Pod's Container with the matching name.
-            None: No Container with the given name was found.
+            Container: The Pod's Container with the matching name. If
+            no container with the given name is found, ``None`` is returned.
         """
         for c in self.get_containers():
             if c.obj.name == name:

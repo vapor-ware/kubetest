@@ -33,7 +33,7 @@ class TestClient:
 
         Returns:
             objects.ClusterRoleBinding: The ClusterRoleBinding for the
-                specified manifest.
+            specified manifest.
         """
         log.info('loading clusterrolebinding from path: %s', path)
         clusterrolebinding = objects.ClusterRoleBinding.load(path)
@@ -52,7 +52,7 @@ class TestClient:
                 augmentation of the ConfigMap namespace.
 
         Returns:
-            objects.Configmap: The ConfigMap for the specified manifest.
+            objects.ConfigMap: The ConfigMap for the specified manifest.
         """
         log.info('loading configmap from path: %s', path)
         configmap = objects.ConfigMap.load(path)
@@ -115,7 +115,7 @@ class TestClient:
                 augmentation of the RoleBinding namespace.
 
         Returns:
-            RoleBinding: The RoleBinding for the specified manifest.
+            objects.RoleBinding: The RoleBinding for the specified manifest.
         """
         log.info('loading rolebinding from path: %s', path)
         rolebinding = objects.RoleBinding.load(path)
@@ -136,7 +136,7 @@ class TestClient:
                 augmentation of the Secret namespace.
 
         Returns:
-            Secret: The Secret for the specified manifest.
+            objects.Secret: The Secret for the specified manifest.
         """
         log.info('loading secret from path: %s', path)
         secret = objects.Secret.load(path)
@@ -157,7 +157,7 @@ class TestClient:
                 augmentation of the Service namespace.
 
         Returns:
-            Service: The Service for the specified manifest.
+            objects.Service: The Service for the specified manifest.
         """
         log.info('loading service from path: %s', path)
         service = objects.Service.load(path)
@@ -223,7 +223,7 @@ class TestClient:
 
         Returns:
             dict[str, objects.Deployment]: The Deployments, where the key is
-                the Deployment name and the value is the Deployment.
+            the Deployment name and the value is the Deployment.
         """
         selectors = utils.selector_kwargs(fields, labels)
 
@@ -251,8 +251,8 @@ class TestClient:
                 these label selectors. By default, no restricting is done.
 
         Returns:
-            dict[str, objects.Configmap]: A dictionary where the key is the
-                ConfigMap name and the value is the ConfigMap itself.
+            dict[str, objects.ConfigMap]: A dictionary where the key is the
+            ConfigMap name and the value is the ConfigMap itself.
         """
         selectors = utils.selector_kwargs(fields, labels)
 
@@ -281,7 +281,7 @@ class TestClient:
 
         Returns:
             dict[str, objects.Pod]: A dictionary where the key is the Pod
-                name and the value is the Pod itself.
+            name and the value is the Pod itself.
         """
         selectors = utils.selector_kwargs(fields, labels)
 
@@ -310,7 +310,7 @@ class TestClient:
 
         Returns:
             dict[str, objects.Service]: A dictionary where the key is the
-                Service name and the value is the Service itself.
+            Service name and the value is the Service itself.
         """
         selectors = utils.selector_kwargs(fields, labels)
 
@@ -340,7 +340,7 @@ class TestClient:
 
         Returns:
             dict[str, objects.Node]: A dictionary where the key is the Node
-                name and the value is the Node itself.
+            name and the value is the Node itself.
         """
         selectors = utils.selector_kwargs(fields, labels)
 

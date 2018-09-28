@@ -148,7 +148,7 @@ class Service(ApiObject):
 
         Returns:
             list[client.V1Endpoints]: A list of endpoints associated
-                with the Service.
+            with the Service.
         """
         log.info('getting endpoints for service "%s"', self.name)
         endpoints = client.CoreV1Api().list_namespaced_endpoints(
@@ -178,11 +178,7 @@ class Service(ApiObject):
         Sample usage:
             Calling proxy_http_get(port='7000', path='test') on synse-blackbox
             service is equivalent to
-            curling from `/api/v1/namespaces/default/services/synse-blackbox:7000/proxy/test` # noqa
-
-        See Also:
-            - https://github.com/kubernetes-client/python/blob/master/kubernetes/docs/CoreV1Api.md#connect_get_namespaced_service_proxy_with_path # noqa
-            - https://kubernetes.io/docs/tasks/administer-cluster/access-cluster-services/#manually-constructing-apiserver-proxy-urls # noqa
+            curling `/api/v1/namespaces/default/services/synse-blackbox:7000/proxy/test`
         """
         return client.CoreV1Api().connect_get_namespaced_service_proxy_with_path(
             name="{}:{}".format(self.name, self.obj.spec.ports[0].port),

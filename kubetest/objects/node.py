@@ -8,18 +8,21 @@ log = logging.getLogger('kubetest')
 
 
 class Node:
-    """Kubetest wrapper around a Kubernetes Node API Object.
+    """Kubetest wrapper around a Kubernetes `Node`_ API Object.
 
-    The actual `kubernetes.client.V1Node` instance that this
-    wraps can be accessed via the `obj` instance member.
+    The actual ``kubernetes.client.V1Node`` instance that this
+    wraps can be accessed via the ``obj`` instance member.
 
     This wrapper provides some convenient functionality around the
-    API Object and provides some state management for the Node.
+    API Object and provides some state management for the `Node`_.
 
-    This wrapper does NOT subclass the kubetest.ApiObject like other
-    object wrappers because it is not intended to be created or
+    This wrapper does **NOT** subclass the ``objects.ApiObject`` like
+    other object wrappers because it is not intended to be created or
     managed from manifest file. It is merely meant to wrap the
     Node spec to make Node-based interactions easier
+
+    .. _Node:
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#node-v1-core
     """
 
     def __init__(self, api_object):
@@ -33,7 +36,7 @@ class Node:
         return self.__str__()
 
     def refresh(self):
-        """Refresh the underlying Kubernetes API Node object."""
+        """Refresh the underlying Kubernetes Node resource."""
         nodes = client.CoreV1Api().list_node()
         for node in nodes.items:
             if node.metadata.name == self.name:

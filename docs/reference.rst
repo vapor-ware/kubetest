@@ -134,3 +134,36 @@ Service
 .. autoclass:: kubetest.objects.Service
    :members:
 
+
+.. _kubetest_conditions:
+
+Conditions
+----------
+
+.. automodule:: kubetest.condition
+
+
+Policy
+~~~~~~
+
+.. versionadded:: 0.0.1
+
+.. autoclass:: kubetest.condition.Policy
+   :members:
+
+
+Condition
+~~~~~~~~~
+
+.. versionadded:: 0.0.1
+
+.. autoclass:: kubetest.condition.Condition
+   :members:
+
+
+Helpers
+~~~~~~~
+
+.. autofunction:: kubetest.condition.check_all
+
+.. autofunction:: kubetest.condition.check_and_sort

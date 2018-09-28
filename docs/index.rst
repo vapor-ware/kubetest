@@ -64,18 +64,16 @@ kubetest is free and open source software distributed under the terms of
 the `GPLv3`_ license.
 
 
-Contents
---------
-
 .. toctree::
-   :maxdepth: 2
+   :hidden:
 
    usage
    fixtures
    markers
    reference
+   writing_tests
    examples
-   source/modules
+   module_ref
 
 
 .. _`GPLv3`: https://github.com/vapor-ware/kubetest/blob/master/LICENSE

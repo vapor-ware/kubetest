@@ -1,4 +1,4 @@
-"""Kubetest wrapper for the Kubernetes `ClusterRoleBinding` API Object."""
+"""Kubetest wrapper for the Kubernetes ``ClusterRoleBinding`` API Object."""
 
 import logging
 
@@ -10,13 +10,16 @@ log = logging.getLogger('kubetest')
 
 
 class ClusterRoleBinding(ApiObject):
-    """Kubetest wrapper around a Kubernetes ClusterRoleBinding API Object.
+    """Kubetest wrapper around a Kubernetes `ClusterRoleBinding`_ API Object.
 
-    The actual `kubernetes.client.V1ClusterRoleBinding` instance that this
-    wraps can be accessed via the `obj` instance member.
+    The actual ``kubernetes.client.V1ClusterRoleBinding`` instance that this
+    wraps can be accessed via the ``obj`` instance member.
 
     This wrapper provides some convenient functionality around the
-    API Object and provides some state management for the ClusterRoleBinding.
+    API Object and provides some state management for the `ClusterRoleBinding`_.
+
+    .. _ClusterRoleBinding:
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#clusterrolebinding-v1-rbac-authorization-k8s-io
     """
 
     obj_type = client.V1ClusterRoleBinding
@@ -55,7 +58,8 @@ class ClusterRoleBinding(ApiObject):
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting clusterrolebinding "%s" with options "%s"', self.name, options)
+        log.info('deleting clusterrolebinding "%s"', self.name)
+        log.debug('delete options: %s', options)
         log.debug('clusterrolebinding: %s', self.obj)
 
         return client.RbacAuthorizationV1Api().delete_cluster_role_binding(
@@ -64,7 +68,7 @@ class ClusterRoleBinding(ApiObject):
         )
 
     def refresh(self):
-        """Refresh the underlying Kubernetes Api ClusterRoleBinding object."""
+        """Refresh the underlying Kubernetes ClusterRoleBinding resource."""
         self.obj = client.RbacAuthorizationV1Api().read_cluster_role_binding(
             name=self.name
         )
@@ -72,7 +76,7 @@ class ClusterRoleBinding(ApiObject):
     def is_ready(self):
         """Check if the ClusterRoleBinding is in the ready state.
 
-        ClusterRoleBindings do not have a 'status' field to check, so we
+        ClusterRoleBindings do not have a "status" field to check, so we
         will measure their readiness status by whether or not they exist
         on the cluster.
 

@@ -1,4 +1,4 @@
-"""Kubetest wrapper for the Kubernetes `Service` API Object."""
+"""Kubetest wrapper for the Kubernetes ``Service`` API Object."""
 
 import logging
 
@@ -10,13 +10,16 @@ log = logging.getLogger('kubetest')
 
 
 class Service(ApiObject):
-    """Kubetest wrapper around a Kubernetes Service API Object.
+    """Kubetest wrapper around a Kubernetes `Service`_ API Object.
 
-    The actual `kubernetes.client.V1Service` instance that this
-    wraps can be accessed via the `obj` instance member.
+    The actual ``kubernetes.client.V1Service`` instance that this
+    wraps can be accessed via the ``obj`` instance member.
 
     This wrapper provides some convenient functionality around the
-    API Object and provides some state management for the Service.
+    API Object and provides some state management for the `Service`_.
+
+    .. _Service:
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#service-v1-core
     """
 
     obj_type = client.V1Service
@@ -32,7 +35,7 @@ class Service(ApiObject):
 
         Args:
             namespace (str): The namespace to create the Service under.
-                If the Service was loaded via the Kubetest client, the
+                If the Service was loaded via the kubetest client, the
                 namespace will already be set, so it is not needed here.
                 Otherwise, the namespace will need to be provided.
         """
@@ -62,7 +65,8 @@ class Service(ApiObject):
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting service "%s" with options "%s"', self.name, options)
+        log.info('deleting service "%s"', self.name)
+        log.debug('delete options: %s', options)
         log.debug('service: %s', self.obj)
         return client.CoreV1Api().delete_namespaced_service(
             name=self.name,
@@ -71,7 +75,7 @@ class Service(ApiObject):
         )
 
     def refresh(self):
-        """Refresh the underlying Kubernetes Api Service object."""
+        """Refresh the underlying Kubernetes Service resource."""
         self.obj = client.CoreV1Api().read_namespaced_service(
             name=self.name,
             namespace=self.namespace,
@@ -81,7 +85,7 @@ class Service(ApiObject):
         """Check if the Service is in the ready state.
 
         The readiness state is not clearly available from the Service
-        status, so to check whether or not the Service is ready, this
+        status, so to see whether or not the Service is ready this
         will check whether the endpoints of the Service are ready.
 
         This comes with the caveat that in order for a Service to
@@ -169,16 +173,10 @@ class Service(ApiObject):
         """Issue a GET request to proxy of a Service.
 
         Args:
-            path (str): Part of URLs that include service endpoints,
-                suffixes, and parameters.
+            path (str): The URI path for the request.
 
         Returns:
-            str: Response in string format.
-
-        Sample usage:
-            Calling proxy_http_get(port='7000', path='test') on synse-blackbox
-            service is equivalent to
-            curling `/api/v1/namespaces/default/services/synse-blackbox:7000/proxy/test`
+            str: The response data
         """
         return client.CoreV1Api().connect_get_namespaced_service_proxy_with_path(
             name="{}:{}".format(self.name, self.obj.spec.ports[0].port),

@@ -1,4 +1,9 @@
-"""Test client provided by kubetest for managing Kubernetes objects."""
+"""The test client for managing Kubernetes resources within test cases.
+
+An instance of the ``TestClient`` defined in this module is automatically
+created for each test case that uses the ``kube`` fixture. The ``kube``
+fixture provides the ``TestClient`` instance to the test case.
+"""
 
 import logging
 
@@ -11,7 +16,10 @@ log = logging.getLogger('kubetest')
 
 
 class TestClient:
-    """Test client for managing Kubernetes objects.
+    """Test client for managing Kubernetes resources for a test case.
+
+    The ``namespace`` for the TestClient will be automatically generated
+    and provided to the TestClient during the test setup process.
 
     Args:
         namespace (str): The namespace associated with the test client.
@@ -26,7 +34,7 @@ class TestClient:
 
     @staticmethod
     def load_clusterrolebinding(path):
-        """Load a ClusterRoleBinding manifest into a ClusterRoleBinding object.
+        """Load a manifest YAML into a ClusterRoleBinding object.
 
         Args:
             path (str): The path to the ClusterRoleBinding manifest.
@@ -40,11 +48,11 @@ class TestClient:
         return clusterrolebinding
 
     def load_configmap(self, path, set_namespace=True):
-        """Load a ConfigMap manifest into a Configmap object.
+        """Load a manifest YAML into a ConfigMap object.
 
-        By default, this will augment the ConfigMap API Object with
+        By default, this will augment the ConfigMap object with
         the generated test case namespace. This behavior can be
-        disabled with the `set_namespace` flag.
+        disabled with the ``set_namespace`` flag.
 
         Args:
             path (str): The path to the ConfigMap manifest.
@@ -61,11 +69,11 @@ class TestClient:
         return configmap
 
     def load_deployment(self, path, set_namespace=True):
-        """Load a Deployment manifest into a Deployment object.
+        """Load a manifest YAML into a Deployment object.
 
-        By default, this will augment the Deployment API Object with
+        By default, this will augment the Deployment object with
         the generated test case namespace. This behavior can be
-        disabled with the `set_namespace` flag.
+        disabled with the ``set_namespace`` flag.
 
         Args:
             path (str): The path to the Deployment manifest.
@@ -82,11 +90,11 @@ class TestClient:
         return deployment
 
     def load_pod(self, path, set_namespace=True):
-        """Load a Pod manifest into a Pod object.
+        """Load a manifest YAML into a Pod object.
 
-        By default, this will augment the Pod API Object with
+        By default, this will augment the Pod object with
         the generated test case namespace. This behavior can be
-        disabled with the `set_namespace` flag.
+        disabled with the ``set_namespace`` flag.
 
         Args:
             path (str): The path to the Pod manifest.
@@ -103,11 +111,11 @@ class TestClient:
         return pod
 
     def load_rolebinding(self, path, set_namespace=True):
-        """Load a RoleBinding manifest into a RoleBinding object.
+        """Load a manifest YAML into a RoleBinding object.
 
-        By default, this will augment the RoleBinding API Object with
+        By default, this will augment the RoleBinding object with
         the generated test case namespace. This behavior can be
-        disabled with the `set_namespace` flag.
+        disabled with the ``set_namespace`` flag.
 
         Args:
             path (str): The path to the RoleBinding manifest.
@@ -124,11 +132,11 @@ class TestClient:
         return rolebinding
 
     def load_secret(self, path, set_namespace=True):
-        """Load a Secret manifest into a Secret object.
+        """Load a manifest YAML into a Secret object.
 
-        By default, this will augment the Secret API Object with
+        By default, this will augment the Secret object with
         the generated test case namespace. This behavior can be
-        disabled with the `set_namespace` flag.
+        disabled with the ``set_namespace`` flag.
 
         Args:
             path (str): The path to the Secret manifest.
@@ -145,11 +153,11 @@ class TestClient:
         return secret
 
     def load_service(self, path, set_namespace=True):
-        """Load a Service manifest into a Service object.
+        """Load a manifest YAML into a Service object.
 
-        By default, this will augment the Service API Object with
+        By default, this will augment the Service object with
         the generated test case namespace. This behavior can be
-        disabled with the `set_namespace` flag.
+        disabled with the ``set_namespace`` flag.
 
         Args:
             path (str): The path to the Service manifest.
@@ -168,7 +176,7 @@ class TestClient:
     # ****** Generic Helpers on ApiObjects ******
 
     def create(self, obj):
-        """Create the provided API Object on the Kubernetes cluster.
+        """Create the provided ApiObject on the Kubernetes cluster.
 
         If the object does not already have a namespace assigned to it,
         the client's generated test case namespace will be used.
@@ -182,7 +190,7 @@ class TestClient:
         obj.create()
 
     def delete(self, obj, options=None):
-        """Delete the provided API Object from the Kubernetes cluster.
+        """Delete the provided ApiObject from the Kubernetes cluster.
 
         If the object does not already have a namespace assigned to it,
         the client's generated test case namespace will be used.
@@ -190,7 +198,7 @@ class TestClient:
         Args:
             obj (objects.ApiObject): A kubetest API Object wrapper.
             options (client.V1DeleteOptions): Additional options for
-                deleting the API Object from the cluster.
+                deleting the resource from the cluster.
         """
         if obj.namespace is None:
             obj.namespace = self.namespace
@@ -201,7 +209,7 @@ class TestClient:
 
     @staticmethod
     def refresh(obj):
-        """Refresh the underlying Kubernetes API Object status and state.
+        """Refresh the underlying Kubernetes resource status and state.
 
         Args:
             obj (objects.ApiObject): A kubetest API Object wrapper.
@@ -222,8 +230,8 @@ class TestClient:
                 these label selectors. By default, no restricting is done.
 
         Returns:
-            dict[str, objects.Deployment]: The Deployments, where the key is
-            the Deployment name and the value is the Deployment.
+            dict[str, objects.Deployment]: A dictionary where the key is
+            the Deployment name and the value is the Deployment itself.
         """
         selectors = utils.selector_kwargs(fields, labels)
 
@@ -438,11 +446,12 @@ class TestClient:
             )
 
     def wait_for_ready_nodes(self, count, timeout=None, interval=1):
-        """Wait until there are at least `count` number of nodes available
+        """Wait until there are at least ``count`` number of nodes available
         in the cluster.
 
-        Note that this should only be used for clusters that auto-scale the
-        nodes. This will not create/delete nodes on its own.
+        Notes:
+            This should only be used for clusters that auto-scale the
+            nodes. This will not create/delete nodes on its own.
 
         Args:
             count (int): The number of nodes to wait for.
@@ -470,7 +479,7 @@ class TestClient:
         """Wait for all of the pre-registered objects to be ready on the cluster.
 
         An object is pre-registered with the test client if it is specified
-        to the test via the `applymanifests` pytest marker. The marker will load
+        to the test via the ``applymanifests`` pytest marker. The marker will load
         the manifest and add the object to the cluster, and register it with
         the test client. This method waits until all such loaded manifest objects
         are in the ready state simultaneously.

@@ -14,13 +14,16 @@ log = logging.getLogger('kubetest')
 
 
 class Pod(ApiObject):
-    """Kubetest wrapper around a Kubernetes Pod API Object.
+    """Kubetest wrapper around a Kubernetes `Pod`_ API Object.
 
-    The actual `kubernetes.client.V1Pod` instance that this
-    wraps can be accessed via the `obj` instance member.
+    The actual ``kubernetes.client.V1Pod`` instance that this
+    wraps can be accessed via the ``obj`` instance member.
 
     This wrapper provides some convenient functionality around the
-    API Object and provides some state management for the Pod.
+    API Object and provides some state management for the `Pod`_.
+
+    .. _Pod:
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#pod-v1-core
     """
 
     obj_type = client.V1Pod
@@ -36,7 +39,7 @@ class Pod(ApiObject):
 
         Args:
             namespace (str): The namespace to create the Pod under.
-                If the Pod was loaded via the Kubetest client, the
+                If the Pod was loaded via the kubetest client, the
                 namespace will already be set, so it is not needed
                 here. Otherwise, the namespace will need to be provided.
         """
@@ -66,7 +69,8 @@ class Pod(ApiObject):
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting pod "%s" with options "%s"', self.name, options)
+        log.info('deleting pod "%s"', self.name)
+        log.debug('delete options: %s', options)
         log.debug('pod: %s', self.obj)
         return client.CoreV1Api().delete_namespaced_pod(
             name=self.name,
@@ -75,7 +79,7 @@ class Pod(ApiObject):
         )
 
     def refresh(self):
-        """Refresh the underlying Kubernetes Api Pod object."""
+        """Refresh the underlying Kubernetes Pod resource."""
         self.obj = client.CoreV1Api().read_namespaced_pod_status(
             name=self.name,
             namespace=self.namespace,
@@ -126,7 +130,7 @@ class Pod(ApiObject):
         return self.obj.status
 
     def get_containers(self):
-        """Get the containers for the pod.
+        """Get the Pod's containers.
 
         Returns:
             list[Container]: A list of containers that belong to the Pod.
@@ -134,9 +138,7 @@ class Pod(ApiObject):
         log.info('getting containers for pod "%s"', self.name)
         self.refresh()
 
-        containers = [Container(c, self) for c in self.obj.spec.containers]
-        log.debug('contianers: %s', containers)
-        return containers
+        return [Container(c, self) for c in self.obj.spec.containers]
 
     def get_container(self, name):
         """Get a container in the Pod by name.
@@ -172,13 +174,14 @@ class Pod(ApiObject):
     def http_proxy_get(self, path, query_params=None):
         """Issue a GET request to a proxy for the Pod.
 
-        This function does not use the kubernetes
-        `connect_get_namespaced_pod_proxy_with_path` function because there
-        appears to be lack of support for custom query parameters (as of
-        the kubernetes==7.0.0 package version). To bypass this, parts of
-        the core functionality from the above function are used here with
-        the modification of allowing user-defined query parameters to be
-        passed along.
+        Notes:
+            This function does not use the kubernetes
+            ``connect_get_namespaced_pod_proxy_with_path`` function because there
+            appears to be lack of support for custom query parameters (as of
+            the ``kubernetes==7.0.0`` package version). To bypass this, parts of
+            the core functionality from the aforementioned function are used here with
+            the modification of allowing user-defined query parameters to be
+            passed along.
 
         Args:
             path (str): The URI path for the request.
@@ -224,13 +227,14 @@ class Pod(ApiObject):
         """Issue a GET request to a proxy for the Pod and return the
         JSON response as a dictionary.
 
-        This function does not use the kubernetes
-        `connect_get_namespaced_pod_proxy_with_path` function because there
-        appears to be lack of support for custom query parameters (as of
-        the kubernetes==7.0.0 package version). To bypass this, parts of
-        the core functionality from the above function are used here with
-        the modification of allowing user-defined query parameters to be
-        passed along.
+        Notes:
+            This function does not use the kubernetes
+            ``connect_get_namespaced_pod_proxy_with_path`` function because there
+            appears to be lack of support for custom query parameters (as of
+            the ``kubernetes==7.0.0`` package version). To bypass this, parts of
+            the core functionality from the aforementioned function are used here with
+            the modification of allowing user-defined query parameters to be
+            passed along.
 
         Args:
             path (str): The URI path for the request.
@@ -273,7 +277,7 @@ class Pod(ApiObject):
         """Wait until all containers in the Pod have started.
 
         This will wait for the images to be pulled and for the containers
-        to be created and started. This will unblock once all pod containers
+        to be created and started. This will unblock once all Pod containers
         have been started.
 
         This is different than waiting until ready, since a container may

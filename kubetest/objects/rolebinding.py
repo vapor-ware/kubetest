@@ -1,4 +1,4 @@
-"""Kubetest wrapper for the Kubernetes `RoleBinding` API Object."""
+"""Kubetest wrapper for the Kubernetes ``RoleBinding`` API Object."""
 
 import logging
 
@@ -10,13 +10,16 @@ log = logging.getLogger('kubetest')
 
 
 class RoleBinding(ApiObject):
-    """Kubetest wrapper around a Kubernetes RoleBinding API Object.
+    """Kubetest wrapper around a Kubernetes `RoleBinding`_ API Object.
 
-    The actual `kubernetes.client.V1RoleBinding` instance that this
-    wraps can be accessed via the `obj` instance member.
+    The actual ``kubernetes.client.V1RoleBinding`` instance that this
+    wraps can be accessed via the ``obj`` instance member.
 
     This wrapper provides some convenient functionality around the
-    API Object and provides some state management for the RoleBinding.
+    API Object and provides some state management for the `RoleBinding`_.
+
+    .. _RoleBinding:
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#rolebinding-v1-rbac-authorization-k8s-io
     """
 
     obj_type = client.V1RoleBinding
@@ -32,7 +35,7 @@ class RoleBinding(ApiObject):
 
         Args:
             namespace (str): The namespace to create the RoleBinding under.
-                If the RoleBinding was loaded via the Kubetest Client, the
+                If the RoleBinding was loaded via the kubetest client, the
                 namespace will already be set, so it is not needed here.
                 Otherwise, the namespace will need to be provided.
         """
@@ -62,9 +65,9 @@ class RoleBinding(ApiObject):
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting rolebinding "%s" with options "%s"', self.name, options)
+        log.info('deleting rolebinding "%s"', self.name)
+        log.debug('delete options: %s', options)
         log.debug('rolebinding: %s', self.obj)
-
         return client.RbacAuthorizationV1Api().delete_namespaced_role_binding(
             namespace=self.namespace,
             name=self.name,
@@ -72,7 +75,7 @@ class RoleBinding(ApiObject):
         )
 
     def refresh(self):
-        """Refresh the underlying Kubernetes Api RoleBinding object."""
+        """Refresh the underlying Kubernetes RoleBinding resource."""
         self.obj = client.RbacAuthorizationV1Api().read_namespaced_role_binding(
             namespace=self.namespace,
             name=self.name,
@@ -81,7 +84,7 @@ class RoleBinding(ApiObject):
     def is_ready(self):
         """Check if the RoleBinding is in the ready state.
 
-        RoleBindings do not have a 'status' field to check, so we
+        RoleBindings do not have a "status" field to check, so we
         will measure their readiness status by whether or not they exist
         on the cluster.
 

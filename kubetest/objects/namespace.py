@@ -1,4 +1,4 @@
-"""Kubetest wrapper for the Kubernetes `Namespace` API Object."""
+"""Kubetest wrapper for the Kubernetes ``Namespace`` API Object."""
 
 import logging
 
@@ -10,13 +10,16 @@ log = logging.getLogger('kubetest')
 
 
 class Namespace(ApiObject):
-    """Kubetest wrapper around a Kubernetes Namespace API Object.
+    """Kubetest wrapper around a Kubernetes `Namespace`_ API Object.
 
-    The actual `kubernetes.client.V1Namespace` instance that this
-    wraps can be accessed via the `obj` instance member.
+    The actual ``kubernetes.client.V1Namespace`` instance that this
+    wraps can be accessed via the ``obj`` instance member.
 
     This wrapper provides some convenient functionality around the
-    API Object and provides some state management for the Namespace.
+    API Object and provides some state management for the `Namespace`_.
+
+    .. _Namespace:
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#namespace-v1-core
     """
 
     obj_type = client.V1Namespace
@@ -32,7 +35,7 @@ class Namespace(ApiObject):
         """Create a new Namespace with object backing.
 
         Args:
-            name (str): The name of the new namespace.
+            name (str): The name of the new Namespace.
 
         Returns:
             Namespace: A new Namespace instance.
@@ -65,7 +68,7 @@ class Namespace(ApiObject):
         """Delete the Namespace.
 
         Args:
-             options (client.V1DeleteOptions): Options for RoleBinding deletion.
+             options (client.V1DeleteOptions): Options for Namespace deletion.
 
         Returns:
             client.V1Status: The status of the delete operation.
@@ -73,7 +76,8 @@ class Namespace(ApiObject):
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting namespace "%s" with options "%s"', self.name, options)
+        log.info('deleting namespace "%s"', self.name)
+        log.debug('delete options: %s', options)
         log.debug('namespace: %s', self.obj)
 
         return client.CoreV1Api().delete_namespace(
@@ -82,7 +86,7 @@ class Namespace(ApiObject):
         )
 
     def refresh(self):
-        """Refresh the underlying Kubernetes API Namespace object."""
+        """Refresh the underlying Kubernetes Namespace resource."""
         self.obj = client.CoreV1Api().read_namespace(
             name=self.name,
         )

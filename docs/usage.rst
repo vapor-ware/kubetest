@@ -1,4 +1,6 @@
 
+.. _command_line_usage:
+
 Command Line Usage
 ==================
 Once installed (see :ref:`installation`), the following pytest command-line options become available:

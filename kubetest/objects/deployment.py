@@ -1,4 +1,4 @@
-"""Kubetest wrapper for the Kubernetes `Deployment` API Object."""
+"""Kubetest wrapper for the Kubernetes ``Deployment`` API Object."""
 
 import logging
 
@@ -13,13 +13,16 @@ log = logging.getLogger('kubetest')
 
 
 class Deployment(ApiObject):
-    """Kubetest wrapper around a Kubernetes Deployment API Object.
+    """Kubetest wrapper around a Kubernetes `Deployment`_ API Object.
 
-    The actual `kubernetes.client.V1Deployment` instance that this
-    wraps can be accessed via the `obj` instance member.
+    The actual ``kubernetes.client.V1Deployment`` instance that this
+    wraps can be accessed via the ``obj`` instance member.
 
     This wrapper provides some convenient functionality around the
-    API Object and provides some state management for the Deployment.
+    API Object and provides some state management for the `Deployment`_.
+
+    .. _Deployment:
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#deployment-v1-apps
     """
 
     obj_type = client.V1Deployment
@@ -35,7 +38,7 @@ class Deployment(ApiObject):
 
         Args:
             namespace (str): The namespace to create the Deployment under.
-                If the Deployment was loaded via the Kubetest client, the
+                If the Deployment was loaded via the kubetest client, the
                 namespace will already be set, so it is not needed here.
                 Otherwise, the namespace will need to be provided.
         """
@@ -65,7 +68,8 @@ class Deployment(ApiObject):
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting deployment "%s" with options "%s"', self.name, options)
+        log.info('deleting deployment "%s"', self.name)
+        log.debug('delete options: %s', options)
         log.debug('deployment: %s', self.obj)
         return self.api_client.delete_namespaced_deployment(
             name=self.name,
@@ -74,7 +78,7 @@ class Deployment(ApiObject):
         )
 
     def refresh(self):
-        """Refresh the underlying Kubernetes Api Deployment object."""
+        """Refresh the underlying Kubernetes Deployment resource."""
         self.obj = self.api_client.read_namespaced_deployment_status(
             name=self.name,
             namespace=self.namespace,
@@ -119,7 +123,7 @@ class Deployment(ApiObject):
         return self.obj.status
 
     def get_pods(self):
-        """Get the pods for the deployment.
+        """Get the pods for the Deployment.
 
         Returns:
             list[Pod]: A list of pods that belong to the deployment.

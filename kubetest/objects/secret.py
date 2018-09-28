@@ -1,4 +1,4 @@
-"""Kubetest wrapper for the Kubernetes `Secret` API Object."""
+"""Kubetest wrapper for the Kubernetes ``Secret`` API Object."""
 
 import logging
 
@@ -10,13 +10,16 @@ log = logging.getLogger('kubetest')
 
 
 class Secret(ApiObject):
-    """Kubetest wrapper around a Kubernetes Secret API Object.
+    """Kubetest wrapper around a Kubernetes `Secret`_ API Object.
 
-    The actual `kubernetes.client.V1Secret` instance that this
-    wraps can be accessed via the `obj` instance member.
+    The actual ``kubernetes.client.V1Secret`` instance that this
+    wraps can be accessed via the ``obj`` instance member.
 
     This wrapper provides some convenient functionality around the
-    API Object and provides some state management for the Secret.
+    API Object and provides some state management for the `Secret`_.
+
+    .. _Secret:
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#secret-v1-core
     """
 
     obj_type = client.V1Secret
@@ -32,7 +35,7 @@ class Secret(ApiObject):
 
         Args:
             namespace (str): The namespace to create the Secret under.
-                If the Secret was loaded via the Kubetest client, the
+                If the Secret was loaded via the kubetest client, the
                 namespace will already be set, so it is not needed here.
                 Otherwise, the namespace will need to be provided.
         """
@@ -62,7 +65,8 @@ class Secret(ApiObject):
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting secret "%s" with options "%s"', self.name, options)
+        log.info('deleting secret "%s"', self.name)
+        log.debug('delete options: %s', options)
         log.debug('secret: %s', self.obj)
         return client.CoreV1Api().delete_namespaced_secret(
             name=self.name,
@@ -71,7 +75,7 @@ class Secret(ApiObject):
         )
 
     def refresh(self):
-        """Refresh the underlying Kubernetes Api Secret object."""
+        """Refresh the underlying Kubernetes Secret resource."""
         self.obj = client.CoreV1Api().read_namespaced_secret(
             name=self.name,
             namespace=self.namespace,
@@ -80,7 +84,7 @@ class Secret(ApiObject):
     def is_ready(self):
         """Check if the Secret is in the ready state.
 
-        Secrets do not have a 'status' field to check, so we will
+        Secrets do not have a "status" field to check, so we will
         measure their readiness status by whether or not they exist
         on the cluster.
 

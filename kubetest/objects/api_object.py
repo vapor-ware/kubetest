@@ -23,11 +23,31 @@ api_clients = {
 
 
 class ApiObject(abc.ABC):
-    """ApiObject is the base class for all Kubernetes API objects."""
+    """ApiObject is the base class for many of the kubetest objects
+    which wrap Kubernetes API objects.
+
+    This base class provides common functionality and common object
+    properties for all API wrappers. It also defines the following
+    abstract methods which all subclasses must implement:
+
+      - ``create``: create the resource on the cluster
+      - ``delete``: remove the resource from the cluster
+      - ``refresh``: refresh the underlying object model
+      - ``is_ready``: check if the object is in the ready state
+
+    Args:
+         api_object: The underlying Kubernetes API object.
+
+    Attributes:
+        obj: The underlying Kubernetes API object.
+    """
 
     # The Kubernetes API object type. Each subclass should
     # define its own obj_type.
     obj_type = None
+    '''The default Kubernetes API object type for the class.
+    Each subclass should define its own ``obj_type``.
+    '''
 
     def __init__(self, api_object):
         # The underlying Kubernetes Api Object
@@ -39,22 +59,22 @@ class ApiObject(abc.ABC):
 
     @property
     def version(self):
-        """The API version of the Kubernetes object (e.g. apiVersion)."""
+        """str: The API version of the Kubernetes object (`obj.apiVersion``)."""
         return self.obj.api_version
 
     @property
     def name(self):
-        """The name of the Kubernetes object (metadata.name)."""
+        """str: The name of the Kubernetes object (``obj.metadata.name``)."""
         return self.obj.metadata.name
 
     @name.setter
     def name(self, name):
-        """Set the name of the Kubernetes objects (metadata.name)."""
+        """Set the name of the Kubernetes objects (``obj.metadata.name``)."""
         self.obj.metadata.name = name
 
     @property
     def namespace(self):
-        """The namespace of the Kubernetes object (metadata.namespace)."""
+        """The namespace of the Kubernetes object (``obj.metadata.namespace``)."""
         return self.obj.metadata.namespace
 
     @namespace.setter
@@ -72,7 +92,7 @@ class ApiObject(abc.ABC):
     @property
     def api_client(self):
         """The API client for the Kubernetes object. This is determined
-        by the apiVersion of the object configuration.
+        by the ``apiVersion`` of the object configuration.
 
         Raises:
             ValueError: The API version is not supported.
@@ -90,11 +110,11 @@ class ApiObject(abc.ABC):
         return self._api_client
 
     def wait_until_ready(self, timeout=None):
-        """Wait until the Api Object is in the ready state.
+        """Wait until the resource is in the ready state.
 
         Args:
             timeout (int): The maximum time to wait, in seconds, for
-                the Api Object to reach the ready state. If unspecified,
+                the resource to reach the ready state. If unspecified,
                 this will wait indefinitely. If specified and the timeout
                 is met or exceeded, a TimeoutError will be raised.
 
@@ -113,11 +133,11 @@ class ApiObject(abc.ABC):
         )
 
     def wait_until_deleted(self, timeout=None):
-        """Wait until the Api Object is deleted from the cluster.
+        """Wait until the resource is deleted from the cluster.
 
         Args:
             timeout (int): The maximum time to wait, in seconds, for
-                the Api Object to be deleted from the cluster. If
+                the resource to be deleted from the cluster. If
                 unspecified, this will wait indefinitely. If specified
                 and the timeout is met or exceeded, a TimeoutError will
                 be raised.
@@ -153,53 +173,56 @@ class ApiObject(abc.ABC):
 
     @classmethod
     def load(cls, path):
-        """Load the Kubernetes API Object from file.
+        """Load the Kubernetes resource from file.
 
         Generally, this is used to load the Kubernetes manifest files
         and parse them into their appropriate API Object type.
 
         Args:
             path (str): The path to the YAML config file (manifest)
-                containing the configuration for the API Object.
+                containing the configuration for the resource.
 
         Returns:
-            ApiObject: The API object corresponding to the configuration
-                loaded from YAML file.
+            ApiObject: The API object wrapper corresponding to the configuration
+            loaded from manifest YAML file.
         """
         obj = load_file(path, cls.obj_type)
         return cls(obj)
 
     @abc.abstractmethod
     def create(self, namespace=None):
-        """Create the underlying Kubernetes Api Object in the cluster
+        """Create the underlying Kubernetes resource in the cluster
         under the given namespace.
 
         Args:
-            namespace (str): The namespace to create the Api Object under.
+            namespace (str): The namespace to create the resource under.
                 If no namespace is provided, it will use the instance's
                 namespace member, which is set when the object is created
-                via the Kubetest client. (optional)
+                via the kubetest client. (optional)
         """
 
     @abc.abstractmethod
     def delete(self, options):
-        """Delete the underlying Kubernetes Api Object from the cluster.
+        """Delete the underlying Kubernetes resource from the cluster.
 
-        This method expects the Api Object to have been loaded or otherwise
+        This method expects the resource to have been loaded or otherwise
         assigned a namespace already. If it has not, the namespace will need
         to be set manually.
 
         Args:
-            options (client.V1DeleteOptions): Options for deployment deletion.
+            options (client.V1DeleteOptions): Options for resource deletion.
         """
 
     @abc.abstractmethod
     def refresh(self):
-        """Refresh the local state of the underlying Kubernetes Api Object."""
+        """Refresh the local state (``obj``) of the underlying Kubernetes resource."""
 
     @abc.abstractmethod
     def is_ready(self):
-        """Check if the Api Object is in the ready state.
+        """Check if the resource is in the ready state.
+
+        It is up to the wrapper subclass to define what "ready" means for
+        that particular resource.
 
         Returns:
             bool: True if in the ready state; False otherwise.

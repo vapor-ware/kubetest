@@ -1,4 +1,4 @@
-"""Test conditions for kubetest."""
+"""Define test conditions for kubetest."""
 
 import enum
 
@@ -8,11 +8,11 @@ class Policy(enum.Enum):
 
     A Policy defines the behavior of how Conditions are checked.
 
-      - `ONCE`: A condition only needs to be met once and the check
+      - **ONCE**: A condition only needs to be met once and the check
         will consider it met regardless of the state of any other
         conditions that may be checked alongside it. This is the
         default behavior.
-      - `SIMULTANEOUS`: A condition needs to be met simultaneous to
+      - **SIMULTANEOUS**: A condition needs to be met simultaneous to
         all other conditions that are being checked alongside it for
         the check to be successful.
     """
@@ -25,15 +25,25 @@ class Condition:
     """A Condition is a convenience wrapper around a function and its arguments
     which allows the function to be called at a later time.
 
-    The function is called in the `check` method, which resolves the result to
+    The function is called in the ``check`` method, which resolves the result to
     a boolean value, thus the condition function should return a boolean or
     something that ultimately resolves to a Truthy or Falsey value.
 
     Args:
-        name: The name of the condition to make it easier to identify.
+        name (str): The name of the condition to make it easier to identify.
         fn: The condition function that will be checked.
         *args: Any arguments for the condition function.
         **kwargs: Any keyword arguments for the condition function.
+
+    Attributes:
+        name (str): The name of the Condition.
+        fn (callable): The condition function that will be checked.
+        args (tuple): Arguments for the checking function.
+        kwargs (dict): Keyword arguments for the checking function.
+        last_check(bool): Holds the state of the last condition check.
+
+    Raises:
+        ValueError: The given ``fn`` is not callable.
     """
 
     def __init__(self, name, fn, *args, **kwargs):
@@ -87,7 +97,7 @@ def check_and_sort(*args):
 
     Returns:
         tuple[list[Condition], list[Condition]]: The met and unmet
-            condition buckets (in that order).
+        condition buckets (in that order).
     """
     met, unmet = [], []
 

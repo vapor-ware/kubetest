@@ -20,6 +20,10 @@ ifndef HAS_PIP_COMPILE
 endif
 	pip-compile --output-file requirements.txt setup.py
 
+.PHONY: docs
+docs:  ## Build the kubetest docs locally
+	tox -e docs
+
 .PHONY: example-tests
 example-tests:  ## Run the example tests using kubetest
 	tox -e examples

@@ -7,19 +7,17 @@ from kubernetes import client
 from kubetest.manifest import load_file, load_path
 from kubetest.objects import ApiObject, ClusterRoleBinding, RoleBinding
 
-ROLEBINDING_INI = (
-    'rolebinding(kind, name, subject_kind=None, subject_name=None): '
-    'create and use a Kubernetes RoleBinding for the test case. The generated role '
-    'binding will use the generated test-case namespace and will be automatically '
-    'removed once the test completes. The role kind (Role, ClusterRole) must be '
-    'specified along with the name of the role. Only existing Roles or ClusterRoles '
-    'can be used. Optionally, the subject_kind (User, Group, ServiceAccount) and '
-    'subject_name can be specified to set a target subject for the RoleBinding. If '
-    'no subject is specified, it will default to all users in the namespace and all '
-    'service accounts. If a subject is specified, both the subject kind and name '
-    'must be present. The RoleBinding will always use the apiGroup '
-    '"rbac.authorization.k8s.io" for both subjects and roleRefs. For more information, '
-    'see https://kubernetes.io/docs/reference/access-authn-authz/rbac/'
+APPLYMANIFEST_INI = (
+    'applymanifests(path, files=None): '
+    'load the YAML manifests from the specified path and create them on the cluster. '
+    'By default, all YAML files found in the specified path will be loaded and created. '
+    'If a list is passed to the files parameter, only the files in the path matching '
+    'to a name in the files list will be loaded and created. This marker is similar to '
+    'the "kubectl apply -f <dir>" command. Loading manifests via this marker will not '
+    'prohibit you from loading other manifests manually. Use the "kube" fixture to get '
+    'references to the created objects. Manifests loaded via this marker are registered '
+    'with the internal test case metainfo and can be waited upon for creation via the '
+    '"kube" fixture "wait_until_created" method.'
 )
 
 CLUSTERROLEBINDING_INI = (
@@ -36,17 +34,19 @@ CLUSTERROLEBINDING_INI = (
     'see https://kubernetes.io/docs/reference/access-authn-authz/rbac/'
 )
 
-APPLYMANIFEST_INI = (
-    'applymanifests(path, files=None): '
-    'load the YAML manifests from the specified path and create them on the cluster. '
-    'By default, all YAML files found in the specified path will be loaded and created. '
-    'If a list is passed to the files parameter, only the files in the path matching '
-    'to a name in the files list will be loaded and created. This marker is similar to '
-    'the "kubectl apply -f <dir>" command. Loading manifests via this marker will not '
-    'prohibit you from loading other manifests manually. Use the "kube" fixture to get '
-    'references to the created objects. Manifests loaded via this marker are registered '
-    'with the internal test case metainfo and can be waited upon for creation via the '
-    '"kube" fixture "wait_until_created" method.'
+ROLEBINDING_INI = (
+    'rolebinding(kind, name, subject_kind=None, subject_name=None): '
+    'create and use a Kubernetes RoleBinding for the test case. The generated role '
+    'binding will use the generated test-case namespace and will be automatically '
+    'removed once the test completes. The role kind (Role, ClusterRole) must be '
+    'specified along with the name of the role. Only existing Roles or ClusterRoles '
+    'can be used. Optionally, the subject_kind (User, Group, ServiceAccount) and '
+    'subject_name can be specified to set a target subject for the RoleBinding. If '
+    'no subject is specified, it will default to all users in the namespace and all '
+    'service accounts. If a subject is specified, both the subject kind and name '
+    'must be present. The RoleBinding will always use the apiGroup '
+    '"rbac.authorization.k8s.io" for both subjects and roleRefs. For more information, '
+    'see https://kubernetes.io/docs/reference/access-authn-authz/rbac/'
 )
 
 
@@ -56,9 +56,9 @@ def register(config):
     Args:
         config: The pytest config that markers will be registered to.
     """
-    config.addinivalue_line('markers', ROLEBINDING_INI)
-    config.addinivalue_line('markers', CLUSTERROLEBINDING_INI)
     config.addinivalue_line('markers', APPLYMANIFEST_INI)
+    config.addinivalue_line('markers', CLUSTERROLEBINDING_INI)
+    config.addinivalue_line('markers', ROLEBINDING_INI)
 
 
 def apply_manifest_from_marker(item, client):

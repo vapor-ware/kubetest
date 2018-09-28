@@ -1,4 +1,4 @@
-"""Kubetest wrapper for the Kubernetes `Container` API Object."""
+"""Kubetest wrapper for the Kubernetes ``Container`` API Object."""
 
 import logging
 
@@ -8,19 +8,22 @@ log = logging.getLogger('kubetest')
 
 
 class Container:
-    """Kubetest wrapper around a Kubernetes Container API Object.
+    """Kubetest wrapper around a Kubernetes `Container`_ API Object.
 
-    The actual `kubernetes.client.V1Container` instance that this
-    wraps can be accessed via the `obj` instance member.
+    The actual ``kubernetes.client.V1Container`` instance that this
+    wraps can be accessed via the ``obj`` instance member.
 
     This wrapper provides some convenient functionality around the
-    API Object and provides some state management for the Container.
+    API Object and provides some state management for the `Container`_.
 
-    This wrapper does NOT subclass the kubetest.ApiObject like other
+    This wrapper does **NOT** subclass the ``objects.ApiObject`` like other
     object wrappers because it is not intended to be created or
     managed from manifest file. It is merely meant to wrap the
     Container spec for a Pod to make Container-targeted actions
     easier.
+
+    .. _Container:
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#container-v1-core
     """
 
     def __init__(self, api_object, pod):
@@ -56,10 +59,10 @@ class Container:
         )
 
     def get_logs(self):
-        """Get up-to-date stream logs of a given container.
+        """Get all the logs for the Container.
 
         Returns:
-            str: String of logs.
+            str: The Container logs.
         """
         return client.CoreV1Api().read_namespaced_pod_log(
             name=self.pod.name,
@@ -68,7 +71,7 @@ class Container:
         )
 
     def search_logs(self, *keyword):
-        """Search for keywords/phrases in the logs.
+        """Search for keywords/phrases in the Container's logs.
 
         Args:
             *keyword (str): Keywords to search for within the logs.

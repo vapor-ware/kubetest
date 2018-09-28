@@ -10,6 +10,14 @@ This page contains the full reference to the kubetest API.
     :local:
 
 
+.. _kubetest_client:
+
+Client
+------
+
+
+.. _kubetest_objects:
+
 Objects
 -------
 

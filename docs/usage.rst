@@ -1,7 +1,7 @@
 
 Command Line Usage
 ==================
-Once installed, the following pytest command-line options become available:
+Once installed (see :ref:`installation`), the following pytest command-line options become available:
 
 .. code-block:: none
 

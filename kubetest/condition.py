@@ -32,8 +32,8 @@ class Condition:
     Args:
         name (str): The name of the condition to make it easier to identify.
         fn: The condition function that will be checked.
-        *args (tuple): Any arguments for the condition function.
-        **kwargs (dict): Any keyword arguments for the condition function.
+        *args: Any arguments for the condition function.
+        **kwargs: Any keyword arguments for the condition function.
 
     Attributes:
         name (str): The name of the Condition.

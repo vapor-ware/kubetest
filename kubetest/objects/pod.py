@@ -216,7 +216,6 @@ class Pod(ApiObject):
             files={},
             response_type='str',
             auth_settings=auth_settings,
-            async=None,
             _return_http_data_only=True,
             _preload_content=True,
             _request_timeout=None,

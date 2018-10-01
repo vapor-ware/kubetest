@@ -2,6 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/vapor-ware/kubetest.svg?style=shield&circle-token=56a800b7205681b0543c145f4e168d08d3048433)](https://circleci.com/gh/vapor-ware/kubetest)
 [![PyPI](https://img.shields.io/pypi/v/kubetest.svg)](https://pypi.org/project/kubetest/)
+[![Documentation Status](https://readthedocs.org/projects/kubetest/badge/?version=latest)](https://kubetest.readthedocs.io/en/latest/?badge=latest)
 
 Kubetest is a [pytest][pytest] plugin that makes it easier to manage a Kubernetes
 cluster within your integration tests. While you can use the [Kubernetes Python client][k8s-py]

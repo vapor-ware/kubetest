@@ -45,16 +45,12 @@ Once installed, the following `pytest` command-line parameters become available:
 
 ```
 pytest \
-    [--google-application-credentials <path-to-credentials-json>] \
     [--kube-config <path-to-config>] \
     [--kube-error-log-lines <count>] \
     [--kube-log-level <level>] \
     [--kube-disable]
 ```
 
-- **`--google-application-credentials`**: Set the `GOOGLE_APPLICATION_CREDENTIALS` environment
-  variable for the test session with the the path to the .json credentials. This is useful
-  when your test cluster is hosted on GKE.
 - **`--kube-config`**: The path to the config file to use for your cluster. If not specified,
   it defaults to the same config that `kubectl` uses at `~/.kube/config`
 - **`--kube-error-log-lines`**: Set the number of lines to tail from the container logs for

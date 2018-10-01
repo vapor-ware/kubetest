@@ -34,8 +34,8 @@ fmt:  ## Run formatting checks on the project source code
 
 .PHONY: github-tag
 github-tag:  ## Create and push a GitHub tag with the current version
-	git tag -a v${PKG_VERSION} -m "${PKG_NAME} version v${PKG_VERSION}"
-	git push -u origin v${PKG_VERSION}
+	git tag -a ${PKG_VERSION} -m "${PKG_NAME} version ${PKG_VERSION}"
+	git push -u origin ${PKG_VERSION}
 
 .PHONY: test
 test:  ## Run the project unit tests

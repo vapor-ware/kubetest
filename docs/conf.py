@@ -16,9 +16,10 @@ import os
 import sys
 import datetime
 
-from kubetest import __version__
-
+sys.path.insert(0, os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('.'))
+
+from kubetest import __version__
 
 
 # -- Project information -----------------------------------------------------

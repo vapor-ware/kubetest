@@ -2,6 +2,7 @@
 
 [![CircleCI](https://circleci.com/gh/vapor-ware/kubetest.svg?style=shield&circle-token=56a800b7205681b0543c145f4e168d08d3048433)](https://circleci.com/gh/vapor-ware/kubetest)
 [![PyPI](https://img.shields.io/pypi/v/kubetest.svg)](https://pypi.org/project/kubetest/)
+[![Documentation Status](https://readthedocs.org/projects/kubetest/badge/?version=latest)](https://kubetest.readthedocs.io/en/latest/?badge=latest)
 
 Kubetest is a [pytest][pytest] plugin that makes it easier to manage a Kubernetes
 cluster within your integration tests. While you can use the [Kubernetes Python client][k8s-py]
@@ -70,7 +71,7 @@ For more detailed information, see the [kubetest documentation][kubetest-docs].
 
 ### Fixtures
 
-#### `kube`
+#### [`kube`](https://kubetest.readthedocs.io/en/latest/fixtures.html#kube)
 The `kube` fixture is the "entrypoint" into using kubetest. It provides a basic API for
 managing your cluster.
 
@@ -104,7 +105,7 @@ To see all markers, run `pytest --kube-disable --markers` with kubetest installe
 This will list the kubetest-provided markers along with a detailed description of
 what they do.
 
-#### `applymanifests`
+#### [`applymanifests`](https://kubetest.readthedocs.io/en/latest/markers.html#apply-manifests)
 Allows you to specify manifest directories or files that should be used for the test
 case. This will automatically load the manifest and create the API object on the cluster.
 
@@ -115,7 +116,7 @@ def test_something(kube):
     ...
 ```
 
-#### `clusterrolebinding`
+#### [`clusterrolebinding`](https://kubetest.readthedocs.io/en/latest/markers.html#cluster-role-binding)
 Allows you to specify different [cluster roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
 that should be applied to the cluster for the test case.
 
@@ -126,7 +127,7 @@ def test_something(kube):
     ...
 ```
 
-#### `rolebinding`
+#### [`rolebinding`](https://kubetest.readthedocs.io/en/latest/markers.html#role-binding)
 Allows you to specify different [roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
 that should be applied to the cluster for the test namespace of the test case.
 
@@ -149,4 +150,4 @@ kubetest is released under the [GPL-3.0](LICENSE) license.
 
 [pytest]: https://docs.pytest.org/en/latest/
 [k8s-py]: https://github.com/kubernetes-client/python
-[kubetest-docs]: 
+[kubetest-docs]: https://kubetest.readthedocs.io/en/latest/

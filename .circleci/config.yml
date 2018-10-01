@@ -61,8 +61,8 @@ jobs:
         command: |
           sudo chown -R circleci:circleci /usr/local/bin
           sudo chown -R circleci:circleci /usr/local/lib/python3.6/site-packages
-          pip install --user -r requirements.txt
-          pip install --user 'twine>=1.5.0'
+          sudo pip install -r requirements.txt
+          sudo pip install 'twine>=1.5.0'
     - run:
         name: Package
         command: python setup.py sdist bdist_wheel

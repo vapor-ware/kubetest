@@ -32,6 +32,11 @@ example-tests:  ## Run the example tests using kubetest
 fmt:  ## Run formatting checks on the project source code
 	tox -e format
 
+.PHONY: github-tag
+github-tag:  ## Create and push a GitHub tag with the current version
+	git tag -a v${PKG_VERSION} -m "${PKG_NAME} version v${PKG_VERSION}"
+	git push -u origin v${PKG_VERSION}
+
 .PHONY: test
 test:  ## Run the project unit tests
 	tox

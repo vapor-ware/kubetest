@@ -97,6 +97,7 @@ jobs:
             -p ${CIRCLE_PROJECT_REPONAME} \
             -t ${GITHUB_TOKEN} \
             ${since_tag}
+          mkdir artifacts
           docker cp changelog:/usr/local/src/your-app/CHANGELOG.md ./artifacts/
     - run:
         name: Create Release

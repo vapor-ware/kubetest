@@ -1,6 +1,5 @@
 """Kubetest wrapper for the Kubernetes `Pod` API Object."""
 
-import json
 import logging
 
 from kubernetes import client

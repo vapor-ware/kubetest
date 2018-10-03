@@ -4,8 +4,9 @@ import json
 import logging
 
 from kubernetes import client
+from kubernetes.client.rest import ApiException
 
-from kubetest import condition, utils
+from kubetest import condition, response, utils
 
 from .api_object import ApiObject
 from .container import Container
@@ -189,7 +190,7 @@ class Pod(ApiObject):
                 the request. (default: None)
 
         Returns:
-            str: The response data.
+            response.Response: The response data.
         """
         c = client.CoreV1Api()
 
@@ -206,46 +207,38 @@ class Pod(ApiObject):
         }
         auth_settings = ['BearerToken']
 
-        return c.api_client.call_api(
-            '/api/v1/namespaces/{namespace}/pods/{name}/proxy/' + path, 'GET',
-            path_params=path_params,
-            query_params=query_params,
-            header_params=header_params,
-            body=None,
-            post_params=[],
-            files={},
-            response_type='str',
-            auth_settings=auth_settings,
-            _return_http_data_only=True,
-            _preload_content=True,
-            _request_timeout=None,
-            collection_formats={}
-        )
+        try:
+            resp = response.Response(*c.api_client.call_api(
+                '/api/v1/namespaces/{namespace}/pods/{name}/proxy/' + path, 'GET',
+                path_params=path_params,
+                query_params=query_params,
+                header_params=header_params,
+                body=None,
+                post_params=[],
+                files={},
+                response_type='str',
+                auth_settings=auth_settings,
+                _return_http_data_only=False,  # we want all info, not just data
+                _preload_content=True,
+                _request_timeout=None,
+                collection_formats={}
+            ))
+        except ApiException as e:
+            # if the ApiException does not have a body or headers, that
+            # means the raised exception did not get a response (even if
+            # it were 404, 500, etc), so we want to continue to raise in
+            # that case. if there is a body and headers, we will not raise
+            # and just take the data out that we need from the exception.
+            if e.body is None and e.headers is None:
+                raise
 
-    def http_proxy_get_json(self, path, query_params=None):
-        """Issue a GET request to a proxy for the Pod and return the
-        JSON response as a dictionary.
+            resp = response.Response(
+                data=e.body,
+                status=e.status,
+                headers=e.headers,
+            )
 
-        Notes:
-            This function does not use the kubernetes
-            ``connect_get_namespaced_pod_proxy_with_path`` function because there
-            appears to be lack of support for custom query parameters (as of
-            the ``kubernetes==7.0.0`` package version). To bypass this, parts of
-            the core functionality from the aforementioned function are used here with
-            the modification of allowing user-defined query parameters to be
-            passed along.
-
-        Args:
-            path (str): The URI path for the request.
-            query_params (dict[str, str]): Any query parameters for
-                the request. (default: None)
-
-        Returns:
-            dict: The response data.
-        """
-        data = self.http_proxy_get(path, query_params)
-        data = data.replace("'", '"')
-        return json.loads(data)
+        return resp
 
     def containers_started(self):
         """Check if the Pod's Containers have all started.

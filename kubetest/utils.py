@@ -118,4 +118,4 @@ def wait_for_condition(condition, timeout=None, interval=1, fail_on_api_error=Tr
         time.sleep(interval)
 
     end = time.time()
-    log.info('wait completed (total=%f) %s', end - start, condition)
+    log.info('wait completed (total=%fs) %s', end - start, condition)

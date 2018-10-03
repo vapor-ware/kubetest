@@ -528,7 +528,7 @@ class TestClient:
             return True
 
         wait_condition = Condition(
-            'wait for {}:{} to be created'.format(type(obj), obj.name),
+            'wait for {}:{} to be created'.format(type(obj).__name__, obj.name),
             check_ready,
             obj,
         )

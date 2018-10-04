@@ -24,6 +24,13 @@ class ClusterRoleBinding(ApiObject):
 
     obj_type = client.V1ClusterRoleBinding
 
+    api_clients = {
+        'preferred': client.RbacAuthorizationV1Api,
+        'rbac.authorization.k8s.io/v1': client.RbacAuthorizationV1Api,
+        'rbac.authorization.k8s.io/v1alpha1': client.RbacAuthorizationV1alpha1Api,
+        'rbac.authorization.k8s.io/v1beta1': client.RbacAuthorizationV1beta1Api,
+    }
+
     def __str__(self):
         return str(self.obj)
 
@@ -38,7 +45,8 @@ class ClusterRoleBinding(ApiObject):
         """
         log.info('creating clusterrolebinding "%s" in namespace "%s"', self.name, self.namespace)  # noqa
         log.debug('clusterrolebinding: %s', self.obj)
-        self.obj = client.RbacAuthorizationV1Api().create_cluster_role_binding(
+
+        self.obj = self.api_client.create_cluster_role_binding(
             body=self.obj,
         )
 
@@ -62,14 +70,14 @@ class ClusterRoleBinding(ApiObject):
         log.debug('delete options: %s', options)
         log.debug('clusterrolebinding: %s', self.obj)
 
-        return client.RbacAuthorizationV1Api().delete_cluster_role_binding(
+        return self.api_client.delete_cluster_role_binding(
             name=self.name,
             body=options,
         )
 
     def refresh(self):
         """Refresh the underlying Kubernetes ClusterRoleBinding resource."""
-        self.obj = client.RbacAuthorizationV1Api().read_cluster_role_binding(
+        self.obj = self.api_client.read_cluster_role_binding(
             name=self.name
         )
 

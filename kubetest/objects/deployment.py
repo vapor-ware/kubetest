@@ -27,6 +27,13 @@ class Deployment(ApiObject):
 
     obj_type = client.V1Deployment
 
+    api_clients = {
+        'preferred': client.AppsV1Api,
+        'apps/v1': client.AppsV1Api,
+        'apps/v1beta1': client.AppsV1beta1Api,
+        'apps/v1beta2': client.AppsV1beta2Api,
+    }
+
     def __str__(self):
         return str(self.obj)
 
@@ -47,6 +54,7 @@ class Deployment(ApiObject):
 
         log.info('creating deployment "%s" in namespace "%s"', self.name, self.namespace)
         log.debug('deployment: %s', self.obj)
+
         self.obj = self.api_client.create_namespaced_deployment(
             namespace=namespace,
             body=self.obj,
@@ -71,6 +79,7 @@ class Deployment(ApiObject):
         log.info('deleting deployment "%s"', self.name)
         log.debug('delete options: %s', options)
         log.debug('deployment: %s', self.obj)
+
         return self.api_client.delete_namespaced_deployment(
             name=self.name,
             namespace=self.namespace,

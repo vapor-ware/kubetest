@@ -24,6 +24,11 @@ class Service(ApiObject):
 
     obj_type = client.V1Service
 
+    api_clients = {
+        'preferred': client.CoreV1Api,
+        'v1': client.CoreV1Api,
+    }
+
     def __str__(self):
         return str(self.obj)
 
@@ -44,7 +49,8 @@ class Service(ApiObject):
 
         log.info('creating service "%s" in namespace "%s"', self.name, self.namespace)
         log.debug('service: %s', self.obj)
-        self.obj = client.CoreV1Api().create_namespaced_service(
+
+        self.obj = self.api_client.create_namespaced_service(
             namespace=namespace,
             body=self.obj,
         )
@@ -68,7 +74,8 @@ class Service(ApiObject):
         log.info('deleting service "%s"', self.name)
         log.debug('delete options: %s', options)
         log.debug('service: %s', self.obj)
-        return client.CoreV1Api().delete_namespaced_service(
+
+        return self.api_client.delete_namespaced_service(
             name=self.name,
             namespace=self.namespace,
             body=options,
@@ -76,7 +83,7 @@ class Service(ApiObject):
 
     def refresh(self):
         """Refresh the underlying Kubernetes Service resource."""
-        self.obj = client.CoreV1Api().read_namespaced_service(
+        self.obj = self.api_client.read_namespaced_service(
             name=self.name,
             namespace=self.namespace,
         )
@@ -155,7 +162,7 @@ class Service(ApiObject):
             with the Service.
         """
         log.info('getting endpoints for service "%s"', self.name)
-        endpoints = client.CoreV1Api().list_namespaced_endpoints(
+        endpoints = self.api_client.list_namespaced_endpoints(
             namespace=self.namespace,
         )
 

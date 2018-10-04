@@ -24,6 +24,11 @@ class ConfigMap(ApiObject):
 
     obj_type = client.V1ConfigMap
 
+    api_clients = {
+        'preferred': client.CoreV1Api,
+        'v1': client.CoreV1Api,
+    }
+
     def __str__(self):
         return str(self.obj)
 
@@ -44,7 +49,8 @@ class ConfigMap(ApiObject):
 
         log.info('creating configmap "%s" in namespace "%s"', self.name, self.namespace)
         log.debug('configmap: %s', self.obj)
-        self.obj = client.CoreV1Api().create_namespaced_config_map(
+
+        self.obj = self.api_client.create_namespaced_config_map(
             namespace=namespace,
             body=self.obj,
         )
@@ -68,7 +74,8 @@ class ConfigMap(ApiObject):
         log.info('deleting configmap "%s"', self.name)
         log.debug('delete options: %s', options)
         log.debug('configmap: %s', self.obj)
-        return client.CoreV1Api().delete_namespaced_config_map(
+
+        return self.api_client.delete_namespaced_config_map(
             name=self.name,
             namespace=self.namespace,
             body=options,
@@ -76,7 +83,7 @@ class ConfigMap(ApiObject):
 
     def refresh(self):
         """Refresh the underlying Kubernetes ConfigMap resource."""
-        self.obj = client.CoreV1Api().read_namespaced_config_map(
+        self.obj = self.api_client.read_namespaced_config_map(
             name=self.name,
             namespace=self.namespace,
         )

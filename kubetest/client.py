@@ -218,10 +218,13 @@ class TestClient:
 
     # ****** General Helpers ******
 
-    def get_deployments(self, fields=None, labels=None):
-        """Get Deployments under the test case namespace.
+    def get_deployments(self, namespace=None, fields=None, labels=None):
+        """Get Deployments from the cluster.
 
         Args:
+            namespace (str): The namespace to get the Deployments from. If not
+                specified, it will use the auto-generated test case namespace
+                by default.
             fields (dict[str, str]): A dictionary of fields used to restrict
                 the returned collection of Deployments to only those which match
                 these field selectors. By default, no restricting is done.
@@ -233,10 +236,13 @@ class TestClient:
             dict[str, objects.Deployment]: A dictionary where the key is
             the Deployment name and the value is the Deployment itself.
         """
+        if namespace is None:
+            namespace = self.namespace
+
         selectors = utils.selector_kwargs(fields, labels)
 
         deployment_list = client.AppsV1Api().list_namespaced_deployment(
-            namespace=self.namespace,
+            namespace=namespace,
             **selectors,
         )
 
@@ -247,10 +253,48 @@ class TestClient:
 
         return deployments
 
-    def get_configmaps(self, fields=None, labels=None):
-        """Get ConfigMaps under the test case namespace.
+    def get_endpoints(self, namespace=None, fields=None, labels=None):
+        """Get Endpoints from the cluster.
 
         Args:
+            namespace (str): The namespace to get the Endpoints from. If not
+                specified, it will use the auto-generated test case namespace
+                by default.
+            fields (dict[str, str]): A dictionary of fields used to restrict
+                the returned collection of Endpoints to only those which match
+                these field selectors. By default, no restricting is done.
+            labels (dict[str, str]): A dictionary of labels used to restrict
+                the returned collection of Endpoints to only those which match
+                these label selectors. By default, no restricting is done.
+
+        Returns:
+            dict[str, objects.Endpoints]: A dictionary where the key is
+            the Endpoint name and the value is the Endpoint itself.
+        """
+        if namespace is None:
+            namespace = self.namespace
+
+        selectors = utils.selector_kwargs(fields, labels)
+
+        endpoints_list = client.CoreV1Api().list_namespaced_endpoints(
+            namespace=namespace,
+            **selectors,
+        )
+
+        endpoints = {}
+        for obj in endpoints_list.items:
+            endpoint = objects.Endpoints(obj)
+            endpoints[endpoint.name] = endpoint
+
+        return endpoints
+
+    def get_configmaps(self, namespace=None, fields=None, labels=None):
+        """Get ConfigMaps from the cluster.
+
+        Args:
+            namespace (str): The namespace to get the ConfigMaps from. If not
+                specified, it will use the auto-generated test case namespace
+                by default.
             fields (dict[str, str]): A dictionary of fields used to restrict
                 the returned collection of ConfigMaps to only those which match
                 these field selectors. By default, no restricting is done.
@@ -262,10 +306,13 @@ class TestClient:
             dict[str, objects.ConfigMap]: A dictionary where the key is the
             ConfigMap name and the value is the ConfigMap itself.
         """
+        if namespace is None:
+            namespace = self.namespace
+
         selectors = utils.selector_kwargs(fields, labels)
 
         configmap_list = client.CoreV1Api().list_namespaced_config_map(
-            namespace=self.namespace,
+            namespace=namespace,
             **selectors,
         )
 
@@ -276,10 +323,13 @@ class TestClient:
 
         return configmaps
 
-    def get_pods(self, fields=None, labels=None):
-        """Get Pods under the test case namespace.
+    def get_pods(self, namespace=None, fields=None, labels=None):
+        """Get Pods from the cluster.
 
         Args:
+            namespace (str): The namespace to get the Pods from. If not
+                specified, it will use the auto-generated test case namespace
+                by default.
             fields (dict[str, str]): A dictionary of fields used to restrict
                 the returned collection of Pods to only those which match
                 these field selectors. By default, no restricting is done.
@@ -291,10 +341,13 @@ class TestClient:
             dict[str, objects.Pod]: A dictionary where the key is the Pod
             name and the value is the Pod itself.
         """
+        if namespace is None:
+            namespace = self.namespace
+
         selectors = utils.selector_kwargs(fields, labels)
 
         pod_list = client.CoreV1Api().list_namespaced_pod(
-            namespace=self.namespace,
+            namespace=namespace,
             **selectors,
         )
 
@@ -305,10 +358,13 @@ class TestClient:
 
         return pods
 
-    def get_services(self, fields=None, labels=None):
+    def get_services(self, namespace=None, fields=None, labels=None):
         """Get Services under the test case namespace.
 
         Args:
+            namespace (str): The namespace to get the Services from. If not
+                specified, it will use the auto-generated test case namespace
+                by default.
             fields (dict[str, str]): A dictionary of fields used to restrict
                 the returned collection of Services to only those which match
                 these field selectors. By default, no restricting is done.
@@ -320,10 +376,13 @@ class TestClient:
             dict[str, objects.Service]: A dictionary where the key is the
             Service name and the value is the Service itself.
         """
+        if namespace is None:
+            namespace = self.namespace
+
         selectors = utils.selector_kwargs(fields, labels)
 
         service_list = client.CoreV1Api().list_namespaced_service(
-            namespace=self.namespace,
+            namespace=namespace,
             **selectors,
         )
 

@@ -7,6 +7,7 @@ from .clusterrolebinding import ClusterRoleBinding
 from .configmap import ConfigMap
 from .container import Container
 from .deployment import Deployment
+from .endpoints import Endpoints
 from .namespace import Namespace
 from .node import Node
 from .pod import Pod

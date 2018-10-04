@@ -24,6 +24,11 @@ class Secret(ApiObject):
 
     obj_type = client.V1Secret
 
+    api_clients = {
+        'preferred': client.CoreV1Api,
+        'v1': client.CoreV1Api,
+    }
+
     def __str__(self):
         return str(self.obj)
 
@@ -44,7 +49,8 @@ class Secret(ApiObject):
 
         log.info('creating secret "%s" in namespace "%s"', self.name, self.namespace)
         log.debug('secret: %s', self.obj)
-        self.obj = client.CoreV1Api().create_namespaced_secret(
+
+        self.obj = self.api_client.create_namespaced_secret(
             namespace=namespace,
             body=self.obj,
         )
@@ -68,7 +74,7 @@ class Secret(ApiObject):
         log.info('deleting secret "%s"', self.name)
         log.debug('delete options: %s', options)
         log.debug('secret: %s', self.obj)
-        return client.CoreV1Api().delete_namespaced_secret(
+        return self.api_client.delete_namespaced_secret(
             name=self.name,
             namespace=self.namespace,
             body=options,
@@ -76,7 +82,7 @@ class Secret(ApiObject):
 
     def refresh(self):
         """Refresh the underlying Kubernetes Secret resource."""
-        self.obj = client.CoreV1Api().read_namespaced_secret(
+        self.obj = self.api_client.read_namespaced_secret(
             name=self.name,
             namespace=self.namespace,
         )

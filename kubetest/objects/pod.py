@@ -28,6 +28,11 @@ class Pod(ApiObject):
 
     obj_type = client.V1Pod
 
+    api_clients = {
+        'preferred': client.CoreV1Api,
+        'v1': client.CoreV1Api,
+    }
+
     def __str__(self):
         return str(self.obj)
 
@@ -48,7 +53,8 @@ class Pod(ApiObject):
 
         log.info('creating pod "%s" in namespace "%s"', self.name, self.namespace)
         log.debug('pod: %s', self.obj)
-        self.obj = client.CoreV1Api().create_namespaced_pod(
+
+        self.obj = self.api_client.create_namespaced_pod(
             namespace=namespace,
             body=self.obj,
         )
@@ -72,7 +78,8 @@ class Pod(ApiObject):
         log.info('deleting pod "%s"', self.name)
         log.debug('delete options: %s', options)
         log.debug('pod: %s', self.obj)
-        return client.CoreV1Api().delete_namespaced_pod(
+
+        return self.api_client.delete_namespaced_pod(
             name=self.name,
             namespace=self.namespace,
             body=options,
@@ -80,7 +87,7 @@ class Pod(ApiObject):
 
     def refresh(self):
         """Refresh the underlying Kubernetes Pod resource."""
-        self.obj = client.CoreV1Api().read_namespaced_pod_status(
+        self.obj = self.api_client.read_namespaced_pod_status(
             name=self.name,
             namespace=self.namespace,
         )
@@ -122,7 +129,6 @@ class Pod(ApiObject):
         Returns:
             client.V1PodStatus: The status of the Pod.
         """
-        log.info('checking status of pod "%s"', self.name)
         # first, refresh the pod state to ensure latest status
         self.refresh()
 

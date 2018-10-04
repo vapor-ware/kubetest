@@ -24,6 +24,13 @@ class RoleBinding(ApiObject):
 
     obj_type = client.V1RoleBinding
 
+    api_clients = {
+        'preferred': client.RbacAuthorizationV1Api,
+        'rbac.authorization.k8s.io/v1': client.RbacAuthorizationV1Api,
+        'rbac.authorization.k8s.io/v1alpha1': client.RbacAuthorizationV1alpha1Api,
+        'rbac.authorization.k8s.io/v1beta1': client.RbacAuthorizationV1beta1Api,
+    }
+
     def __str__(self):
         return str(self.obj)
 
@@ -44,7 +51,8 @@ class RoleBinding(ApiObject):
 
         log.info('creating rolebinding "%s" in namespace "%s"', self.name, self.namespace)  # noqa
         log.debug('rolebinding: %s', self.obj)
-        self.obj = client.RbacAuthorizationV1Api().create_namespaced_role_binding(
+
+        self.obj = self.api_client.create_namespaced_role_binding(
             namespace=namespace,
             body=self.obj,
         )
@@ -68,7 +76,8 @@ class RoleBinding(ApiObject):
         log.info('deleting rolebinding "%s"', self.name)
         log.debug('delete options: %s', options)
         log.debug('rolebinding: %s', self.obj)
-        return client.RbacAuthorizationV1Api().delete_namespaced_role_binding(
+
+        return self.api_client.delete_namespaced_role_binding(
             namespace=self.namespace,
             name=self.name,
             body=options,
@@ -76,7 +85,7 @@ class RoleBinding(ApiObject):
 
     def refresh(self):
         """Refresh the underlying Kubernetes RoleBinding resource."""
-        self.obj = client.RbacAuthorizationV1Api().read_namespaced_role_binding(
+        self.obj = self.api_client.read_namespaced_role_binding(
             namespace=self.namespace,
             name=self.name,
         )

@@ -24,6 +24,11 @@ class Namespace(ApiObject):
 
     obj_type = client.V1Namespace
 
+    api_clients = {
+        'preferred': client.CoreV1Api,
+        'v1': client.CoreV1Api,
+    }
+
     def __str__(self):
         return str(self.obj)
 
@@ -60,7 +65,8 @@ class Namespace(ApiObject):
 
         log.info('creating namespace "%s"', self.name)
         log.debug('namespace: %s', self.obj)
-        self.obj = client.CoreV1Api().create_namespace(
+
+        self.obj = self.api_client.create_namespace(
             body=self.obj,
         )
 
@@ -80,14 +86,14 @@ class Namespace(ApiObject):
         log.debug('delete options: %s', options)
         log.debug('namespace: %s', self.obj)
 
-        return client.CoreV1Api().delete_namespace(
+        return self.api_client.delete_namespace(
             name=self.name,
             body=options,
         )
 
     def refresh(self):
         """Refresh the underlying Kubernetes Namespace resource."""
-        self.obj = client.CoreV1Api().read_namespace(
+        self.obj = self.api_client.read_namespace(
             name=self.name,
         )
 

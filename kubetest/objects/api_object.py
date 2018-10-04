@@ -3,23 +3,12 @@
 import abc
 import logging
 
-from kubernetes import client
 from kubernetes.client.rest import ApiException
 
 from kubetest import condition, utils
 from kubetest.manifest import load_file
 
 log = logging.getLogger('kubetest')
-
-# A global map that matches the Api Client class to its corresponding
-# apiVersion so we can get the correct client for the manifest version.
-# TODO (etd): investigate - there may be a better way of doing this?
-#   https://github.com/kubernetes-client/python/blob/master/examples/example3.py
-api_clients = {
-    'apps/v1': client.AppsV1Api,
-    'apps/v1beta1': client.AppsV1beta1Api,
-    'apps/v1beta2': client.AppsV1beta2Api,
-}
 
 
 class ApiObject(abc.ABC):
@@ -47,6 +36,15 @@ class ApiObject(abc.ABC):
     obj_type = None
     '''The default Kubernetes API object type for the class.
     Each subclass should define its own ``obj_type``.
+    '''
+
+    api_clients = None
+    '''A mapping of all the supported api clients for the API
+    object type. Various resources can have multiple versions,
+    e.g. "apps/v1", "apps/v1beta1", etc. The preferred version
+    for each resource type should be defined under the "preferred"
+    key. The preferred API client will be used when the apiVersion
+    is not specified for the resource.
     '''
 
     def __init__(self, api_object):
@@ -98,18 +96,25 @@ class ApiObject(abc.ABC):
             ValueError: The API version is not supported.
         """
         if self._api_client is None:
-            c = api_clients.get(self.version)
-            # If we didn't find the client in the api_clients dict, raise
-            # an error - missing clients will need to be added manually.
+            c = self.api_clients.get(self.version)
+            # If we didn't find the client in the api_clients dict, use the
+            # preferred version.
             if c is None:
-                raise ValueError(
-                    'Unsupported Api Client version: {}'.format(self.version)
+                log.warning(
+                    'unknown version ({}), falling back to preferred version'
+                    .format(self.version)
                 )
+                c = self.api_clients.get('preferred')
+                if c is None:
+                    raise ValueError(
+                        'unknown version specified and no preferred version '
+                        'defined for resource ({})'.format(self.version)
+                    )
             # If we did find it, initialize that client version.
             self._api_client = c()
         return self._api_client
 
-    def wait_until_ready(self, timeout=None):
+    def wait_until_ready(self, timeout=None, interval=1, fail_on_api_error=False):
         """Wait until the resource is in the ready state.
 
         Args:
@@ -117,6 +122,14 @@ class ApiObject(abc.ABC):
                 the resource to reach the ready state. If unspecified,
                 this will wait indefinitely. If specified and the timeout
                 is met or exceeded, a TimeoutError will be raised.
+            interval (int|float): The time, in seconds, to wait before
+                re-checking if the object is ready.
+            fail_on_api_error (bool): Fail if an API error is raised. An
+                API error can be raised for a number of reasons, such as
+                'resource not found', which could be the case when a resource
+                is just being started or restarted. When waiting for readiness
+                we generally do not want to fail on these conditions.
+                (default: False)
 
         Raises:
              TimeoutError: The specified timeout was exceeded.
@@ -129,10 +142,11 @@ class ApiObject(abc.ABC):
         utils.wait_for_condition(
             condition=ready_condition,
             timeout=timeout,
-            interval=1,
+            interval=interval,
+            fail_on_api_error=fail_on_api_error,
         )
 
-    def wait_until_deleted(self, timeout=None):
+    def wait_until_deleted(self, timeout=None, interval=1):
         """Wait until the resource is deleted from the cluster.
 
         Args:
@@ -141,6 +155,8 @@ class ApiObject(abc.ABC):
                 unspecified, this will wait indefinitely. If specified
                 and the timeout is met or exceeded, a TimeoutError will
                 be raised.
+            interval (int|float): The time, in seconds, to wait before
+                re-checking if the object has been deleted.
 
         Raises:
             TimeoutError: The specified timeout was exceeded.
@@ -168,7 +184,7 @@ class ApiObject(abc.ABC):
         utils.wait_for_condition(
             condition=delete_condition,
             timeout=timeout,
-            interval=1,
+            interval=interval,
         )
 
     @classmethod

@@ -28,7 +28,7 @@ pytest==3.8.0
 python-dateutil==2.7.3    # via adal, kubernetes
 pyyaml==3.13
 requests-oauthlib==1.0.0  # via kubernetes
-requests==2.19.1          # via adal, kubernetes, requests-oauthlib
+requests==2.20.0
 rsa==3.4.2                # via google-auth
 six==1.11.0               # via cryptography, google-auth, kubernetes, more-itertools, pytest, python-dateutil, websocket-client
 urllib3==1.23             # via kubernetes, requests

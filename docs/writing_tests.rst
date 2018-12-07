@@ -17,6 +17,29 @@ kubetest.
 If you wish to specify a different config file, you can pass it in via the
 ``--kube-config`` flag. See :ref:`command_line_usage` for more details.
 
+You can also write a ``kubeconfig`` fixture_ that provides the path to the
+config path.  This may be useful in case your cluster is generated as part
+of the tests.
+
+.. code-block:: python
+
+    import pytest
+    import subprocess
+
+
+    @pytest.fixture
+    def kubeconfig():
+        # Here, Terraform creates a cluster and outputs a kubeconfig
+        # at somepath
+        subprocess.check_call(['terraform', 'apply'])
+        return 'somepath/kubeconfig'
+
+
+     def test_my_terraformed_cluster(kube):
+         # Use your cluster!
+         pass
+
+
 
 Loading Manifests
 -----------------

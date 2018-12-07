@@ -143,10 +143,7 @@ def pytest_sessionstart(session):
         #     if old_creds:
         #         os.environ['OLD_' + GOOGLE_APPLICATION_CREDENTIALS] = old_creds
         #     os.environ[GOOGLE_APPLICATION_CREDENTIALS] = gke_creds
-
-        # Read in the kubeconfig file
-        config_file = session.config.getoption('kube_config')
-        kubernetes.config.load_kube_config(config_file=config_file)
+        pass
 
 
 # def pytest_sessionfinish(session):
@@ -285,8 +282,14 @@ def pytest_keyboard_interrupt():
 
 # ********** pytest fixtures **********
 
+@pytest.fixture
+def kubeconfig(request):
+    config_file = request.session.config.getoption('kube_config')
+    return config_file
+
+
 @pytest.fixture()
-def kube(request):
+def kube(kubeconfig, request):
     """Return a client for managing a Kubernetes cluster for testing."""
     test_case = manager.get_test(request.node.nodeid)
     if test_case is None:
@@ -298,6 +301,7 @@ def kube(request):
 
     # Setup the test case. This will create the namespace and any other
     # objects (e.g. role bindings) that the test case will need.
+    kubernetes.config.load_kube_config(config_file=kubeconfig)
     test_case.setup()
 
     return test_case.client

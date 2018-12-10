@@ -1,6 +1,6 @@
 # kubetest
 
-[![CircleCI](https://circleci.com/gh/vapor-ware/kubetest.svg?style=shield&circle-token=56a800b7205681b0543c145f4e168d08d3048433)](https://circleci.com/gh/vapor-ware/kubetest)
+[![Build Status](https://build.vio.sh/buildStatus/icon?job=vapor-ware/kubetest/master)](https://build.vio.sh/blue/organizations/jenkins/vapor-ware%2Fkubetest/activity)
 [![PyPI](https://img.shields.io/pypi/v/kubetest.svg)](https://pypi.org/project/kubetest/)
 [![Documentation Status](https://readthedocs.org/projects/kubetest/badge/?version=latest)](https://kubetest.readthedocs.io/en/latest/?badge=latest)
 

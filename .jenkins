@@ -43,7 +43,7 @@ pipeline {
       }
       steps {
         // verify the version matches the tag
-        PKG_VERSION=$(make version) ./bin/ci/check_version.sh
+        sh 'PKG_VERSION=$(make version) ./bin/ci/check_version.sh'
 
         // publish to pypi
         sh 'tox -e publish'
@@ -66,7 +66,7 @@ pipeline {
       }
       steps {
         // verify that the version matches the tag
-        PKG_VERSION=$(make version) ./bin/ci/check_version.sh
+        sh 'PKG_VERSION=$(make version) ./bin/ci/check_version.sh'
 
         // Auto-generate a changelog for the release
         sh './bin/ci/generate_changelog.sh'

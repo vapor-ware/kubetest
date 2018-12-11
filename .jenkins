@@ -1,0 +1,73 @@
+#!/usr/bin/env groovy
+
+pipeline {
+
+  agent any
+
+  stages {
+    stage('Checkout') {
+      steps {
+        checkout scm
+      }
+    }
+
+    // Clean up the workspace
+    stage('Clean') {
+      steps {
+        sh 'make clean'
+      }
+    }
+
+    // Run project unit tests.
+    stage('Test') {
+      steps {
+        sh 'make test'
+      }
+    }
+
+    // Build and distribute a new package version to PyPi.
+    stage('Publish to PyPi') {
+      when {
+        // example matches: 1.2.3, 1.2.3-dev
+        tag pattern: '(0|[1-9]*)\\.(0|[1-9]*)\\.(0|[1-9]*)(-(\\S*))?$', comparator: "REGEXP"
+      }
+      environment {
+        TWINE_USERNAME = 'vaporio'
+        TWINE_PASSWORD = credentials('twine-password')
+      }
+      steps {
+        // verify the version matches the tag
+        sh 'PKG_VERSION=$(make version) ./bin/ci/check_version.sh'
+
+        // publish to pypi
+        sh 'tox -e publish'
+      }
+    }
+
+    // Generate a new release draft on GitHub for a tag matching a version string
+    // pattern. The release will include an auto-generated changelog and build
+    // artifacts.
+    stage('Draft GitHub Release') {
+      when {
+        // example matches: 1.2.3, 1.2.3-dev
+        tag pattern: '(0|[1-9]*)\\.(0|[1-9]*)\\.(0|[1-9]*)(-(\\S*))?$', comparator: "REGEXP"
+      }
+      environment {
+        GITHUB_USER = 'vapor-ware'
+        GITHUB_TOKEN = credentials('1de2c61b-4188-478b-bc65-42b0df860163')
+        GITHUB_REPONAME = 'kubetest'
+      }
+      steps {
+        // verify that the version matches the tag
+        sh 'PKG_VERSION=$(make version) ./bin/ci/check_version.sh'
+
+        // Auto-generate a changelog for the release
+        sh './bin/ci/generate_changelog.sh'
+
+        // Create the release
+        sh 'docker pull edaniszewski/ghr'
+        sh 'docker run --rm -v ${WORKSPACE}:/repo edaniszewski/ghr -u ${GITHUB_USER} -r ${GITHUB_REPONAME} -t ${GITHUB_TOKEN} -b "$(cat ./CHANGELOG.md)" -replace -draft ${TAG_NAME} dist/'
+      }
+    }
+  }
+}

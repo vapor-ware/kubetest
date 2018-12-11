@@ -4,11 +4,6 @@ pipeline {
 
   agent any
 
-  environment {
-    // FIXME: for release flow testing
-    TAG_NAME = '0.0.4-dev'
-  }
-
   stages {
     stage('Checkout') {
       steps {
@@ -55,8 +50,7 @@ pipeline {
     stage('Draft GitHub Release') {
       when {
         // example matches: 1.2.3, 1.2.3-dev
-        //tag pattern: '(0|[1-9]*)\\.(0|[1-9]*)\\.(0|[1-9]*)(-(\\S*))?$', comparator: "REGEXP"
-        branch 'jenkins-ci'
+        tag pattern: '(0|[1-9]*)\\.(0|[1-9]*)\\.(0|[1-9]*)(-(\\S*))?$', comparator: "REGEXP"
       }
       environment {
         GITHUB_USER = 'vapor-ware'
@@ -75,7 +69,5 @@ pipeline {
         sh 'docker run --rm -v ${WORKSPACE}:/repo edaniszewski/ghr -u ${GITHUB_USER} -r ${GITHUB_REPONAME} -t ${GITHUB_TOKEN} -b "$(cat ./CHANGELOG.md)" -replace -draft ${TAG_NAME} dist/'
       }
     }
-
-
   }
 }

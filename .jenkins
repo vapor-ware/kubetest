@@ -37,9 +37,8 @@ pipeline {
         tag pattern: '(0|[1-9]*)\\.(0|[1-9]*)\\.(0|[1-9]*)(-(\\S*))?$', comparator: "REGEXP"
       }
       environment {
-        // FIXME: need to add these to jenkins
-        TWINE_USERNAME = credentials('')
-        TWINE_PASSWORD = credentials('')
+        TWINE_USERNAME = 'vaporio'
+        TWINE_PASSWORD = credentials('twine-password')
       }
       steps {
         // verify the version matches the tag

@@ -34,7 +34,7 @@ setup(
     python_requires='>=3.6',
     install_requires=[
         'kubernetes',
-        'pyyaml',
+        'pyyaml>=4.2b1',
         'pytest',
         'requests>=2.20.0',  # used by 'kubernetes'
     ],

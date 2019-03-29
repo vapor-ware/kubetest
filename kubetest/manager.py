@@ -126,6 +126,11 @@ class TestMeta:
         self.node_id = node_id
         self.ns = utils.new_namespace(name)
 
+        # Flag to designate whether pytest setup (not TestMeta.setup) failed.
+        # If pytest setup failed for the case, we can skip teardown, as there
+        # will be nothing on the cluster itself.
+        self._pt_setup_failed = False
+
         # lazy load
         self._client = None
         self._namespace = None
@@ -180,6 +185,12 @@ class TestMeta:
         This performs all actions needed in order to clean up the state that
         was previously set up for the test client in `setup`.
         """
+        # Only perform teardown if pytest setup was successful and there is a
+        # possibility of things existing on the cluster.
+        if self._pt_setup_failed:
+            log.info('pytest setup failed for {}: not running test case teardown'.format(self.name))
+            return
+
         # delete the test case namespace. this will also delete anything
         # in the namespace, which includes RoleBindings.
         self.namespace.delete()

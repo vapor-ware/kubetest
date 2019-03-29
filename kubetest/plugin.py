@@ -50,7 +50,7 @@ def pytest_addoption(parser):
         help='disable automatic configuration with the kubeconfig file'
     )
 
-    # FIXME (etd) - this was an attempt to fix occassional permissions errors
+    # FIXME (etd) - this was an attempt to fix occasional permissions errors
     # (https://github.com/vapor-ware/kubetest/issues/11) but in doing so, it looks
     # like I hosed my permissions, so I'm just commenting all of this out for now...
     # group.addoption(
@@ -185,16 +185,29 @@ def pytest_runtest_setup(item):
     disabled = item.config.getoption('kube_disable')
     if not disabled:
 
-        # Register test case state based on markers on the test case
-        test_case.register_rolebindings(
-            *markers.rolebindings_from_marker(item, test_case.ns)
-        )
-        test_case.register_clusterrolebindings(
-            *markers.clusterrolebindings_from_marker(item, test_case.ns)
-        )
+        # Note: These markers are not applied right now, meaning that the resource(s)
+        #  which they reference are not added to the cluster yet. They are just
+        #  registered with the test case so they can be applied to the cluster on
+        #  test case setup.
+        #
+        #  At this point, the config is not loaded, so there is nothing that could be
+        #  added to the cluster. It is safe to skip the teardown (which cleans up the
+        #  test namespace) since nothing could be added to the namespace yet.
+        try:
+            # Register test case state based on markers on the test case.
+            test_case.register_rolebindings(
+                *markers.rolebindings_from_marker(item, test_case.ns)
+            )
+            test_case.register_clusterrolebindings(
+                *markers.clusterrolebindings_from_marker(item, test_case.ns)
+            )
 
-        # Apply manifests for the test case, if any are specified.
-        markers.apply_manifest_from_marker(item, test_case)
+            # Apply manifests for the test case, if any are specified.
+            markers.apply_manifest_from_marker(item, test_case)
+
+        except Exception as e:
+            test_case._pt_setup_failed = True
+            raise e
 
 
 def pytest_runtest_teardown(item):

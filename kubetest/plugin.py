@@ -44,6 +44,13 @@ def pytest_addoption(parser):
         help='the kubernetes config for kubetest'
     )
     group.addoption(
+        '--kube-context',
+        action='store',
+        metavar='context',
+        default=None,
+        help='the name of the kubernetes config context to use',
+    )
+    group.addoption(
         '--kube-disable',
         action='store_true',
         default=False,
@@ -89,8 +96,13 @@ def pytest_report_header(config):
         if config_file is None:
             config_file = 'default'
 
+        context = config.getoption('kube_context')
+        if context is None:
+            context = 'current context'
+
         return [
             'kubetest config file: {}'.format(config_file),
+            'kubetest context: {}'.format(context),
         ]
 
 
@@ -312,9 +324,14 @@ def kube(kubeconfig, request):
         )
         return None
 
+    context = request.session.config.getoption('kube_context')
+
     # Setup the test case. This will create the namespace and any other
     # objects (e.g. role bindings) that the test case will need.
-    kubernetes.config.load_kube_config(config_file=kubeconfig)
+    kubernetes.config.load_kube_config(
+        config_file=kubeconfig,
+        context=context,
+    )
     test_case.setup()
 
     return test_case.client

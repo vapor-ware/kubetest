@@ -10,6 +10,7 @@ Once installed (see :ref:`installation`), the following pytest command-line opti
     pytest \
         [--kube-error-log-lines <COUNT>] \
         [--kube-log-level <LEVEL>] \
+        [--kube-context <CONTEXT>] \
         [--kube-config <PATH>] \
         [--kube-disable]
 
@@ -18,6 +19,11 @@ Once installed (see :ref:`installation`), the following pytest command-line opti
     Specifies the path to the config file to use for connecting to your cluster.
     If no ``PATH`` is specified, it uses the default path to cluster config,
     which is the same config that ``kubectl`` uses: ``~/.kube/config``.
+
+- ``--kube-context <CONTEXT>``
+
+    Specifies the context to use in the kubeconfig. If not specified, it will use
+    the current context, as set in the kubeconfig.
 
 - ``--kube-disable``
 

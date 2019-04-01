@@ -11,6 +11,58 @@ that ``kubetest`` makes available when installed.
     Use ``pytest --markers`` to get a complete list of available markers
     along with their descriptions.
 
+.. _applymanifest_marker:
+
+Apply Manifest
+--------------
+
+Summary
+~~~~~~~
+
+.. code-block:: python
+
+    @pytest.mark.applymanifest(path)
+
+``applymanifest`` allows you to load a Kubernetes manifest file and create the
+resource(s) on the cluster.
+
+Description
+~~~~~~~~~~~
+Load the YAML manifest with the specified ``path`` and create the corresponding
+resource(s) on the cluster.
+
+Loading a manifest via this marker does not prohibit you from manually loading other
+manifests later in the test case. You can use the :ref:`kube_fixture` fixture to get
+object references to the created resources. Manifests loaded via this marker are
+registered with the internal test case ``MetaInfo`` and can be waited upon for
+creation via the :ref:`kube_fixture` fixture's ``wait_until_created`` method.
+
+The path to the directory should either be an absolute path, or a path relative
+from the test file. This marker can be used multiple times on a test case. If you
+wish to load multiple manifests at once, consider using the :ref:`applymanifests_marker`
+marker.
+
+This marker is similar to the ``kubectl apply -f <file>`` command.
+
+Examples
+~~~~~~~~
+- Load a manifest YAML for a deployment
+
+  .. code-block:: python
+
+      @pytest.mark.applymanifest('./deployment.yaml')
+      def test_something(kube):
+          ...
+
+- Load multiple manifests
+
+  .. code-block:: python
+
+      @pytest.mark.applymanifest('manifests/test/service.yaml')
+      @pytest.mark.applymanifest('manifests/test/deployment.yaml')
+      def test_something(kube):
+          ...
+
 
 .. _applymanifests_marker:
 
@@ -22,7 +74,7 @@ Summary
 
 .. code-block:: python
 
-    @pytest.mark.applymanifests(path, files=None)
+    @pytest.mark.applymanifests(dir, files=None)
 
 ``applymanifests`` allows you to load Kubernetes manifests from the specified
 directory and create the resources on the cluster.
@@ -30,7 +82,7 @@ directory and create the resources on the cluster.
 Description
 ~~~~~~~~~~~
 Load the YAML manifests from the specified ``path`` and create the corresponding
-resources on the cluster. By default all YAML files found in the specified ``path``
+resources on the cluster. By default all YAML files found in the specified ``dir``
 will be loaded and created. A list of file names can be passed to the ``files``
 parameter, which would limit manifest application to only those YAMLs matching the
 provided file names in the directory.

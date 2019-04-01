@@ -188,7 +188,9 @@ class TestMeta:
         # Only perform teardown if pytest setup was successful and there is a
         # possibility of things existing on the cluster.
         if self._pt_setup_failed:
-            log.info('pytest setup failed for {}: not running test case teardown'.format(self.name))
+            log.info('pytest setup failed for {}: not running test case teardown'.format(
+                self.name)
+            )
             return
 
         # delete the test case namespace. this will also delete anything

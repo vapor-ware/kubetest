@@ -8,7 +8,18 @@ from kubetest.manifest import load_file, load_path
 from kubetest.objects import ApiObject, ClusterRoleBinding, RoleBinding
 
 APPLYMANIFEST_INI = (
-    'applymanifests(path, files=None): '
+    'applymanifest(path): '
+    'load a YAML manifest file from the specified path and create it on the cluster. '
+    'This marker is similar to the "kubectl apply -f <path>" command. Loading a '
+    'manifest via this marker will not prohibit you from loading other manifests '
+    'manually. Use the "kube" fixture to get references to the created objects. The '
+    'manifest loaded via this marker is registered with the internal test case '
+    'metainfo and can be waited up for creation via the "kube" fixture '
+    '"wait_until_created" method.'
+)
+
+APPLYMANIFESTS_INI = (
+    'applymanifests(dir, files=None): '
     'load the YAML manifests from the specified path and create them on the cluster. '
     'By default, all YAML files found in the specified path will be loaded and created. '
     'If a list is passed to the files parameter, only the files in the path matching '
@@ -57,11 +68,57 @@ def register(config):
         config: The pytest config that markers will be registered to.
     """
     config.addinivalue_line('markers', APPLYMANIFEST_INI)
+    config.addinivalue_line('markers', APPLYMANIFESTS_INI)
     config.addinivalue_line('markers', CLUSTERROLEBINDING_INI)
     config.addinivalue_line('markers', ROLEBINDING_INI)
 
 
 def apply_manifest_from_marker(item, client):
+    """Load a manifest and create the API objects for teh specified file.
+
+    This gets called for every `pytest.mark.applymanifest` marker on
+    test cases.
+
+    Once the manifest has been loaded, the API object(s) will be registered
+    with the test cases' TestMeta. This allows easier control via the
+    "kube" fixture, such as waiting for all objects to be created.
+
+    Args:
+        item: The pytest test item.
+        client (manager.TestMeta): The metainfo object for the marked
+            test case.
+    """
+    for mark in item.iter_markers(name='applymanifest'):
+        path = mark.args[0]
+
+        # Normalize the path to be absolute.
+        if not os.path.isabs(path):
+            path = os.path.abspath(path)
+
+        # Load the manifest
+        obj = load_file(path)
+
+        # For each of the loaded Kubernetes resources, wrap it in the
+        # equivalent kubetest wrapper. If the object does not yet have a
+        # wrapper, error out. We cannot reliably create the resource
+        # without our ApiObject wrapper semantics.
+        wrapped = []
+        found = False
+        for klass in ApiObject.__subclasses__():
+            if obj.kind == klass.__name__:
+                wrapped.append(klass(obj))
+                found = True
+                break
+        if not found:
+            raise ValueError(
+                'Unable to match loaded object to an internal wrapper '
+                'class: {}'.format(obj)
+            )
+
+        client.register_objects(wrapped)
+
+
+def apply_manifests_from_marker(item, client):
     """Load manifests and create the API objects for the specified files.
 
     This gets called for every `pytest.mark.applymanifests` marker on

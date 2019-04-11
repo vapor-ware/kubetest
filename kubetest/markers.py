@@ -96,7 +96,7 @@ def apply_manifest_from_marker(item, client):
             path = os.path.abspath(path)
 
         # Load the manifest
-        obj = load_file(path)
+        objs = load_file(path)
 
         # For each of the loaded Kubernetes resources, wrap it in the
         # equivalent kubetest wrapper. If the object does not yet have a
@@ -104,16 +104,17 @@ def apply_manifest_from_marker(item, client):
         # without our ApiObject wrapper semantics.
         wrapped = []
         found = False
-        for klass in ApiObject.__subclasses__():
-            if obj.kind == klass.__name__:
-                wrapped.append(klass(obj))
-                found = True
-                break
-        if not found:
-            raise ValueError(
-                'Unable to match loaded object to an internal wrapper '
-                'class: {}'.format(obj)
-            )
+        for obj in objs:
+            for klass in ApiObject.__subclasses__():
+                if obj.kind == klass.__name__:
+                    wrapped.append(klass(obj))
+                    found = True
+                    break
+            if not found:
+                raise ValueError(
+                    'Unable to match loaded object to an internal wrapper '
+                    'class: {}'.format(obj)
+                )
 
         client.register_objects(wrapped)
 
@@ -150,7 +151,7 @@ def apply_manifests_from_marker(item, client):
         if files is None:
             objs = load_path(dir_path)
         else:
-            objs = [obj for objs in load_file(os.path.join(dir_path, f)) for f in files]
+            objs = [obj for obj in load_file(os.path.join(dir_path, f)) for f in files]
 
         # For each of the loaded Kubernetes resources, we'll want to wrap it
         # in the equivalent kubetest wrapper. If the resource does not have

@@ -202,8 +202,13 @@ class ApiObject(abc.ABC):
             ApiObject: The API object wrapper corresponding to the configuration
             loaded from manifest YAML file.
         """
-        obj = load_file(path, cls.obj_type)
-        return cls(obj)
+        objs = load_file(path)
+        if len(objs) != 1:
+            raise ValueError(
+                'Unable to load resource from file - multiple resources found '
+                'in specified file.'
+            )
+        return cls(objs[0])
 
     @abc.abstractmethod
     def create(self, namespace=None):

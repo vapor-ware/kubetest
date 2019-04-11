@@ -24,7 +24,7 @@ def load_file(path):
         A list of the Kubernetes API objects for this manifest file.
     """
     with open(path, 'r') as f:
-        manifests = yaml.load_all(f)
+        manifests = yaml.load_all(f, Loader=yaml.SafeLoader)
 
         objs = []
         for manifest in manifests:

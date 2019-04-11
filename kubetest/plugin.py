@@ -215,6 +215,7 @@ def pytest_runtest_setup(item):
             )
 
             # Apply manifests for the test case, if any are specified.
+            markers.apply_manifests_from_marker(item, test_case)
             markers.apply_manifest_from_marker(item, test_case)
 
         except Exception as e:

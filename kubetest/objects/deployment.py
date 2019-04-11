@@ -1,6 +1,7 @@
 """Kubetest wrapper for the Kubernetes ``Deployment`` API Object."""
 
 import logging
+import uuid
 
 from kubernetes import client
 
@@ -34,11 +35,66 @@ class Deployment(ApiObject):
         'apps/v1beta2': client.AppsV1beta2Api,
     }
 
+    def __init__(self, *args, **kwargs):
+        super(Deployment, self).__init__(*args, **kwargs)
+        self._add_kubetest_labels()
+
     def __str__(self):
         return str(self.obj)
 
     def __repr__(self):
         return self.__str__()
+
+    def _add_kubetest_labels(self):
+        """Add a kubetest label to the Deployment object.
+
+        This allows kubetest to more easily and reliably search for and aggregate
+        API objects, such as getting the Pods for a Deployment.
+
+        The kubetest label key is "kubetest/<obj kind>" where the obj kind is
+        the lower-cased kind of the obj.
+        """
+        self.klabel_uid = str(uuid.uuid4())
+        self.klabel_key = 'kubetest/deployment'
+
+        # fixme: it would be nice to clean up this label setting logic a bit
+        #   and possibly abstract it out to something more generalized, but
+        #   that is difficult to do given the differences in object attributes
+
+        # Set the base metadata label
+        if self.obj.metadata is None:
+            self.obj.metadata = client.V1ObjectMeta()
+
+        if self.obj.metadata.labels is None:
+            self.obj.metadata.labels = {}
+
+        if self.klabel_key not in self.obj.metadata.labels:
+            self.obj.metadata.labels[self.klabel_key] = self.klabel_uid
+
+        # If no spec is set, there is nothing to set additional labels on
+        if self.obj.spec is None:
+            log.warning('deployment spec not set - cannot set kubetest label')
+            return
+
+        # Set the selector label
+        if self.obj.spec.selector is None:
+            self.obj.spec.selector = client.V1LabelSelector()
+
+        if self.obj.spec.selector.match_labels is None:
+            self.obj.spec.selector.match_labels = {}
+
+        if self.klabel_key not in self.obj.spec.selector.match_labels:
+            self.obj.spec.selector.match_labels[self.klabel_key] = self.klabel_uid
+
+        # Set the template label
+        if self.obj.spec.template is None:
+            self.obj.spec.template = client.V1PodTemplateSpec()
+
+        if self.obj.spec.template.metadata is None:
+            self.obj.spec.template.metadata = client.V1ObjectMeta(labels={})
+
+        if self.klabel_key not in self.obj.spec.template.metadata.labels:
+            self.obj.spec.template.metadata.labels[self.klabel_key] = self.klabel_uid
 
     def create(self, namespace=None):
         """Create the Deployment under the given namespace.
@@ -138,10 +194,12 @@ class Deployment(ApiObject):
             list[Pod]: A list of pods that belong to the deployment.
         """
         log.info('getting pods for deployment "%s"', self.name)
+
         pods = client.CoreV1Api().list_namespaced_pod(
             namespace=self.namespace,
-            label_selector=selector_string(self.obj.metadata.labels),
+            label_selector=selector_string({self.klabel_key: self.klabel_uid})
         )
+
         pods = [Pod(p) for p in pods.items]
         log.debug('pods: %s', pods)
         return pods

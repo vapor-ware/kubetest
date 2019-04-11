@@ -58,10 +58,10 @@ class Deployment(ApiObject):
         self.klabel_key = 'kubetest/deployment'
 
         # fixme: it would be nice to clean up this label setting logic a bit
-        #  and possibly abstract it out to something more generalized, but
-        #  that is difficult to do given the differences in object attributes
+        #   and possibly abstract it out to something more generalized, but
+        #   that is difficult to do given the differences in object attributes
 
-        # # Set the base metadata label
+        # Set the base metadata label
         if self.obj.metadata is None:
             self.obj.metadata = client.V1ObjectMeta()
 

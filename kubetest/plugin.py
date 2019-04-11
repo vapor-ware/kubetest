@@ -7,6 +7,7 @@ the state of the cluster.
 
 # import os
 import logging
+import urllib3
 
 import kubernetes
 import pytest
@@ -83,6 +84,14 @@ def pytest_addoption(parser):
              'to show all lines, set this to -1.'
     )
 
+    group.addoption(
+        '--suppress-insecure-request',
+        action='store',
+        default=False,
+        help='suppress the urllib3 InsecureRequestWarning. This is useful if testing '
+             'against a cluster without HTTPS set up.'
+    )
+
 
 def pytest_report_header(config):
     """Augment the pytest report header with kubetest info.
@@ -116,6 +125,10 @@ def pytest_configure(config):
     """
     # Register kubetest markers
     markers.register(config)
+
+    # Disable warnings, if configured to do so.
+    if config.getoption('suppress_insecure_request'):
+        urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def pytest_sessionstart(session):

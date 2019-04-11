@@ -11,28 +11,31 @@ import yaml
 from kubernetes.client import models
 
 
-def load_file(path, obj_type=None):
-    """Load an individual Kubernetes manifest YAML file.
+def load_file(path):
+    """
+    Load an individual Kubernetes manifest YAML file. This file may contain
+    multiple document. It will attempt to auto-detect the type of each object
+    to load.
 
     Args:
         path (str): The fully qualified path to the file.
-        obj_type: The type of the object to load. If not specified,
-            this will attempt to auto-detect the type.
 
     Returns:
-        The Kubernetes API object for the manifest file.
+        A list of the Kubernetes API objects for this manifest file.
     """
     with open(path, 'r') as f:
-        manifest = yaml.load(f)
+        manifests = yaml.load_all(f)
 
-    if obj_type is None:
-        obj_type = get_type(manifest)
-        if obj_type is None:
-            raise ValueError(
-                'Unable to determine object type for manifest: {}'.format(manifest)
-            )
+        objs = []
+        for manifest in manifests:
+            obj_type = get_type(manifest)
+            if obj_type is None:
+                raise ValueError(
+                    'Unable to determine object type for manifest: {}'.format(manifest)
+                )
+            objs.append(new_object(obj_type, manifest))
 
-    return new_object(obj_type, manifest)
+    return objs
 
 
 def load_path(path):
@@ -55,8 +58,7 @@ def load_path(path):
     objs = []
     for f in os.listdir(path):
         if os.path.splitext(f)[1].lower() in ['.yaml', '.yml']:
-            obj = load_file(os.path.join(path, f))
-            objs.append(obj)
+            objs = objs + load_file(os.path.join(path, f))
     return objs
 
 

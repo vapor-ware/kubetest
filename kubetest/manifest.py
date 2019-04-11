@@ -12,10 +12,10 @@ from kubernetes.client import models
 
 
 def load_file(path):
-    """
-    Load an individual Kubernetes manifest YAML file. This file may contain
-    multiple document. It will attempt to auto-detect the type of each object
-    to load.
+    """Load an individual Kubernetes manifest YAML file.
+
+    This file may contain multiple YAML documents. It will attempt to auto-detect
+    the type of each object to load.
 
     Args:
         path (str): The fully qualified path to the file.

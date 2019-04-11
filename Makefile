@@ -18,7 +18,7 @@ deps:  ## Update the frozen pip dependencies (requirements.txt)
 ifndef HAS_PIP_COMPILE
 	pip install pip-tools
 endif
-	pip-compile --output-file requirements.txt setup.py
+	pip-compile --update --output-file requirements.txt setup.py
 
 .PHONY: docs
 docs:  ## Build the kubetest docs locally

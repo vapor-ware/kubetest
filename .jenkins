@@ -54,7 +54,7 @@ pipeline {
       }
       environment {
         GITHUB_USER = 'vapor-ware'
-        GITHUB_TOKEN = credentials('1de2c61b-4188-478b-bc65-42b0df860163')
+        GITHUB_TOKEN = credentials('vio-bot-gh-token')
         GITHUB_REPONAME = 'kubetest'
       }
       steps {

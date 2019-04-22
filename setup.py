@@ -36,7 +36,7 @@ setup(
         'kubernetes',
         'pyyaml>=4.2b1',
         'pytest',
-        'requests>=2.20.0',  # used by 'kubernetes'
+        'requests>=2.21.0',  # used by 'kubernetes'
     ],
     tests_require=[],
     zip_safe=False,

@@ -151,7 +151,9 @@ def apply_manifests_from_marker(item, client):
         if files is None:
             objs = load_path(dir_path)
         else:
-            objs = [obj for obj in load_file(os.path.join(dir_path, f)) for f in files]
+            objs = []
+            for f in files:
+                objs.extend(load_file(os.path.join(dir_path, f)))
 
         # For each of the loaded Kubernetes resources, we'll want to wrap it
         # in the equivalent kubetest wrapper. If the resource does not have

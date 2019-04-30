@@ -24,10 +24,20 @@ def new_namespace(test_name):
     Returns:
         str: The namespace name.
     """
-    return 'kubetest-{}-{}'.format(
-        test_name.replace('_', '-').lower(),
-        int(time.time())
-    )
+    prefix = 'kubetest'
+    timestamp = str(int(time.time()))
+    test_name = test_name.replace('_', '-').lower()
+
+    # The length of a resource name in Kubernetes may not exceed 63
+    # characters. Check the length of all components (+2 for the dashes
+    # joining the components). If the total length exceeds 63, truncate
+    # the test name.
+    name_len = len(prefix) + len(timestamp) + len(test_name) + 2
+
+    if name_len > 63:
+        test_name = test_name[:-(name_len-63)]
+
+    return '-'.join((prefix, test_name, timestamp))
 
 
 def selector_string(selectors):

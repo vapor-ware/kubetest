@@ -7,10 +7,10 @@ the state of the cluster.
 
 # import os
 import logging
-import urllib3
 
 import kubernetes
 import pytest
+import urllib3
 
 from kubetest import markers
 from kubetest.manager import KubetestManager
@@ -330,6 +330,17 @@ def kubeconfig(request):
 @pytest.fixture()
 def kube(kubeconfig, request):
     """Return a client for managing a Kubernetes cluster for testing."""
+
+    # FIXME (etd): This is a temporary patch which will cause tests to fail when
+    #   --kube-disable is set. The semantics around kube-disable are not clean and
+    #   need to be revisited. Until then, just cause failures and log the error
+    #   so it is actually clear why test setup/run/teardown isn't working correctly.
+    #   • https://github.com/vapor-ware/kubetest/issues/110
+    #   • https://github.com/vapor-ware/kubetest/issues/111
+    if request.session.config.getoption('kube_disable'):
+        log.error('Unable to get kubetest client, --kube-disable flag is set')
+        return None
+
     test_case = manager.get_test(request.node.nodeid)
     if test_case is None:
         logging.getLogger('kubetest').warning(

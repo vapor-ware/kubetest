@@ -26,6 +26,7 @@ setup(
     version=pkg['__version__'],
     description=pkg['__description__'],
     long_description=readme,
+    long_description_content_type="text/markdown",
     url=pkg['__url__'],
     author=pkg['__author__'],
     author_email=pkg['__author_email__'],

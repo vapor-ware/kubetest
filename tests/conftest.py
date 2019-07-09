@@ -57,6 +57,50 @@ def simple_deployment():
 
 
 @pytest.fixture()
+def simple_statefulset():
+    """Return the Kubernetes config matching the simple-statefulset.yaml manifest."""
+    return client.V1StatefulSet(
+        api_version='apps/v1',
+        kind='StatefulSet',
+        metadata=client.V1ObjectMeta(
+            name='postgres-statefulset',
+            labels={
+                'app': 'postgres'
+            }
+        ),
+        spec=client.V1StatefulSetSpec(
+            replicas=3,
+            selector=client.V1LabelSelector(
+                match_labels={
+                    'app': 'postgres'
+                }
+            ),
+            service_name='simple-service',
+            template=client.V1PodTemplateSpec(
+                metadata=client.V1ObjectMeta(
+                    labels={
+                        'app': 'postgres'
+                    }
+                ),
+                spec=client.V1PodSpec(
+                    containers=[
+                        client.V1Container(
+                            name='postgres',
+                            image='postgres:9.6',
+                            ports=[
+                                client.V1ContainerPort(
+                                    container_port=5432
+                                )
+                            ]
+                        )
+                    ]
+                )
+            )
+        )
+    )
+
+
+@pytest.fixture()
 def simple_service():
     """Return the Kubernetes config matching the simple-service.yaml manifest."""
     return client.V1Service(

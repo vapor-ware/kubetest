@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-statefulset
+  labels:
+    app: postgres
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: postgres
+  serviceName: simple-service
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:9.6
+        ports:
+        - containerPort: 5432

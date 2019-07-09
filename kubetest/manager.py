@@ -34,6 +34,7 @@ class ObjectManager:
         'configmap',
         'deployment',
         'pod',
+        'statefulset',
     ]
 
     def __init__(self):
@@ -103,6 +104,7 @@ class ObjectManager:
           - ConfigMap
           - Deployment
           - Pod
+          - StatefulSet
 
         Yields:
             ApiObject: The kubetest ApiObject wrapper to be created

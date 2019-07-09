@@ -101,6 +101,24 @@ class TestLoadType:
                 os.path.join(manifest_dir, 'simple-deployment.yaml')
             )
 
+    def test_simple_statefulset_ok(self, manifest_dir, simple_statefulset):
+        """Test loading the simple statefulset successfully."""
+        obj = manifest.load_type(
+            client.V1StatefulSet,
+            os.path.join(manifest_dir, 'simple-statefulset.yaml')
+        )
+        assert obj == simple_statefulset
+
+    def test_simple_statefulset_wrong_type(self, manifest_dir):
+        """Test loading the simple statefulset to the wrong type."""
+        with pytest.raises(ValueError):
+            # The V1Container requires a name -- since the manifest has no name,
+            # it will cause V1Container construction to fail with ValueError.
+            manifest.load_type(
+                client.V1Container,
+                os.path.join(manifest_dir, 'simple-statefulset.yaml')
+            )
+
     def test_simple_service_ok(self, manifest_dir, simple_service):
         """Test loading the simple service successfully."""
         obj = manifest.load_type(

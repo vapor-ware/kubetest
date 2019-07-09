@@ -89,6 +89,27 @@ class TestClient:
             deployment.namespace = self.namespace
         return deployment
 
+    def load_statefulset(self, path, set_namespace=True):
+        """Load a manifest YAML into a StatefulSet object.
+
+        By default, this will augment the StatefulSet object with
+        the generated test case namespace. This behavior can be
+        disabled with the ``set_namespace`` flag.
+
+        Args:
+            path (str): The path to the StatefulSet manifest.
+            set_namespace (bool): Enable/disable the automatic
+                augmentation of the StatefulSet namespace.
+
+        Returns:
+            objects.StatefulSet: The StatefulSet for the specified manifest.
+        """
+        log.info('loading statefulset from path: %s', path)
+        statefulset = objects.StatefulSet.load(path)
+        if set_namespace:
+            statefulset.namespace = self.namespace
+        return statefulset
+
     def load_pod(self, path, set_namespace=True):
         """Load a manifest YAML into a Pod object.
 
@@ -252,6 +273,42 @@ class TestClient:
             deployments[deployment.name] = deployment
 
         return deployments
+
+    def get_statefulsets(self, namespace=None, fields=None, labels=None):
+        """Get StatefulSets from the cluster.
+
+        Args:
+            namespace (str): The namespace to get the StatefulSets from. If not
+                specified, it will use the auto-generated test case namespace
+                by default.
+            fields (dict[str, str]): A dictionary of fields used to restrict
+                the returned collection of StatefulSets to only those which
+                match these field selectors. By default, no restricting is done.
+            labels (dict[str, str]): A dictionary of labels used to restrict
+                the returned collection of StatefulSets to only those which
+                match these label selectors. By default, no restricting is done.
+
+        Returns:
+            dict[str, objects.StatefulSet]: A dictionary where the key is
+            the StatefulSet name and the value is the StatefulSet itself.
+        """
+        if namespace is None:
+            namespace = self.namespace
+
+        selectors = utils.selector_kwargs(fields, labels)
+
+        statefulset_list = client.AppsV1Api().list_namespaced_stateful_set(
+            namespace=namespace,
+            **selectors,
+        )
+
+        statefulsets = {}
+        for obj in statefulset_list.items:
+            statefulset = objects.StatefulSet(obj)
+            statefulsets[statefulset.name] = statefulset
+
+        return statefulsets
+
 
     def get_endpoints(self, namespace=None, fields=None, labels=None):
         """Get Endpoints from the cluster.

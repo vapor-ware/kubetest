@@ -6,6 +6,7 @@ from .api_object import ApiObject
 from .clusterrolebinding import ClusterRoleBinding
 from .configmap import ConfigMap
 from .container import Container
+from .daemonset import DaemonSet
 from .deployment import Deployment
 from .endpoints import Endpoints
 from .namespace import Namespace
@@ -15,4 +16,3 @@ from .rolebinding import RoleBinding
 from .secret import Secret
 from .service import Service
 from .statefulset import StatefulSet
-from .daemonset import DaemonSet

@@ -18,6 +18,13 @@ pipeline {
       }
     }
 
+    // Lint the source code.
+    stage('Lint') {
+      steps {
+        sh 'make lint'
+      }
+    }
+
     // Run project unit tests.
     stage('Test') {
       steps {

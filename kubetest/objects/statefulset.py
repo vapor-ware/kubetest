@@ -137,7 +137,7 @@ class StatefulSet(ApiObject):
         log.debug('delete options: %s', options)
         log.debug('statefulset: %s', self.obj)
 
-        return self.api_client.delete_namespaced_statefulset(
+        return self.api_client.delete_namespaced_stateful_set(
             name=self.name,
             namespace=self.namespace,
             body=options,
@@ -145,7 +145,7 @@ class StatefulSet(ApiObject):
 
     def refresh(self):
         """Refresh the underlying Kubernetes StatefulSet resource."""
-        self.obj = self.api_client.read_namespaced_statefulset_status(
+        self.obj = self.api_client.read_namespaced_stateful_set_status(
             name=self.name,
             namespace=self.namespace,
         )

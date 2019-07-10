@@ -25,7 +25,11 @@ Once installed (see :ref:`installation`), the following pytest command-line opti
     Specifies the context to use in the kubeconfig. If not specified, it will use
     the current context, as set in the kubeconfig.
 
-- ``--kube-disable``
+- ``--kube-disable`` **DEPRECATED**
+
+    .. note::
+       *v0.2.0*: This flag no longer does anything. It will be removed in the next
+       major release.
 
     Disable kubetest from running. This can be useful when running pytest when no
     backing cluster is needed (e.g. to view the registered markers via ``pytest --markers``).

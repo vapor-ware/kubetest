@@ -8,6 +8,7 @@ kubetest.client module
 ----------------------
 
 .. automodule:: kubetest.client
+    :noindex:
     :members:
     :undoc-members:
     :show-inheritance:
@@ -32,6 +33,7 @@ kubetest.objects module
 -----------------------
 
 .. automodule:: kubetest.objects
+    :noindex:
     :members:
     :undoc-members:
     :show-inheritance:

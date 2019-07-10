@@ -5,8 +5,8 @@ useful test fixtures and functionality in order to interact with and test
 the state of the cluster.
 """
 
-# import os
 import logging
+import warnings
 
 import kubernetes
 import pytest
@@ -55,7 +55,7 @@ def pytest_addoption(parser):
         '--kube-disable',
         action='store_true',
         default=False,
-        help='disable automatic configuration with the kubeconfig file'
+        help='[DEPRECATED] disable automatic configuration with the kubeconfig file'
     )
 
     # FIXME (etd) - this was an attempt to fix occasional permissions errors
@@ -99,20 +99,18 @@ def pytest_report_header(config):
     See Also:
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_report_header
     """
-    disabled = config.getoption('kube_disable')
-    if not disabled:
-        config_file = config.getoption('kube_config')
-        if config_file is None:
-            config_file = 'default'
+    config_file = config.getoption('kube_config')
+    if config_file is None:
+        config_file = 'default'
 
-        context = config.getoption('kube_context')
-        if context is None:
-            context = 'current context'
+    context = config.getoption('kube_context')
+    if context is None:
+        context = 'current context'
 
-        return [
-            'kubetest config file: {}'.format(config_file),
-            'kubetest context: {}'.format(context),
-        ]
+    return [
+        'kubetest config file: {}'.format(config_file),
+        'kubetest context: {}'.format(context),
+    ]
 
 
 def pytest_configure(config):
@@ -155,20 +153,28 @@ def pytest_sessionstart(session):
     logger = logging.getLogger('kubetest')
     logger.setLevel(level)
 
-    # Configure kubetest with the kubernetes config, if not disabled.
-    disabled = session.config.getoption('kube_disable')
-    if not disabled:
-        # # Set the GOOGLE_APPLICATION_CREDENTIALS environment variable. For more, see:
-        # # https://cloud.google.com/docs/authentication/production
-        # gke_creds = config.getoption('google_application_credentials')
-        # if gke_creds is not None:
-        #     # If application credentials already exist, store them so they can be
-        #     # reset after testing.
-        #     old_creds = os.environ.get(GOOGLE_APPLICATION_CREDENTIALS)
-        #     if old_creds:
-        #         os.environ['OLD_' + GOOGLE_APPLICATION_CREDENTIALS] = old_creds
-        #     os.environ[GOOGLE_APPLICATION_CREDENTIALS] = gke_creds
-        pass
+    # Check for configuration deprecations
+    if session.config.getoption('kube_disable'):
+        warnings.warn(
+            '--kube-disable flag is deprecated (v0.2.0) and is no longer functional. '
+            'To disable the plugin for a project, see: '
+            'https://docs.pytest.org/en/latest/plugins.html',
+        )
+
+    # # Configure kubetest with the kubernetes config, if not disabled.
+    # disabled = session.config.getoption('kube_disable')
+    # if not disabled:
+    #     # # Set the GOOGLE_APPLICATION_CREDENTIALS environment variable. For more, see:
+    #     # # https://cloud.google.com/docs/authentication/production
+    #     # gke_creds = config.getoption('google_application_credentials')
+    #     # if gke_creds is not None:
+    #     #     # If application credentials already exist, store them so they can be
+    #     #     # reset after testing.
+    #     #     old_creds = os.environ.get(GOOGLE_APPLICATION_CREDENTIALS)
+    #     #     if old_creds:
+    #     #         os.environ['OLD_' + GOOGLE_APPLICATION_CREDENTIALS] = old_creds
+    #     #     os.environ[GOOGLE_APPLICATION_CREDENTIALS] = gke_creds
+    #     pass
 
 
 # def pytest_sessionfinish(session):
@@ -203,37 +209,30 @@ def pytest_runtest_setup(item):
         test_name=item.name,
     )
 
-    # FIXME (etd) - not sure this is really what we want to do. does it make sense
-    # to entirely disable the plugin just be specifying the disable flag? probably..
-    # but there must be a better way than adding this check (perhaps unregistering the
-    # plugin in the pytest_configure hook?)
-    disabled = item.config.getoption('kube_disable')
-    if not disabled:
+    # Note: These markers are not applied right now, meaning that the resource(s)
+    #  which they reference are not added to the cluster yet. They are just
+    #  registered with the test case so they can be applied to the cluster on
+    #  test case setup.
+    #
+    #  At this point, the config is not loaded, so there is nothing that could be
+    #  added to the cluster. It is safe to skip the teardown (which cleans up the
+    #  test namespace) since nothing could be added to the namespace yet.
+    try:
+        # Register test case state based on markers on the test case.
+        test_case.register_rolebindings(
+            *markers.rolebindings_from_marker(item, test_case.ns)
+        )
+        test_case.register_clusterrolebindings(
+            *markers.clusterrolebindings_from_marker(item, test_case.ns)
+        )
 
-        # Note: These markers are not applied right now, meaning that the resource(s)
-        #  which they reference are not added to the cluster yet. They are just
-        #  registered with the test case so they can be applied to the cluster on
-        #  test case setup.
-        #
-        #  At this point, the config is not loaded, so there is nothing that could be
-        #  added to the cluster. It is safe to skip the teardown (which cleans up the
-        #  test namespace) since nothing could be added to the namespace yet.
-        try:
-            # Register test case state based on markers on the test case.
-            test_case.register_rolebindings(
-                *markers.rolebindings_from_marker(item, test_case.ns)
-            )
-            test_case.register_clusterrolebindings(
-                *markers.clusterrolebindings_from_marker(item, test_case.ns)
-            )
+        # Apply manifests for the test case, if any are specified.
+        markers.apply_manifests_from_marker(item, test_case)
+        markers.apply_manifest_from_marker(item, test_case)
 
-            # Apply manifests for the test case, if any are specified.
-            markers.apply_manifests_from_marker(item, test_case)
-            markers.apply_manifest_from_marker(item, test_case)
-
-        except Exception as e:
-            test_case._pt_setup_failed = True
-            raise e
+    except Exception as e:
+        test_case._pt_setup_failed = True
+        raise e
 
 
 def pytest_runtest_teardown(item):
@@ -242,9 +241,7 @@ def pytest_runtest_teardown(item):
     See Also:
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_runtest_teardown
     """
-    disabled = item.config.getoption('kube_disable')
-    if not disabled:
-        manager.teardown(item.nodeid)
+    manager.teardown(item.nodeid)
 
 
 def pytest_runtest_makereport(item, call):
@@ -255,23 +252,21 @@ def pytest_runtest_makereport(item, call):
     See Also:
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_runtest_makereport
     """
-    disabled = item.config.getoption('kube_disable')
-    if not disabled:
-        if call.when == 'call':
-            if call.excinfo is not None:
-                tail_lines = item.config.getoption('kube_error_log_lines')
-                if tail_lines != 0:
-                    test_case = manager.get_test(item.nodeid)
-                    logs = test_case.yield_container_logs(
-                        tail_lines=tail_lines
+    if call.when == 'call':
+        if call.excinfo is not None:
+            tail_lines = item.config.getoption('kube_error_log_lines')
+            if tail_lines != 0:
+                test_case = manager.get_test(item.nodeid)
+                logs = test_case.yield_container_logs(
+                    tail_lines=tail_lines
+                )
+                for container_log in logs:
+                    # Add a report section to the test output
+                    item.add_report_section(
+                        when=call.when,
+                        key='kubernetes container logs',
+                        content=container_log
                     )
-                    for container_log in logs:
-                        # Add a report section to the test output
-                        item.add_report_section(
-                            when=call.when,
-                            key='kubernetes container logs',
-                            content=container_log
-                        )
 
 
 def pytest_keyboard_interrupt():
@@ -331,21 +326,12 @@ def kubeconfig(request):
 def kube(kubeconfig, request):
     """Return a client for managing a Kubernetes cluster for testing."""
 
-    # FIXME (etd): This is a temporary patch which will cause tests to fail when
-    #   --kube-disable is set. The semantics around kube-disable are not clean and
-    #   need to be revisited. Until then, just cause failures and log the error
-    #   so it is actually clear why test setup/run/teardown isn't working correctly.
-    #   • https://github.com/vapor-ware/kubetest/issues/110
-    #   • https://github.com/vapor-ware/kubetest/issues/111
-    if request.session.config.getoption('kube_disable'):
-        log.error('Unable to get kubetest client, --kube-disable flag is set')
-        return None
-
     test_case = manager.get_test(request.node.nodeid)
     if test_case is None:
-        logging.getLogger('kubetest').warning(
-            'No kubetest test client found for test using the "kube" fixture. '
-            '(are you running with the --kube-disable flag?)'
+        log.error(
+            'No kubetest client found for test using the "kube" fixture. ({})'.format(
+                request.node.nodeid,
+            )
         )
         return None
 

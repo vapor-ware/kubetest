@@ -27,6 +27,7 @@ pod or deployment and inspect the aftermath).
 For more information, see the [kubetest documentation][kubetest-docs].
 
 ## Installation
+
 This plugin can be installed with `pip`
 
 ```
@@ -41,109 +42,19 @@ recommended to only install `kubetest` in a virtual environment or other managed
 such as a CI pipeline, where you can assure that cluster access and configuration are
 available.
 
-## Usage
-Once installed, the following `pytest` command-line parameters become available:
+## Documentation
 
-```
-pytest \
-    [--kube-config <path-to-config>] \
-    [--kube-error-log-lines <count>] \
-    [--kube-log-level <level>] \
-    [--kube-disable]
-```
-
-- **`--kube-config`**: The path to the config file to use for your cluster. If not specified,
-  it defaults to the same config that `kubectl` uses at `~/.kube/config`
-- **`--kube-error-log-lines`**: Set the number of lines to tail from the container logs for
-  a test namespace when a test fails. By default this is set to 50. If you want to show all
-  container logs, set this to -1. If you do not wish to show container logs, set this to 0.
-- **`--kube-log-level`**: Set the logging level for kubetest. The default log level is *warning*.
-  Setting the log level to *info* will provide logging for kubetest actions. Setting the log level
-  to *debug* will log out the Kubernetes object state for various actions as well.
-- **`--kube-disable`**: Disable kubetest from running initial cluster configuration.
-
-Note that kubetest expects a cluster to be available and requires some form of configuration
-in order to interface with that cluster.
-
-## Pytest Integration
-Below, a brief overview is given for the various components of kubetest exposed via pytest.
-For more detailed information, see the [kubetest documentation][kubetest-docs].
-
-### Fixtures
-
-#### [`kube`](https://kubetest.readthedocs.io/en/latest/fixtures.html#kube)
-The `kube` fixture is the "entrypoint" into using kubetest. It provides a basic API for
-managing your cluster.
-
-```python
-def test_deployment(kube):
-    """Example test case for creating and deleting a deployment."""
-    
-    d = kube.load_deployment('path/to/deployment.yaml')
-    
-    d.create()
-    d.wait_until_ready(timeout=10)
-    
-    # test some deployment state
-    
-    d.delete()
-    d.wait_until_deleted(timeout=10)
-```
-
-The above example shows a simplified test case using kubetest to load a deployment
-from file, create it on the cluster, wait until it is in the ready state, delete the
-deployment, and then wait until it is deleted.
-
-The two final steps - `delete` and `wait_until_deleted` can be useful when testing
-a failure scenario, but does not need to be specified at the end of a test case as
-a means of cluster cleanup. Because each test will run in its own namespace, once the
-test completes, the namespace will be deleted from the cluster, which will in turn
-delete all objects in that namespace, cleaning out all test artifacts.
-
-### Markers
-To see all markers, run `pytest --kube-disable --markers` with kubetest installed.
-This will list the kubetest-provided markers along with a detailed description of
-what they do.
-
-#### [`applymanifests`](https://kubetest.readthedocs.io/en/latest/markers.html#apply-manifests)
-Allows you to specify manifest directories or files that should be used for the test
-case. This will automatically load the manifest and create the API object on the cluster.
-
-*Example:*
-```python
-@pytest.mark.applymanifests('manifests')
-def test_something(kube):
-    ...
-```
-
-#### [`clusterrolebinding`](https://kubetest.readthedocs.io/en/latest/markers.html#cluster-role-binding)
-Allows you to specify different [cluster roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
-that should be applied to the cluster for the test case.
-
-*Example:*
-```python
-@pytest.mark.clusterrolebinding('cluster-admin')
-def test_something(kube):
-    ...
-```
-
-#### [`rolebinding`](https://kubetest.readthedocs.io/en/latest/markers.html#role-binding)
-Allows you to specify different [roles](https://kubernetes.io/docs/reference/access-authn-authz/rbac/)
-that should be applied to the cluster for the test namespace of the test case.
-
-*Example:*
-```python
-@pytest.mark.rolebinding('custom-role')
-def test_something(kube):
-    ...
-```
+See the [kubetest documentation page][kubetest-docs] for details on command line usage,
+available fixtures and markers, and general pytest integration.
 
 ## Feedback
+
 Feedback for kubetest is greatly appreciated! If you experience any issues, find the
 documentation unclear, have feature requests, or just have questions about it, we'd
 love to know. Feel free to open an issue for any feedback you may have.
 
 ## License
+
 kubetest is released under the [GPL-3.0](LICENSE) license.
 
 

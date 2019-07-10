@@ -1,4 +1,4 @@
-"""Kubetest wrapper for the Kubernetes ``StatefulSet`` API Object."""
+"""Kubetest wrapper for the Kubernetes ``DaemonSet`` API Object."""
 
 import logging
 import uuid
@@ -112,7 +112,7 @@ class DaemonSet(ApiObject):
                  self.namespace)
         log.debug('daemonset: %s', self.obj)
 
-        self.obj = self.api_client.create_namespaced_stateful_set(
+        self.obj = self.api_client.create_namespaced_daemon_set(
             namespace=namespace,
             body=self.obj,
         )
@@ -137,7 +137,7 @@ class DaemonSet(ApiObject):
         log.debug('delete options: %s', options)
         log.debug('daemonset: %s', self.obj)
 
-        return self.api_client.delete_namespaced_daemonset(
+        return self.api_client.delete_namespaced_daemon_set(
             name=self.name,
             namespace=self.namespace,
             body=options,
@@ -145,7 +145,7 @@ class DaemonSet(ApiObject):
 
     def refresh(self):
         """Refresh the underlying Kubernetes DaemonSet resource."""
-        self.obj = self.api_client.read_namespaced_daemonset_status(
+        self.obj = self.api_client.read_namespaced_daemon_set_status(
             name=self.name,
             namespace=self.namespace,
         )

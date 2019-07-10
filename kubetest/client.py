@@ -125,7 +125,7 @@ class TestClient:
         Returns:
             objects.DaemonSet: The DaemonSet for the specified manifest.
         """
-        log.info('loading statefulset from path: %s', path)
+        log.info('loading daemonset from path: %s', path)
         daemonset = objects.DaemonSet.load(path)
         if set_namespace:
             daemonset.namespace = self.namespace

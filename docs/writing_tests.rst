@@ -17,7 +17,7 @@ kubetest.
 If you wish to specify a different config file, you can pass it in via the
 ``--kube-config`` flag. See :ref:`command_line_usage` for more details.
 
-You can also write a ``kubeconfig`` fixture_ that provides the path to the
+You can also write a ``kubeconfig`` fixture which provides the path to the
 config path.  This may be useful in case your cluster is generated as part
 of the tests.
 

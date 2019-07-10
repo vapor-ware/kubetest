@@ -35,6 +35,7 @@ class ObjectManager:
         'deployment',
         'pod',
         'statefulset',
+        'daemonset',
     ]
 
     def __init__(self):
@@ -105,6 +106,7 @@ class ObjectManager:
           - Deployment
           - Pod
           - StatefulSet
+          - DaemonSet
 
         Yields:
             ApiObject: The kubetest ApiObject wrapper to be created

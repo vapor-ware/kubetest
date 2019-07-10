@@ -110,6 +110,27 @@ class TestClient:
             statefulset.namespace = self.namespace
         return statefulset
 
+    def load_daemonset(self, path, set_namespace=True):
+        """Load a manifest YAML into a DaemonSet object.
+
+        By default, this will augment the DaemonSet object with
+        the generated test case namespace. This behavior can be
+        disabled with the ``set_namespace`` flag.
+
+        Args:
+            path (str): The path to the DaemonSet manifest.
+            set_namespace (bool): Enable/disable the automatic
+                augmentation of the DaemonSet namespace.
+
+        Returns:
+            objects.DaemonSet: The DaemonSet for the specified manifest.
+        """
+        log.info('loading statefulset from path: %s', path)
+        daemonset = objects.DaemonSet.load(path)
+        if set_namespace:
+            daemonset.namespace = self.namespace
+        return daemonset
+
     def load_pod(self, path, set_namespace=True):
         """Load a manifest YAML into a Pod object.
 
@@ -309,6 +330,40 @@ class TestClient:
 
         return statefulsets
 
+    def get_daemonsets(self, namespace=None, fields=None, labels=None):
+        """Get DaemonSets from the cluster.
+
+        Args:
+            namespace (str): The namespace to get the DaemonSets from. If not
+                specified, it will use the auto-generated test case namespace
+                by default.
+            fields (dict[str, str]): A dictionary of fields used to restrict
+                the returned collection of DaemonSets to only those which
+                match these field selectors. By default, no restricting is done.
+            labels (dict[str, str]): A dictionary of labels used to restrict
+                the returned collection of DaemonSets to only those which
+                match these label selectors. By default, no restricting is done.
+
+        Returns:
+            dict[str, objects.DaemonSet]: A dictionary where the key is
+            the DaemonSet name and the value is the DaemonSet itself.
+        """
+        if namespace is None:
+            namespace = self.namespace
+
+        selectors = utils.selector_kwargs(fields, labels)
+
+        daemonset_list = client.AppsV1Api().list_namespaced_daemon_set(
+            namespace=namespace,
+            **selectors,
+        )
+
+        daemonsets = {}
+        for obj in daemonset_list.items:
+            daemonset = objects.DaemonSet(obj)
+            daemonsets[daemonset.name] = daemonset
+
+        return daemonsets
 
     def get_endpoints(self, namespace=None, fields=None, labels=None):
         """Get Endpoints from the cluster.

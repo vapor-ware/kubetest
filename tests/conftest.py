@@ -101,6 +101,48 @@ def simple_statefulset():
 
 
 @pytest.fixture()
+def simple_daemonset():
+    """Return the Kubernetes config matching the simple-daemonset.yaml manifest."""
+    return client.V1DaemonSet(
+        api_version='apps/v1',
+        kind='DaemonSet',
+        metadata=client.V1ObjectMeta(
+            name='canal-daemonset',
+            labels={
+                'app': 'canal'
+            }
+        ),
+        spec=client.V1DaemonSetSpec(
+            selector=client.V1LabelSelector(
+                match_labels={
+                    'app': 'canal'
+                }
+            ),
+            template=client.V1PodTemplateSpec(
+                metadata=client.V1ObjectMeta(
+                    labels={
+                        'app': 'canal'
+                    }
+                ),
+                spec=client.V1PodSpec(
+                    containers=[
+                        client.V1Container(
+                            name='canal',
+                            image='canal:3.7.2',
+                            ports=[
+                                client.V1ContainerPort(
+                                    container_port=9099
+                                )
+                            ]
+                        )
+                    ]
+                )
+            )
+        )
+    )
+
+
+@pytest.fixture()
 def simple_service():
     """Return the Kubernetes config matching the simple-service.yaml manifest."""
     return client.V1Service(

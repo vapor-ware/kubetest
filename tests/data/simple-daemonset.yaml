@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: canal-daemonset
+  labels:
+    app: canal
+spec:
+  selector:
+    matchLabels:
+      app: canal
+  template:
+    metadata:
+      labels:
+        app: canal
+    spec:
+      containers:
+      - name: canal
+        image: canal:3.7.2
+        ports:
+        - containerPort: 9099

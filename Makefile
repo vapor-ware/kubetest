@@ -3,9 +3,7 @@
 #
 
 PKG_NAME    := kubetest
-PKG_VERSION := $(shell python -c "import kubetest ; print(kubetest.__version__)")
-
-HAS_PIP_COMPILE := $(shell which pip-compile)
+PKG_VERSION := $(shell python setup.py --version)
 
 
 .PHONY: clean
@@ -15,10 +13,7 @@ clean:  ## Clean up build artifacts
 
 .PHONY: deps
 deps:  ## Update the frozen pip dependencies (requirements.txt)
-ifndef HAS_PIP_COMPILE
-	pip install pip-tools
-endif
-	pip-compile --upgrade --output-file requirements.txt setup.py
+	tox -e deps
 
 .PHONY: docs
 docs:  ## Build the kubetest docs locally
@@ -33,9 +28,13 @@ fmt:  ## Run formatting checks on the project source code
 	tox -e format
 
 .PHONY: github-tag
-github-tag:  ## Create and push a GitHub tag with the current version
+github-tag:  ## Create and push a tag with the current version
 	git tag -a ${PKG_VERSION} -m "${PKG_NAME} version ${PKG_VERSION}"
 	git push -u origin ${PKG_VERSION}
+
+.PHONY: lint
+lint:  ## Run linting checks on the project source code (isort, flake8, twine)
+	tox -e lint
 
 .PHONY: test
 test:  ## Run the project unit tests
@@ -43,7 +42,7 @@ test:  ## Run the project unit tests
 
 .PHONY: version
 version:  ## Print the version of the project
-	@echo "$(PKG_VERSION)"
+	@echo "${PKG_VERSION}"
 
 .PHONY: help
 help:  ## Print Make usage information

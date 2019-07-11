@@ -163,17 +163,17 @@ class DaemonSet(ApiObject):
         if status is None:
             return False
 
-        # check the status for the number of total replicas and compare
-        # it to the number of ready replicas. if the numbers are
+        # check the status for the number of desired pod count and compare
+        # it to the number of ready pods. if the numbers are
         # equal, the daemonset is ready; otherwise it is not ready.
         # TODO (etd) - we may want some logging in here eventually
-        total = status.replicas
-        ready = status.ready_replicas
+        desired = status.desired_number_scheduled
+        ready = status.number_ready
 
-        if total is None:
+        if desired is None:
             return False
 
-        return total == ready
+        return desired == ready
 
     def status(self):
         """Get the status of the DaemonSet.

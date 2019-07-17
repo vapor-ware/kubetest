@@ -6,13 +6,14 @@ the state of the cluster.
 """
 
 import logging
+import os
 import warnings
 
 import kubernetes
 import pytest
 import urllib3
 
-from kubetest import markers
+from kubetest import errors, markers
 from kubetest.manager import KubetestManager
 
 GOOGLE_APPLICATION_CREDENTIALS = 'GOOGLE_APPLICATION_CREDENTIALS'
@@ -42,7 +43,10 @@ def pytest_addoption(parser):
         action='store',
         metavar='path',
         default=None,
-        help='the kubernetes config for kubetest'
+        help=(
+            'the kubernetes config for kubetest; this is required for '
+            'resources to be installed on the cluster'
+        )
     )
     group.addoption(
         '--kube-context',
@@ -203,36 +207,39 @@ def pytest_runtest_setup(item):
     See Also:
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_runtest_setup
     """
-    # Register a new test case with the manager and setup the test case state.
-    test_case = manager.new_test(
-        node_id=item.nodeid,
-        test_name=item.name,
-    )
+    # Only create a managed test case if a kube-config is specified.
+    if item.config.getoption('kube_config'):
 
-    # Note: These markers are not applied right now, meaning that the resource(s)
-    #  which they reference are not added to the cluster yet. They are just
-    #  registered with the test case so they can be applied to the cluster on
-    #  test case setup.
-    #
-    #  At this point, the config is not loaded, so there is nothing that could be
-    #  added to the cluster. It is safe to skip the teardown (which cleans up the
-    #  test namespace) since nothing could be added to the namespace yet.
-    try:
-        # Register test case state based on markers on the test case.
-        test_case.register_rolebindings(
-            *markers.rolebindings_from_marker(item, test_case.ns)
-        )
-        test_case.register_clusterrolebindings(
-            *markers.clusterrolebindings_from_marker(item, test_case.ns)
+        # Register a new test case with the manager and setup the test case state.
+        test_case = manager.new_test(
+            node_id=item.nodeid,
+            test_name=item.name,
         )
 
-        # Apply manifests for the test case, if any are specified.
-        markers.apply_manifests_from_marker(item, test_case)
-        markers.apply_manifest_from_marker(item, test_case)
+        # Note: These markers are not applied right now, meaning that the resource(s)
+        #  which they reference are not added to the cluster yet. They are just
+        #  registered with the test case so they can be applied to the cluster on
+        #  test case setup.
+        #
+        #  At this point, the config is not loaded, so there is nothing that could be
+        #  added to the cluster. It is safe to skip the teardown (which cleans up the
+        #  test namespace) since nothing could be added to the namespace yet.
+        try:
+            # Register test case state based on markers on the test case.
+            test_case.register_rolebindings(
+                *markers.rolebindings_from_marker(item, test_case.ns)
+            )
+            test_case.register_clusterrolebindings(
+                *markers.clusterrolebindings_from_marker(item, test_case.ns)
+            )
 
-    except Exception as e:
-        test_case._pt_setup_failed = True
-        raise e
+            # Apply manifests for the test case, if any are specified.
+            markers.apply_manifests_from_marker(item, test_case)
+            markers.apply_manifest_from_marker(item, test_case)
+
+        except Exception as e:
+            test_case._pt_setup_failed = True
+            raise e
 
 
 def pytest_runtest_teardown(item):
@@ -258,16 +265,17 @@ def pytest_runtest_makereport(item, call):
             tail_lines = item.config.getoption('kube_error_log_lines')
             if tail_lines != 0:
                 test_case = manager.get_test(item.nodeid)
-                logs = test_case.yield_container_logs(
-                    tail_lines=tail_lines
-                )
-                for container_log in logs:
-                    # Add a report section to the test output
-                    item.add_report_section(
-                        when=call.when,
-                        key='kubernetes container logs',
-                        content=container_log
+                if test_case:
+                    logs = test_case.yield_container_logs(
+                        tail_lines=tail_lines
                     )
+                    for container_log in logs:
+                        # Add a report section to the test output
+                        item.add_report_section(
+                            when=call.when,
+                            key='kubernetes container logs',
+                            content=container_log
+                        )
 
 
 def pytest_keyboard_interrupt():
@@ -327,6 +335,13 @@ def kubeconfig(request):
 def kube(kubeconfig, request):
     """Return a client for managing a Kubernetes cluster for testing."""
 
+    if not kubeconfig:
+        log.error(
+            'kube fixture used when no --kube-config is set; unable to install test '
+            'resources onto a cluster.'
+        )
+        raise errors.SetupError('--kube-config not set')
+
     test_case = manager.get_test(request.node.nodeid)
     if test_case is None:
         log.error(
@@ -334,15 +349,13 @@ def kube(kubeconfig, request):
                 request.node.nodeid,
             )
         )
-        return None
-
-    context = request.session.config.getoption('kube_context')
+        raise errors.SetupError('error generating test client')
 
     # Setup the test case. This will create the namespace and any other
     # objects (e.g. role bindings) that the test case will need.
     kubernetes.config.load_kube_config(
-        config_file=kubeconfig,
-        context=context,
+        config_file=os.path.expandvars(os.path.expanduser(kubeconfig)),
+        context=request.session.config.getoption('kube_context'),
     )
     test_case.setup()
 

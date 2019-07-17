@@ -17,8 +17,8 @@ Once installed (see :ref:`installation`), the following pytest command-line opti
 - ``--kube-config <PATH>``
 
     Specifies the path to the config file to use for connecting to your cluster.
-    If no ``PATH`` is specified, it uses the default path to cluster config,
-    which is the same config that ``kubectl`` uses: ``~/.kube/config``.
+    If this option is not specified, ``kubetest`` will not install resources onto
+    the cluster, which may cause test failure.
 
 - ``--kube-context <CONTEXT>``
 

@@ -9,6 +9,7 @@ from .container import Container
 from .daemonset import DaemonSet
 from .deployment import Deployment
 from .endpoints import Endpoints
+from .event import Event
 from .namespace import Namespace
 from .node import Node
 from .pod import Pod

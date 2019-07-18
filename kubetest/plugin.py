@@ -248,7 +248,7 @@ def pytest_runtest_teardown(item):
     See Also:
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_runtest_teardown
     """
-    if hasattr(item.config, 'kube_config'):
+    if item.config.getoption('kube_config'):
         manager.teardown(item.nodeid)
 
 

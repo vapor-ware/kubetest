@@ -199,7 +199,8 @@ class TestMeta:
 
         # delete the test case namespace. this will also delete anything
         # in the namespace, which includes RoleBindings.
-        self.namespace.delete()
+        if self._namespace:
+            self.namespace.delete()
 
         # ClusterRoleBindings are not bound to a namespace, so we will need
         # to delete them ourselves.

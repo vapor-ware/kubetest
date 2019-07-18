@@ -63,3 +63,87 @@ See the :ref:`examples` page for more.
 
       containers = pod.get_containers()
       assert len(containers) == 1
+
+
+.. _kubeconfig_fixture:
+
+kubeconfig
+----------
+
+.. autofunction:: kubetest.plugin.kubeconfig
+   :noindex:
+
+Summary
+~~~~~~~
+
+The ``kubeconfig`` fixture provides the name of the kubeconfig file which was used to
+load cluster configuration for the test. This should be the same value which was passed in
+via the ``--kube-config`` command line parameter.
+
+Example Usage
+~~~~~~~~~~~~~
+
+Below is a simple trivial example of how the ``kubeconfig`` fixture may be used.
+
+.. code-block:: python
+
+    def test_something(kubeconfig):
+        """A test case that gets the config file name via fixture."""
+
+        assert kubeconfig == '~/.kube/config'
+
+
+.. _clusterinfo_fixture:
+
+clusterinfo
+-----------
+
+.. autofunction:: kubetest.plugin.clusterinfo
+   :noindex:
+
+Summary
+~~~~~~~
+
+The ``clusterinfo`` fixture provides some basic information about the cluster which the tests
+are being run on. This information is taken from the cluster configuration and current context,
+so it should match the corresponding entries in the kube config file.
+
+.. important::
+  When using the ``clusterinfo`` fixture, you should *always* specify it **after** the
+  ``kube`` fixture. This is because the ``clusterinfo`` fixture does not load the
+  specified kubeconfig file, whereas the ``kube`` fixture does. Invoking the ``clusterinfo``
+  fixture before the ``kube`` fixture will lead to some default configuration values to be
+  returned, which may not accurately reflect the actual configuration used when the tests
+  are run.
+
+  **Good**
+
+  .. code-block:: python
+
+      def test_example(kube, clusterinfo):
+          ...
+
+  **Bad**
+
+  .. code-block:: python
+
+      def test_example(clusterinfo, kube):
+          ...
+
+The ``clusterinfo`` fixture returns an instance of ``ClusterInfo``:
+
+.. autoclass:: kubetest.plugin.ClusterInfo
+   :noindex:
+
+Example Usage
+~~~~~~~~~~~~~
+
+Below is a simple trivial example of how the ``kubeconfig`` fixture may be used.
+
+.. code-block:: python
+
+    def test_something(kube, clusterinfo):
+        """A test case that gets cluster info via fixture."""
+
+        assert clusterinfo.user == 'test-user'
+        assert clusterinfo.context == 'text-context'

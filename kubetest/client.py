@@ -534,6 +534,42 @@ class TestClient:
 
         return nodes
 
+    def get_events(self, fields=None, labels=None, all_namespaces=False):
+        """Get the latest Events that occurred in the cluster.
+
+        Args:
+            fields (dict[str, str]): A dictionary of fields used to restrict
+                the returned collection of Events to only those which match
+                these field selectors. By default, no restricting is done.
+            labels (dict[str, str]): A dictionary of labels used to restrict
+                the returned collection of Events to only those which match
+                these label selectors. By default, no restricting is done.
+            all_namespaces (bool): If True, get the events across all
+                namespaces.
+
+        Returns:
+            dict[str, objects.Event]: A dictionary where the key is the Event
+            name and the value is the Event itself.
+        """
+        selectors = utils.selector_kwargs(fields, labels)
+
+        if all_namespaces:
+            event_list = client.CoreV1Api().list_event_for_all_namespaces(
+                **selectors
+            )
+        else:
+            event_list = client.CoreV1Api().list_namespaced_event(
+                namespace=self.namespace,
+                **selectors
+            )
+
+        events = {}
+        for obj in event_list.items:
+            event = objects.Event(obj)
+            events[event.name] = event
+
+        return events
+
     # ****** Test Helpers ******
 
     @staticmethod

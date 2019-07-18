@@ -325,8 +325,54 @@ def pytest_keyboard_interrupt():
 
 # ********** pytest fixtures **********
 
+class ClusterInfo:
+    """Information about the cluster the kubetest is being run on.
+
+    This info is gathered from the current context and the loaded
+    configuration.
+
+    :ivar cluster: The name of the cluster set for the current context.
+    :ivar user: The name of the user set for the current context.
+    :ivar context: The name of the current context.
+    :ivar host: API server address.
+    :ivar verify_ssl: SSL certificate verification when calling the API.
+    """
+
+    def __init__(self, current, config):
+        self.cluster = current['context']['cluster']
+        self.user = current['context']['user']
+        self.context = current['name']
+        self.host = config.host
+        self.verify_ssl = config.verify_ssl
+
+
+@pytest.fixture
+def clusterinfo(request):
+    """Get a ``ClusterInfo`` instance which provides basic information
+    about the cluster the tests are being run on.
+    """
+
+    # Get an instance of a Configuration, which the kubeconfig
+    # will be loaded into by default.
+    config = kubernetes.client.Configuration()
+
+    # Get the current context.
+    _, current = kubernetes.config.list_kube_config_contexts(
+        os.path.expandvars(os.path.expanduser(
+            request.session.config.getoption('kube_config')
+        ))
+    )
+
+    return ClusterInfo(
+        current=current,
+        config=config,
+    )
+
+
 @pytest.fixture
 def kubeconfig(request):
+    """Return the name of the configured kube config file loaded for the tests."""
+
     config_file = request.session.config.getoption('kube_config')
     return config_file
 

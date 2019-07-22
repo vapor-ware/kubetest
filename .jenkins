@@ -35,17 +35,13 @@ pipeline {
     // Build and distribute a new package version to PyPi.
     stage('Publish to PyPi') {
       when {
-        // example matches: 1.2.3, 1.2.3-dev
-        tag pattern: '(0|[1-9]*)\\.(0|[1-9]*)\\.(0|[1-9]*)(-(\\S*))?$', comparator: "REGEXP"
+        buildingTag()
       }
       environment {
         TWINE_USERNAME = 'vaporio'
         TWINE_PASSWORD = credentials('twine-password')
       }
       steps {
-        // verify the version matches the tag
-        sh 'PKG_VERSION=$(make version) ./bin/ci/check_version.sh'
-
         // publish to pypi
         sh 'tox -e publish'
       }
@@ -56,8 +52,7 @@ pipeline {
     // artifacts.
     stage('Draft GitHub Release') {
       when {
-        // example matches: 1.2.3, 1.2.3-dev
-        tag pattern: '(0|[1-9]*)\\.(0|[1-9]*)\\.(0|[1-9]*)(-(\\S*))?$', comparator: "REGEXP"
+        buildingTag()
       }
       environment {
         GITHUB_USER = 'vapor-ware'
@@ -65,15 +60,12 @@ pipeline {
         GITHUB_REPONAME = 'kubetest'
       }
       steps {
-        // verify that the version matches the tag
-        sh 'PKG_VERSION=$(make version) ./bin/ci/check_version.sh'
-
         // Auto-generate a changelog for the release
         sh './bin/ci/generate_changelog.sh'
 
         // Create the release
         sh 'docker pull edaniszewski/ghr'
-        sh 'docker run --rm -v ${WORKSPACE}:/repo edaniszewski/ghr -u ${GITHUB_USER} -r ${GITHUB_REPONAME} -t ${GITHUB_TOKEN} -b "$(cat ./CHANGELOG.md)" -replace -draft ${TAG_NAME} dist/'
+        sh 'docker run --rm -v ${WORKSPACE}:/repo edaniszewski/ghr -u ${GITHUB_USER} -r ${GITHUB_REPONAME} -t ${GITHUB_TOKEN} -b "$(cat ./CHANGELOG.md)" -replace ${TAG_NAME} dist/'
       }
     }
   }

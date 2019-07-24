@@ -4,6 +4,7 @@ import abc
 import logging
 
 from kubernetes.client.rest import ApiException
+from kubernetes.config import load_kube_config
 
 from kubetest import condition, utils
 from kubetest.manifest import load_file
@@ -95,23 +96,23 @@ class ApiObject(abc.ABC):
         Raises:
             ValueError: The API version is not supported.
         """
-        if self._api_client is None:
-            c = self.api_clients.get(self.version)
-            # If we didn't find the client in the api_clients dict, use the
-            # preferred version.
+        load_kube_config()
+        c = self.api_clients.get(self.version)
+        # If we didn't find the client in the api_clients dict, use the
+        # preferred version.
+        if c is None:
+            log.warning(
+                'unknown version ({}), falling back to preferred version'
+                .format(self.version)
+            )
+            c = self.api_clients.get('preferred')
             if c is None:
-                log.warning(
-                    'unknown version ({}), falling back to preferred version'
-                    .format(self.version)
+                raise ValueError(
+                    'unknown version specified and no preferred version '
+                    'defined for resource ({})'.format(self.version)
                 )
-                c = self.api_clients.get('preferred')
-                if c is None:
-                    raise ValueError(
-                        'unknown version specified and no preferred version '
-                        'defined for resource ({})'.format(self.version)
-                    )
-            # If we did find it, initialize that client version.
-            self._api_client = c()
+        # If we did find it, initialize that client version.
+        self._api_client = c()
         return self._api_client
 
     def wait_until_ready(self, timeout=None, interval=1, fail_on_api_error=False):

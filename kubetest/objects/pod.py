@@ -184,7 +184,7 @@ class Pod(ApiObject):
             This function does not use the kubernetes
             ``connect_get_namespaced_pod_proxy_with_path`` function because there
             appears to be lack of support for custom query parameters (as of
-            the ``kubernetes==7.0.0`` package version). To bypass this, parts of
+            the ``kubernetes==9.0.0`` package version). To bypass this, parts of
             the core functionality from the aforementioned function are used here with
             the modification of allowing user-defined query parameters to be
             passed along.
@@ -224,7 +224,76 @@ class Pod(ApiObject):
                 response_type='str',
                 auth_settings=auth_settings,
                 _return_http_data_only=False,  # we want all info, not just data
-                _preload_content=True,
+                _preload_content=False,
+                _request_timeout=None,
+                collection_formats={}
+            ))
+        except ApiException as e:
+            # if the ApiException does not have a body or headers, that
+            # means the raised exception did not get a response (even if
+            # it were 404, 500, etc), so we want to continue to raise in
+            # that case. if there is a body and headers, we will not raise
+            # and just take the data out that we need from the exception.
+            if e.body is None and e.headers is None:
+                raise
+
+            resp = response.Response(
+                data=e.body,
+                status=e.status,
+                headers=e.headers,
+            )
+
+        return resp
+
+    def http_proxy_post(self, path, query_params=None, data=None):
+        """Issue a POST request to a proxy for the Pod.
+
+        Notes:
+            This function does not use the kubernetes
+            ``connect_post_namespaced_pod_proxy_with_path`` function because there
+            appears to be lack of support for custom query parameters (as of
+            the ``kubernetes==9.0.0`` package version). To bypass this, parts of
+            the core functionality from the aforementioned function are used here with
+            the modification of allowing user-defined query parameters to be
+            passed along.
+
+        Args:
+            path (str): The URI path for the request.
+            query_params (dict[str, str]): Any query parameters for
+                the request. (default: None)
+            data: The data to POST.
+
+        Returns:
+            response.Response: The response data.
+        """
+        c = client.CoreV1Api()
+
+        if query_params is None:
+            query_params = {}
+
+        path_params = {
+            'name': self.name,
+            'namespace': self.namespace
+        }
+        header_params = {
+            'Accept': c.api_client.select_header_accept(['*/*']),
+            'Content-Type': c.api_client.select_header_content_type(['*/*'])
+        }
+        auth_settings = ['BearerToken']
+
+        try:
+            resp = response.Response(*c.api_client.call_api(
+                '/api/v1/namespaces/{namespace}/pods/{name}/proxy/' + path, 'POST',
+                path_params=path_params,
+                query_params=query_params,
+                header_params=header_params,
+                body=data,
+                post_params=[],
+                files={},
+                response_type='str',
+                auth_settings=auth_settings,
+                _return_http_data_only=False,  # we want all info, not just data
+                _preload_content=False,
                 _request_timeout=None,
                 collection_formats={}
             ))

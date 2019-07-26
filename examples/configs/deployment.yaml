@@ -16,16 +16,13 @@ spec:
     spec:
       terminationGracePeriodSeconds: 3
       containers:
-      - name: synse-server
-        image: vaporio/synse-server:latest
+      - name: http-listener
+        image: mendhak/http-https-echo
         ports:
         - name: http
-          containerPort: 5000
-        args: [ 'enable-emulator' ]
-        env:
-        # Enable debug logging via ENV config
-        - name: SYNSE_LOGGING
-          value: debug
+          containerPort: 80
+        - name: https
+          containerPort: 443
         resources:
           requests:
             cpu: 25m

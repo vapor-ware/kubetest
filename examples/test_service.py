@@ -30,12 +30,12 @@ def test_service(kube):
     endpoints = svc.get_endpoints()
     assert len(endpoints) == 1
 
-    resp = svc.proxy_http_get("synse/test")
+    resp = svc.proxy_http_get("test/get")
     assert len(resp) != 0
 
     d = ast.literal_eval(resp)
-    assert d.get("status") == "ok"
-    assert d.get("timestamp") is not None
+    assert d.get("path") == "/test/get"
+    assert d.get("method") == "GET"
 
     kube.delete(svc)
     kube.delete(dep)

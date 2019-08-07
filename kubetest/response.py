@@ -1,8 +1,12 @@
 """Response wrapper object for proxied requests to Kubernetes resources."""
 
+import ast
 import json
+import logging
 
 import urllib3
+
+log = logging.getLogger('kubetest')
 
 
 class Response:
@@ -41,20 +45,24 @@ class Response:
         # instances are the HTTP methods on Pods (e.g. http_proxy_get), where
         # `_preload_content=False`. Should that be set to True, it will not return
         # the HTTPResponse but will instead return the response data formatted as
-        # the type specified in the `response_type` param.
-        #
-        # Note that I have found setting _preload_content to True (the default value
-        # for the Kubernetes client) to be difficult to deal with from a generic interface
-        # because it requires you to know the expected output ("str", "dict", ...)
-        # and pass that in as a param, where that could really be abstracted away from
-        # the user. For that reason, it is currently set to False -- this may change
-        # in the future if desired.
+        # the type specified in the `response_type` param. By default, kubetest sets
+        # the _preload_content field to True, so this should generally not be hit.
         if isinstance(self.data, urllib3.HTTPResponse):
             return json.loads(self.data.data)
 
-        # the response data comes back as a string formatted as a python
-        # dictionary might be, where the inner quotes are single quotes
-        # (') instead of the double quotes (") expected by JSON standard.
-        # to remedy this, we just replace single quotes with double quotes.
-        data = self.data.replace("'", '"')
-        return json.loads(data)
+        # The response data comes back as a string. This could be a JSON string,
+        # or something else (text body, error string, etc). Since we've preloaded
+        # the content as a string (see comment above), we can not simply load the
+        # string as JSON as the preloading essentially serializes the Python dict
+        # out to a string, so various values will not parse into JSON (None vs null,
+        # " vs ', etc). To remedy this, we attempt to load the response as an ast
+        # literal - if it fails for any reason, fall back to trying to load JSON.
+        # At the very least the JSON loading will fail with a familiar error which
+        # one would expect from a .json() function.
+        try:
+            data = ast.literal_eval(self.data)
+        except Exception as e:
+            log.debug('failed literal eval of data {} ({})'.format(self.data, e))
+            data = json.loads(self.data)
+
+        return data

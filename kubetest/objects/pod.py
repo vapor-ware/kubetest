@@ -224,7 +224,7 @@ class Pod(ApiObject):
                 response_type='str',
                 auth_settings=auth_settings,
                 _return_http_data_only=False,  # we want all info, not just data
-                _preload_content=False,
+                _preload_content=True,
                 _request_timeout=None,
                 collection_formats={}
             ))
@@ -293,7 +293,7 @@ class Pod(ApiObject):
                 response_type='str',
                 auth_settings=auth_settings,
                 _return_http_data_only=False,  # we want all info, not just data
-                _preload_content=False,
+                _preload_content=True,
                 _request_timeout=None,
                 collection_formats={}
             ))

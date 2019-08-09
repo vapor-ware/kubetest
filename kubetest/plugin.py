@@ -207,39 +207,45 @@ def pytest_runtest_setup(item):
     See Also:
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_runtest_setup
     """
-    # Only create a managed test case if a kube-config is specified.
-    if item.config.getoption('kube_config'):
+    # Previously (v0.3.[0-3]), this setup was gated to only run if the
+    # --kube-config commandline flag was set. This was primarily done as an
+    # optimization as to not create test metadata for tests that will not use
+    # it. https://github.com/vapor-ware/kubetest/issues/130 points out that
+    # the kubeconfig may be set without the --kube-config flag by overriding the
+    # kubeconfig fixture. In such a case, this would have been skipped -- thus
+    # there should NOT be any gating around test case metadata creation since
+    # it is too early to tell whether we have all of the info we need.
 
-        # Register a new test case with the manager and setup the test case state.
-        test_case = manager.new_test(
-            node_id=item.nodeid,
-            test_name=item.name,
+    # Register a new test case with the manager and setup the test case state.
+    test_case = manager.new_test(
+        node_id=item.nodeid,
+        test_name=item.name,
+    )
+
+    # Note: These markers are not applied right now, meaning that the resource(s)
+    #  which they reference are not added to the cluster yet. They are just
+    #  registered with the test case so they can be applied to the cluster on
+    #  test case setup.
+    #
+    #  At this point, the config is not loaded, so there is nothing that could be
+    #  added to the cluster. It is safe to skip the teardown (which cleans up the
+    #  test namespace) since nothing could be added to the namespace yet.
+    try:
+        # Register test case state based on markers on the test case.
+        test_case.register_rolebindings(
+            *markers.rolebindings_from_marker(item, test_case.ns)
+        )
+        test_case.register_clusterrolebindings(
+            *markers.clusterrolebindings_from_marker(item, test_case.ns)
         )
 
-        # Note: These markers are not applied right now, meaning that the resource(s)
-        #  which they reference are not added to the cluster yet. They are just
-        #  registered with the test case so they can be applied to the cluster on
-        #  test case setup.
-        #
-        #  At this point, the config is not loaded, so there is nothing that could be
-        #  added to the cluster. It is safe to skip the teardown (which cleans up the
-        #  test namespace) since nothing could be added to the namespace yet.
-        try:
-            # Register test case state based on markers on the test case.
-            test_case.register_rolebindings(
-                *markers.rolebindings_from_marker(item, test_case.ns)
-            )
-            test_case.register_clusterrolebindings(
-                *markers.clusterrolebindings_from_marker(item, test_case.ns)
-            )
+        # Apply manifests for the test case, if any are specified.
+        markers.apply_manifests_from_marker(item, test_case)
+        markers.apply_manifest_from_marker(item, test_case)
 
-            # Apply manifests for the test case, if any are specified.
-            markers.apply_manifests_from_marker(item, test_case)
-            markers.apply_manifest_from_marker(item, test_case)
-
-        except Exception as e:
-            test_case._pt_setup_failed = True
-            raise e
+    except Exception as e:
+        test_case._pt_setup_failed = True
+        raise e
 
 
 def pytest_runtest_teardown(item):

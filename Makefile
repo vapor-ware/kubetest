@@ -2,7 +2,7 @@
 # kubetest
 #
 
-PKG_NAME    := kubetest
+PKG_NAME    := $(shell python setup.py --name)
 PKG_VERSION := $(shell python setup.py --version)
 
 

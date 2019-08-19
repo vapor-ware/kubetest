@@ -267,7 +267,7 @@ def pytest_runtest_makereport(item, call):
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_runtest_makereport
     """
     if call.when == 'call':
-        if call.excinfo is not None:
+        if call.excinfo is not None and call.excinfo.typename != 'Skipped':
             tail_lines = item.config.getoption('kube_error_log_lines')
             if tail_lines != 0:
                 test_case = manager.get_test(item.nodeid)

@@ -140,7 +140,7 @@ def load_type(obj_type, path):
         FileNotFoundError: The specified file was not found.
     """
     with open(path, 'r') as f:
-        manifest = yaml.load(f)
+        manifest = yaml.full_load(f)
 
     return new_object(obj_type, manifest)
 

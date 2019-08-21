@@ -400,6 +400,41 @@ class TestClient:
 
         return endpoints
 
+    def get_secrets(self, namespace=None, fields=None, labels=None):
+        """Get Secrets from the cluster.
+
+        Args:
+            namespace (str): The namespace to get the Secrets from. If not
+                specified, it will use the auto-generated test case namespace
+                by default.
+            fields (dict[str, str]): A dictionary of fields used to restrict
+                the returned collection of Secrets to only those which match
+                these field selectors. By default, no restricting is done.
+            labels (dict[str, str]): A dictionary of labels used to restrict
+                the returned collection of Secrets to only those which match
+                these label selectors. By default, no restricting is done.
+
+        Returns:
+            dict[str, objects.Secret]: A dictionary where the key is
+            the Secret name and the value is the Secret itself.
+        """
+        if namespace is None:
+            namespace = self.namespace
+
+        selectors = utils.selector_kwargs(fields, labels)
+
+        secret_list = client.CoreV1Api().list_namespaced_secret(
+            namespace=namespace,
+            **selectors,
+        )
+
+        secrets = {}
+        for obj in secret_list.items:
+            secret = objects.Secret(obj)
+            secrets[secret.name] = secret
+
+        return secrets
+
     def get_configmaps(self, namespace=None, fields=None, labels=None):
         """Get ConfigMaps from the cluster.
 

@@ -260,6 +260,34 @@ class TestClient:
 
     # ****** General Helpers ******
 
+    def get_namespaces(self, fields=None, labels=None):
+        """Get Namespaces from the cluster.
+
+        Args:
+            fields (dict[str, str]): A dictionary of fields used to restrict
+                the returned collection of Namespaces to only those which match
+                these field selectors. By default, no restricting is done.
+            labels (dict[str, str]): A dictionary of labels used to restrict
+                the returned collection of Namespaces to only those which match
+                these label selectors. By default, no restricting is done.
+
+        Returns:
+            dict[str, objects.Namespace]: A dictionary where the key is
+            the Namespace name and the value is the Nameself itself.
+        """
+        selectors = utils.selector_kwargs(fields, labels)
+
+        namespace_list = client.CoreV1Api().list_namespace(
+            **selectors,
+        )
+
+        namespaces = {}
+        for obj in namespace_list.items:
+            namespace = objects.Namespace(obj)
+            namespaces[namespace.name] = namespace
+
+        return namespaces
+
     def get_deployments(self, namespace=None, fields=None, labels=None):
         """Get Deployments from the cluster.
 

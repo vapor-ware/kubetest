@@ -12,6 +12,8 @@ from .endpoints import Endpoints
 from .event import Event
 from .namespace import Namespace
 from .node import Node
+from .persistentvolume import PersistentVolume
+from .persistentvolumeclaim import PersistentVolumeClaim
 from .pod import Pod
 from .rolebinding import RoleBinding
 from .secret import Secret

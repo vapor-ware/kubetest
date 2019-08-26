@@ -22,7 +22,8 @@ class TestClient:
     and provided to the TestClient during the test setup process.
 
     Args:
-        namespace (str): The namespace associated with the test client.
+        namespace (str): The namespace associated with the test
+        client.
             Each test case will have its own namespace assigned.
     """
 
@@ -214,6 +215,48 @@ class TestClient:
         if set_namespace:
             service.namespace = self.namespace
         return service
+
+    def load_PersistentVolume(self, path, set_namespace=False):
+        """Load a manifest YAML into a Service object.
+
+        By default, this will augment the Service object with
+        the generated test case namespace. This behavior can be
+        disabled with the ``set_namespace`` flag.
+
+        Args:
+            path (str): The path to the Service manifest.
+            set_namespace (bool): Enable/disable the automatic
+                augmentation of the Service namespace.
+
+        Returns:
+            objects.Service: The Service for the specified manifest.
+        """
+        log.info('loading persistentvolume from path: %s', path)
+        persistentvolume = objects.PersistentVolume.load(path)
+        if set_namespace:
+            persistentvolume.namespace = self.namespace
+        return persistentvolume
+
+    def load_persistentvolumeclaim(self, path, set_namespace=True):
+        """Load a manifest YAML into a Service object.
+
+        By default, this will augment the Service object with
+        the generated test case namespace. This behavior can be
+        disabled with the ``set_namespace`` flag.
+
+        Args:
+            path (str): The path to the Service manifest.
+            set_namespace (bool): Enable/disable the automatic
+                augmentation of the Service namespace.
+
+        Returns:
+            objects.Service: The Service for the specified manifest.
+        """
+        log.info('loading persistentvolumeclaim from path: %s', path)
+        persistentvolumeclaim = objects.PersistentVolumeClaim.load(path)
+        if set_namespace:
+            persistentvolumeclaim.namespace = self.namespace
+        return persistentvolumeclaim
 
     # ****** Generic Helpers on ApiObjects ******
 
@@ -504,6 +547,71 @@ class TestClient:
             services[service.name] = service
 
         return services
+
+    def get_persistentvolume(self, fields=None, labels=None):
+        """Get PersistentVolume from the cluster.
+
+        Args:
+            fields (dict[str, str]): A dictionary of fields used to restrict
+                the returned collection of PersistentVolume to only those which match
+                these field selectors. By default, no restricting is done.
+            labels (dict[str, str]): A dictionary of labels used to restrict
+                the returned collection of PersistentVolume to only those which match
+                these label selectors. By default, no restricting is done.
+
+        Returns:
+            dict[str, objects.PersistentVolume]: A dictionary where the key is
+            the PersistentVolume name and the value is the PersistentVolume itself.
+        """
+        selectors = utils.selector_kwargs(fields, labels)
+
+        persistentvolume_list = client.CoreV1Api().list_persistent_volume(
+                **selectors
+        )
+
+        persistentvolumes = {}
+        for obj in persistentvolume_list.items:
+            persistentvolume = objects.PersistentVolume(obj)
+            persistentvolumes[persistentvolume.name] = persistentvolume
+
+        return persistentvolumes
+
+    def get_persistentvolumeclaim(self, namespace=None, fields=None, labels=None):
+        """Get PersistentVolumeClaim from the cluster.
+
+        Args:
+            namespace (str): The namespace to get the PersistentVolumeClaim from. If not
+                specified, it will use the auto-generated test case namespace
+                by default.
+            fields (dict[str, str]): A dictionary of fields used to restrict
+                the returned collection of PersistentVolumeClaim to only those which match
+                these field selectors. By default, no restricting is done.
+            labels (dict[str, str]): A dictionary of labels used to restrict
+                the returned collection of PersistentVolumeClaim to only those which match
+                these label selectors. By default, no restricting is done.
+
+        Returns:
+            dict[str, objects.PersistentVolumeClaim]: A dictionary where the key is
+            the PersistentVolumeClaim name and the value is the PersistentVolumeClaim
+            itself.
+        """
+        if namespace is None:
+            namespace = self.namespace
+
+        selectors = utils.selector_kwargs(fields, labels)
+
+        persistentvolumeclaim_list = client.CoreV1Api().\
+            list_namespaced_persistent_volume_claim(
+            namespace=namespace,
+            **selectors,
+        )
+
+        persistentvolumeclaims = {}
+        for obj in persistentvolumeclaim_list.items:
+            persistentvolumeclaim = objects.PersistentVolumeClaim(obj)
+            persistentvolumeclaims[persistentvolumeclaim.name] = persistentvolumeclaim
+
+        return persistentvolumeclaims
 
     @staticmethod
     def get_nodes(fields=None, labels=None):

@@ -32,6 +32,8 @@ class ObjectManager:
         'secret',
         'service',
         'configmap',
+        'persistentvolume',
+        'persistentvolumeclaim',
         'daemonset',
         'statefulset',
         'deployment',
@@ -103,6 +105,8 @@ class ObjectManager:
           - Secret
           - Service
           - ConfigMap
+          - PersistentVolume
+          - PersistentVolumeClaim
           - DaemonSet
           - StatefulSet
           - Deployment

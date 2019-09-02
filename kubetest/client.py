@@ -216,20 +216,20 @@ class TestClient:
             service.namespace = self.namespace
         return service
 
-    def load_PersistentVolume(self, path, set_namespace=False):
-        """Load a manifest YAML into a Service object.
+    def load_persistentvolume(self, path, set_namespace=False):
+        """Load a manifest YAML into a PersistentVolume object.
 
-        By default, this will augment the Service object with
+        By default, this will not augment the PersistentVolume object with
         the generated test case namespace. This behavior can be
-        disabled with the ``set_namespace`` flag.
+        enabled with the ``set_namespace`` flag.
 
         Args:
-            path (str): The path to the Service manifest.
+            path (str): The path to the PersistentVolume manifest.
             set_namespace (bool): Enable/disable the automatic
-                augmentation of the Service namespace.
+                augmentation of the PersistentVolume namespace.
 
         Returns:
-            objects.Service: The Service for the specified manifest.
+            objects.PersistentVolume: The PersistentVolume for the specified manifest.
         """
         log.info('loading persistentvolume from path: %s', path)
         persistentvolume = objects.PersistentVolume.load(path)
@@ -238,19 +238,20 @@ class TestClient:
         return persistentvolume
 
     def load_persistentvolumeclaim(self, path, set_namespace=True):
-        """Load a manifest YAML into a Service object.
+        """Load a manifest YAML into a PersistentVolumeClaim object.
 
-        By default, this will augment the Service object with
+        By default, this will augment the PersistentVolumeClaim object with
         the generated test case namespace. This behavior can be
         disabled with the ``set_namespace`` flag.
 
         Args:
-            path (str): The path to the Service manifest.
+            path (str): The path to the PersistentVolumeClaim manifest.
             set_namespace (bool): Enable/disable the automatic
-                augmentation of the Service namespace.
+                augmentation of the PersistentVolumeClaim namespace.
 
         Returns:
-            objects.Service: The Service for the specified manifest.
+            objects.PersistentVolumeClaim: The PersistentVolumeClaim for the specified
+            manifest.
         """
         log.info('loading persistentvolumeclaim from path: %s', path)
         persistentvolumeclaim = objects.PersistentVolumeClaim.load(path)

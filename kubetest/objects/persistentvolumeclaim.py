@@ -95,9 +95,10 @@ class PersistentVolumeClaim(ApiObject):
     def is_ready(self):
         """Check if the PersistentVolumeClaim is in the ready state.
 
-        PersistentVolumeClaims do not have a "status" field to check, so we will
-        measure their readiness status by whether or not they exist
-        on the cluster.
+        PersistentVolumeClaims have a "status" field to check. However, as this
+        field may change from "available" to "bound" quickly if another
+        object is using the PersistentVolumeClaim, we will measure their
+        readiness status by whether or not they exist on the cluster.
 
         Returns:
             bool: True if in the ready state; False otherwise.

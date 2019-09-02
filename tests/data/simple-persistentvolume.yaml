@@ -9,7 +9,7 @@ spec:
   - ReadWriteMany
   local:
     path: /tmp/vol1
-  persistentVolumeReclaimPolicy: Recycle
+  persistentVolumeReclaimPolicy: Delete
   nodeAffinity:
     required:
       nodeSelectorTerms:

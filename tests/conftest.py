@@ -164,3 +164,67 @@ def simple_service():
             ]
         )
     )
+
+
+@pytest.fixture()
+def simple_persistentvolume():
+    """Return the Kubernetes config matching the simple-persistentvolume.yaml manifest."""
+    return client.V1PersistentVolume(
+        api_version='v1',
+        kind='PersistentVolume',
+        metadata=client.V1ObjectMeta(
+            name='my-pv'
+        ),
+        spec=client.V1PersistentVolumeSpec(
+            capacity={
+                'storage': '16Mi'
+            },
+            access_modes=[
+                'ReadWriteMany'
+            ],
+            local=client.V1LocalVolumeSource(
+                path='/tmp/vol1'
+            ),
+            persistent_volume_reclaim_policy='Delete',
+            node_affinity=client.V1VolumeNodeAffinity(
+                required=client.V1NodeSelector(
+                    node_selector_terms=[
+                        client.V1NodeSelectorTerm(
+                            match_expressions=[
+                                client.V1NodeSelectorRequirement(
+                                    key='kubernetes.io/hostname',
+                                    operator='In',
+                                    values=[
+                                        'my-node'
+                                    ]
+                                )
+                            ]
+                        )
+                    ]
+                )
+            )
+        )
+    )
+
+
+@pytest.fixture()
+def simple_persistentvolumeclaim():
+    """Return the Kubernetes config matching the simple-persistentvolumeclaim.yaml
+    manifest."""
+    return client.V1PersistentVolumeClaim(
+        api_version='v1',
+        kind='PersistentVolumeClaim',
+        metadata=client.V1ObjectMeta(
+            name='my-pvc'
+        ),
+        spec=client.V1PersistentVolumeClaimSpec(
+            access_modes=[
+                'ReadWriteMany'
+            ],
+            resources=client.V1ResourceRequirements(
+                requests={
+                  'storage': '16Mi'
+                }
+            )
+        )
+    )

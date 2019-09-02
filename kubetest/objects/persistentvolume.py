@@ -36,13 +36,8 @@ class PersistentVolume(ApiObject):
         return self.__str__()
 
     def create(self):
-        """Create the PersistentVolume under the given namespace.
+        """Create the PersistentVolume.
 
-        Args:
-            namespace (str): The namespace to create the PersistentVolume under.
-                If the PersistentVolume was loaded via the kubetest client, the
-                namespace will already be set, so it is not needed here.
-                Otherwise, the namespace will need to be provided.
         """
         log.info('creating persistentvolume "%s"', self.name)
         log.debug('persistentvolume: %s', self.obj)
@@ -53,10 +48,6 @@ class PersistentVolume(ApiObject):
 
     def delete(self, options):
         """Delete the PersistentVolume.
-
-        This method expects the PersistentVolume to have been loaded or otherwise
-        assigned a namespace already. If it has not, the namespace will need
-        to be set manually.
 
         Args:
              options (client.V1DeleteOptions): Options for PersistentVolume deletion.
@@ -85,9 +76,10 @@ class PersistentVolume(ApiObject):
     def is_ready(self):
         """Check if the PersistentVolume is in the ready state.
 
-        PersistentVolumes do not have a "status" field to check, so we will
-        measure their readiness status by whether or not they exist
-        on the cluster.
+        PersistentVolumes have a "status" field to check. However, as this
+        field may change from "available" to "bound" quickly if another
+        object is using the PersistentVolume, we will measure their
+        readiness status by whether or not they exist on the cluster.
 
         Returns:
             bool: True if in the ready state; False otherwise.

@@ -197,7 +197,7 @@ class Deployment(ApiObject):
 
         pods = client.CoreV1Api().list_namespaced_pod(
             namespace=self.namespace,
-            label_selector=selector_string({self.klabel_key: self.klabel_uid})
+      #      label_selector=selector_string({self.klabel_key: self.klabel_uid})
         )
 
         pods = [Pod(p) for p in pods.items]

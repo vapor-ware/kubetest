@@ -43,8 +43,7 @@ class TestClient:
 
     # ****** Manifest Loaders ******
 
-    @staticmethod
-    def load_clusterrolebinding(path):
+    def load_clusterrolebinding(self, path):
         """Load a manifest YAML into a ClusterRoleBinding object.
 
         Args:
@@ -56,6 +55,10 @@ class TestClient:
         """
         log.info('loading clusterrolebinding from path: %s', path)
         clusterrolebinding = objects.ClusterRoleBinding.load(path)
+
+        # Use the api_client defined for the test client for the object
+        # wrapper it creates.
+        clusterrolebinding._client = self.api_client
         return clusterrolebinding
 
     def load_configmap(self, path, set_namespace=True):
@@ -77,6 +80,10 @@ class TestClient:
         configmap = objects.ConfigMap.load(path)
         if set_namespace:
             configmap.namespace = self.namespace
+
+        # Use the api_client defined for the test client for the object
+        # wrapper it creates.
+        configmap._client = self.api_client
         return configmap
 
     def load_deployment(self, path, set_namespace=True):
@@ -98,6 +105,10 @@ class TestClient:
         deployment = objects.Deployment.load(path)
         if set_namespace:
             deployment.namespace = self.namespace
+
+        # Use the api_client defined for the test client for the object
+        # wrapper it creates.
+        deployment._client = self.api_client
         return deployment
 
     def load_statefulset(self, path, set_namespace=True):
@@ -119,6 +130,10 @@ class TestClient:
         statefulset = objects.StatefulSet.load(path)
         if set_namespace:
             statefulset.namespace = self.namespace
+
+        # Use the api_client defined for the test client for the object
+        # wrapper it creates.
+        statefulset._client = self.api_client
         return statefulset
 
     def load_daemonset(self, path, set_namespace=True):
@@ -140,6 +155,10 @@ class TestClient:
         daemonset = objects.DaemonSet.load(path)
         if set_namespace:
             daemonset.namespace = self.namespace
+
+        # Use the api_client defined for the test client for the object
+        # wrapper it creates.
+        daemonset._client = self.api_client
         return daemonset
 
     def load_pod(self, path, set_namespace=True):
@@ -161,6 +180,10 @@ class TestClient:
         pod = objects.Pod.load(path)
         if set_namespace:
             pod.namespace = self.namespace
+
+        # Use the api_client defined for the test client for the object
+        # wrapper it creates.
+        pod._client = self.api_client
         return pod
 
     def load_rolebinding(self, path, set_namespace=True):
@@ -182,6 +205,10 @@ class TestClient:
         rolebinding = objects.RoleBinding.load(path)
         if set_namespace:
             rolebinding.namespace = self.namespace
+
+        # Use the api_client defined for the test client for the object
+        # wrapper it creates.
+        rolebinding._client = self.api_client
         return rolebinding
 
     def load_secret(self, path, set_namespace=True):
@@ -203,6 +230,10 @@ class TestClient:
         secret = objects.Secret.load(path)
         if set_namespace:
             secret.namespace = self.namespace
+
+        # Use the api_client defined for the test client for the object
+        # wrapper it creates.
+        secret._client = self.api_client
         return secret
 
     def load_service(self, path, set_namespace=True):
@@ -224,6 +255,10 @@ class TestClient:
         service = objects.Service.load(path)
         if set_namespace:
             service.namespace = self.namespace
+
+        # Use the api_client defined for the test client for the object
+        # wrapper it creates.
+        service._client = self.api_client
         return service
 
     # ****** Generic Helpers on ApiObjects ******
@@ -239,6 +274,14 @@ class TestClient:
         """
         if obj.namespace is None:
             obj.namespace = self.namespace
+
+        # If the object which the TestClient is trying to create does not
+        # have its api client set, use the TestClient's api_client. This requires
+        # setting the client to None so it can be rebuilt with the TestClient's
+        # api_client.
+        if obj._client is None:
+            obj._api_client = None
+            obj._client = self.api_client
 
         obj.create()
 
@@ -258,15 +301,30 @@ class TestClient:
         if options is None:
             options = client.V1DeleteOptions()
 
+        # If the object which the TestClient is trying to create does not
+        # have its api client set, use the TestClient's api_client. This requires
+        # setting the client to None so it can be rebuilt with the TestClient's
+        # api_client.
+        if obj._client is None:
+            obj._api_client = None
+            obj._client = self.api_client
+
         obj.delete(options=options)
 
-    @staticmethod
-    def refresh(obj):
+    def refresh(self, obj):
         """Refresh the underlying Kubernetes resource status and state.
 
         Args:
             obj (objects.ApiObject): A kubetest API Object wrapper.
         """
+        # If the object which the TestClient is trying to create does not
+        # have its api client set, use the TestClient's api_client. This requires
+        # setting the client to None so it can be rebuilt with the TestClient's
+        # api_client.
+        if obj._client is None:
+            obj._api_client = None
+            obj._client = self.api_client
+
         obj.refresh()
 
     # ****** General Helpers ******
@@ -294,7 +352,7 @@ class TestClient:
 
         namespaces = {}
         for obj in namespace_list.items:
-            namespace = objects.Namespace(obj)
+            namespace = objects.Namespace(obj, client=self.api_client)
             namespaces[namespace.name] = namespace
 
         return namespaces
@@ -329,7 +387,7 @@ class TestClient:
 
         deployments = {}
         for obj in deployment_list.items:
-            deployment = objects.Deployment(obj)
+            deployment = objects.Deployment(obj, client=self.api_client)
             deployments[deployment.name] = deployment
 
         return deployments
@@ -364,7 +422,7 @@ class TestClient:
 
         statefulsets = {}
         for obj in statefulset_list.items:
-            statefulset = objects.StatefulSet(obj)
+            statefulset = objects.StatefulSet(obj, client=self.api_client)
             statefulsets[statefulset.name] = statefulset
 
         return statefulsets
@@ -399,7 +457,7 @@ class TestClient:
 
         daemonsets = {}
         for obj in daemonset_list.items:
-            daemonset = objects.DaemonSet(obj)
+            daemonset = objects.DaemonSet(obj, client=self.api_client)
             daemonsets[daemonset.name] = daemonset
 
         return daemonsets
@@ -434,7 +492,7 @@ class TestClient:
 
         endpoints = {}
         for obj in endpoints_list.items:
-            endpoint = objects.Endpoints(obj)
+            endpoint = objects.Endpoints(obj, client=self.api_client)
             endpoints[endpoint.name] = endpoint
 
         return endpoints
@@ -469,7 +527,7 @@ class TestClient:
 
         secrets = {}
         for obj in secret_list.items:
-            secret = objects.Secret(obj)
+            secret = objects.Secret(obj, client=self.api_client)
             secrets[secret.name] = secret
 
         return secrets
@@ -504,7 +562,7 @@ class TestClient:
 
         configmaps = {}
         for obj in configmap_list.items:
-            cm = objects.ConfigMap(obj)
+            cm = objects.ConfigMap(obj, client=self.api_client)
             configmaps[cm.name] = cm
 
         return configmaps
@@ -539,7 +597,7 @@ class TestClient:
 
         pods = {}
         for obj in pod_list.items:
-            pod = objects.Pod(obj)
+            pod = objects.Pod(obj, client=self.api_client)
             pods[pod.name] = pod
 
         return pods
@@ -574,7 +632,7 @@ class TestClient:
 
         services = {}
         for obj in service_list.items:
-            service = objects.Service(obj)
+            service = objects.Service(obj, client=self.api_client)
             services[service.name] = service
 
         return services
@@ -602,7 +660,7 @@ class TestClient:
 
         nodes = {}
         for obj in node_list.items:
-            node = objects.Node(obj)
+            node = objects.Node(obj, client=self.api_client)
             nodes[node.name] = node
 
         return nodes

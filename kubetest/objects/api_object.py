@@ -47,13 +47,20 @@ class ApiObject(abc.ABC):
     is not specified for the resource.
     '''
 
-    def __init__(self, api_object):
+    def __init__(self, api_object, client=None):
         # The underlying Kubernetes Api Object
         self.obj = api_object
 
         # The api client for the object. This will be determined
         # by the apiVersion of the object's manifest.
         self._api_client = None
+
+        # The underlying client which is used by the api client, above.
+        # The naming of this is a bit confusing, but here the "api_client"
+        # can be thought of as the Kubernetes versioned client (e.g. AppsV1Api)
+        # whereas this "client" is the generic ApiClient which underlays the
+        # versioned client.
+        self._client = client
 
     @property
     def version(self):
@@ -111,7 +118,7 @@ class ApiObject(abc.ABC):
                         'defined for resource ({})'.format(self.version)
                     )
             # If we did find it, initialize that client version.
-            self._api_client = c()
+            self._api_client = c(api_client=self._client)
         return self._api_client
 
     def wait_until_ready(self, timeout=None, interval=1, fail_on_api_error=False):

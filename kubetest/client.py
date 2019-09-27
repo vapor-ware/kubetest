@@ -30,6 +30,17 @@ class TestClient:
         self.namespace = namespace
         self.pre_registered = []
 
+        self._api_client = None
+
+    @property
+    def api_client(self):
+        """"""
+        return self._api_client
+
+    @api_client.setter
+    def api_client(self, value):
+        self._api_client = value
+
     # ****** Manifest Loaders ******
 
     @staticmethod
@@ -277,7 +288,7 @@ class TestClient:
         """
         selectors = utils.selector_kwargs(fields, labels)
 
-        namespace_list = client.CoreV1Api().list_namespace(
+        namespace_list = client.CoreV1Api(api_client=self.api_client).list_namespace(
             **selectors,
         )
 
@@ -311,7 +322,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        deployment_list = client.AppsV1Api().list_namespaced_deployment(
+        deployment_list = client.AppsV1Api(api_client=self.api_client).list_namespaced_deployment(
             namespace=namespace,
             **selectors,
         )
@@ -346,7 +357,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        statefulset_list = client.AppsV1Api().list_namespaced_stateful_set(
+        statefulset_list = client.AppsV1Api(api_client=self.api_client).list_namespaced_stateful_set(
             namespace=namespace,
             **selectors,
         )
@@ -381,7 +392,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        daemonset_list = client.AppsV1Api().list_namespaced_daemon_set(
+        daemonset_list = client.AppsV1Api(api_client=self.api_client).list_namespaced_daemon_set(
             namespace=namespace,
             **selectors,
         )
@@ -416,7 +427,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        endpoints_list = client.CoreV1Api().list_namespaced_endpoints(
+        endpoints_list = client.CoreV1Api(api_client=self.api_client).list_namespaced_endpoints(
             namespace=namespace,
             **selectors,
         )
@@ -451,7 +462,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        secret_list = client.CoreV1Api().list_namespaced_secret(
+        secret_list = client.CoreV1Api(api_client=self.api_client).list_namespaced_secret(
             namespace=namespace,
             **selectors,
         )
@@ -486,7 +497,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        configmap_list = client.CoreV1Api().list_namespaced_config_map(
+        configmap_list = client.CoreV1Api(api_client=self.api_client).list_namespaced_config_map(
             namespace=namespace,
             **selectors,
         )
@@ -521,7 +532,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        pod_list = client.CoreV1Api().list_namespaced_pod(
+        pod_list = client.CoreV1Api(api_client=self.api_client).list_namespaced_pod(
             namespace=namespace,
             **selectors,
         )
@@ -556,7 +567,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        service_list = client.CoreV1Api().list_namespaced_service(
+        service_list = client.CoreV1Api(api_client=self.api_client).list_namespaced_service(
             namespace=namespace,
             **selectors,
         )
@@ -568,8 +579,7 @@ class TestClient:
 
         return services
 
-    @staticmethod
-    def get_nodes(fields=None, labels=None):
+    def get_nodes(self, fields=None, labels=None):
         """Get the Nodes that make up the cluster.
 
         Args:
@@ -586,7 +596,7 @@ class TestClient:
         """
         selectors = utils.selector_kwargs(fields, labels)
 
-        node_list = client.CoreV1Api().list_node(
+        node_list = client.CoreV1Api(api_client=self.api_client).list_node(
             **selectors,
         )
 
@@ -617,11 +627,11 @@ class TestClient:
         selectors = utils.selector_kwargs(fields, labels)
 
         if all_namespaces:
-            event_list = client.CoreV1Api().list_event_for_all_namespaces(
+            event_list = client.CoreV1Api(api_client=self.api_client).list_event_for_all_namespaces(
                 **selectors
             )
         else:
-            event_list = client.CoreV1Api().list_namespaced_event(
+            event_list = client.CoreV1Api(api_client=self.api_client).list_namespaced_event(
                 namespace=self.namespace,
                 **selectors
             )

@@ -35,7 +35,7 @@ def new_namespace(test_name):
     name_len = len(prefix) + len(timestamp) + len(test_name) + 2
 
     if name_len > 63:
-        test_name = test_name[:-(name_len-63)]
+        test_name = test_name[:-(name_len - 63)]
 
     return '-'.join((prefix, test_name, timestamp))
 

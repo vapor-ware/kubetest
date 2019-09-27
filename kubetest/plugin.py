@@ -297,11 +297,10 @@ def pytest_keyboard_interrupt():
             # if the namespace has a 'kubetest-' prefix, remove it.
             name = ns.metadata.name
             status = ns.status
-            if (
-                    name.startswith('kubetest-') and
-                    status is not None and
-                    status.phase.lower() == 'active'
-            ):
+            if name.startswith('kubetest-') and \
+               status is not None and \
+               status.phase.lower() == 'active':
+
                 print('keyboard interrupt: cleaning up namespace "{}"'.format(name))
                 kubernetes.client.CoreV1Api().delete_namespace(
                     body=kubernetes.client.V1DeleteOptions(),

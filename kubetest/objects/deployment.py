@@ -54,8 +54,10 @@ class Deployment(ApiObject):
         The kubetest label key is "kubetest/<obj kind>" where the obj kind is
         the lower-cased kind of the obj.
         """
-        self.klabel_uid = str(uuid.uuid4())
         self.klabel_key = 'kubetest/deployment'
+        self.klabel_uid = self.obj.metadata.labels.get(self.klabel_key, None)
+        if not self.klabel_uid:
+            self.klabel_uid = str(uuid.uuid4())
 
         # fixme: it would be nice to clean up this label setting logic a bit
         #   and possibly abstract it out to something more generalized, but

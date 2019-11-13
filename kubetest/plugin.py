@@ -266,6 +266,11 @@ def pytest_runtest_makereport(item, call):
     See Also:
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_runtest_makereport
     """
+
+    # skip for tests without fixtures (eg: doctests)
+    if not hasattr(item, 'fixturenames'):
+        return
+
     if 'kube' in item.fixturenames and call.when == 'call':
         if call.excinfo is not None and call.excinfo.typename != 'Skipped':
             tail_lines = item.config.getoption('kube_error_log_lines')

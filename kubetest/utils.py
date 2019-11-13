@@ -27,6 +27,8 @@ def new_namespace(test_name):
     prefix = 'kubetest'
     timestamp = str(int(time.time()))
     test_name = test_name.replace('_', '-').lower()
+    test_name = test_name.replace('[', '-')
+    test_name = test_name.replace(']', '-')
 
     # The length of a resource name in Kubernetes may not exceed 63
     # characters. Check the length of all components (+2 for the dashes

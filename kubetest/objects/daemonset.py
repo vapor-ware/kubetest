@@ -55,7 +55,10 @@ class DaemonSet(ApiObject):
         the lower-cased kind of the obj.
         """
         self.klabel_key = 'kubetest/daemonset'
-        self.klabel_uid = self.obj.metadata.labels.get(self.klabel_key, None)
+        if self.obj.metadata.labels:
+            self.klabel_uid = self.obj.metadata.labels.get(self.klabel_key, None)
+        else:
+            self.klabel_uid = None
         if not self.klabel_uid:
             self.klabel_uid = str(uuid.uuid4())
 

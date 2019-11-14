@@ -307,6 +307,8 @@ By default a new namespace with a randomized name is created for each test case.
 Set ``create`` to False to not create any namespace.
 Set ``name`` to a string to use give the namespace a specific name, or set to None to generate a unique name.
 
+Note: When ``create`` is False, the objects created by test test are not automatically deleted
+
 Examples
 ~~~~~~~~
 - Do not create a namespace for a given test

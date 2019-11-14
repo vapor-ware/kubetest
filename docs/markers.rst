@@ -3,6 +3,7 @@
 
 Markers
 =======
+
 This section defines the `markers <https://docs.pytest.org/en/latest/mark.html>`_
 that ``kubetest`` makes available when installed.
 
@@ -28,6 +29,7 @@ resource(s) on the cluster.
 
 Description
 ~~~~~~~~~~~
+
 Load the YAML manifest with the specified ``path`` and create the corresponding
 resource(s) on the cluster.
 
@@ -46,6 +48,7 @@ This marker is similar to the ``kubectl apply -f <file>`` command.
 
 Examples
 ~~~~~~~~
+
 - Load a manifest YAML for a deployment
 
   .. code-block:: python
@@ -81,6 +84,7 @@ directory and create the resources on the cluster.
 
 Description
 ~~~~~~~~~~~
+
 Load the YAML manifests from the specified ``path`` and create the corresponding
 resources on the cluster. By default all YAML files found in the specified ``dir``
 will be loaded and created. A list of file names can be passed to the ``files``
@@ -106,6 +110,8 @@ bucketed, and then applied to the cluster in the following order:
 - Secret
 - Service
 - ConfigMap
+- DeamonSet
+- StatefulSet
 - Deployment
 - Pod
 
@@ -113,6 +119,7 @@ This marker is similar to the ``kubectl apply -f <dir>`` command.
 
 Examples
 ~~~~~~~~
+
 - Load manifest YAMLs from a ``manifests`` directory
 
   .. code-block:: python
@@ -165,11 +172,12 @@ Summary
     @pytest.mark.clusterrolebinding(name, subject_kind=None, subject_name=None)
 
 ``clusterrolebinding`` creates a ``ClusterRoleBinding`` resource for the cluster
-that will exist for the lifespan of the test case. The named cluster role must
+which will exist for the lifespan of the test case. The named cluster role must
 already exist on the cluster.
 
 Description
 ~~~~~~~~~~~
+
 Create and use a Kubernetes ClusterRoleBinding for the test case. The generated
 ClusterRoleBinding will be automatically created and removed for each marked test.
 The name of the cluster role must be specified and the ClusterRole must already exist.
@@ -192,6 +200,7 @@ For more information, see: https://kubernetes.io/docs/reference/access-authn-aut
 
 Examples
 ~~~~~~~~
+
 - Use the "cluster-admin" role binding with the default subject
 
   .. code-block:: python
@@ -230,12 +239,12 @@ Summary
 
     @pytest.mark.rolebinding(kind, name, subject_kind=None, subject_name=None)
 
-``rolebinding`` creates a ``RoleBinding`` resource for the cluster that will exist
+``rolebinding`` creates a ``RoleBinding`` resource for the cluster which will exist
 for the lifespan of the test case. The named role must already exist on the cluster.
-
 
 Description
 ~~~~~~~~~~~
+
 Create and use a Kubernetes RoleBinding for the test case. The generated RoleBinding
 will use the generated test case namespace and will be automatically created for each
 marked test case and removed once each test completes. The role ``kind`` (one of:
@@ -259,6 +268,7 @@ For more information, see: https://kubernetes.io/docs/reference/access-authn-aut
 
 Examples
 ~~~~~~~~
+
 - Use a RoleBinding with the default subject
 
   .. code-block:: python
@@ -287,7 +297,7 @@ Examples
 .. _namespace_marker:
 
 Namespace
-------------
+---------
 
 Summary
 ~~~~~~~
@@ -296,22 +306,24 @@ Summary
 
     @pytest.mark.namespace(create=True, name=None)
 
-``namespace`` helps define the way namespaces are handled for each test case.
-
+``namespace`` helps define the way namespaces are handled for each test case,
+allowing tests to define custom namespaces or use existing ones.
 
 Description
 ~~~~~~~~~~~
 
-The ``namespace`` marker exposes some configuration to control how namespaces are handled
+The ``namespace`` marker exposes options to control how namespaces are handled
 by kubetest.
 
-By default a new namespace with a randomized name is created for each test case.
-Set ``create`` to *False* to not create any namespace.
-Set ``name`` to a string to give the namespace a specific name, or set to *None*
-to use a randomized name.
+By default, a new namespace is created for each test case where the namespace name is
+generated from the test name and a timestamp to ensure uniqueness. With this marker, this
+default behavior may be overridden:
+- Set ``create`` to *False* to disable namespace creation.
+- Set ``name`` to a string to give the namespace a specific name, or set to *None*
+to use the generated name.
 
-Note: When ``create`` is *False*, the objects created inside the test and by the 
-applymanifest/applymanifests markers are not automatically deleted.
+**Note**: When ``create`` is *False*, the objects created inside the test and by the
+``applymanifest``/``applymanifests`` markers are not automatically deleted.
 
 Examples
 ~~~~~~~~

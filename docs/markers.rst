@@ -296,21 +296,26 @@ Summary
 
     @pytest.mark.namespace(create=True, name=None)
 
-``namespace`` helps defining the way namespaces are handled for each test case.
+``namespace`` helps define the way namespaces are handled for each test case.
 
 
 Description
 ~~~~~~~~~~~
 
-Namespace configuration for this test.
-By default a new namespace with a randomized name is created for each test case.
-Set ``create`` to False to not create any namespace.
-Set ``name`` to a string to use give the namespace a specific name, or set to None to generate a unique name.
+The ``namespace`` marker exposes some configuration to control how namespaces are handled
+by kubetest.
 
-Note: When ``create`` is False, the objects created by test test are not automatically deleted
+By default a new namespace with a randomized name is created for each test case.
+Set ``create`` to *False* to not create any namespace.
+Set ``name`` to a string to give the namespace a specific name, or set to *None*
+to use a randomized name.
+
+Note: When ``create`` is *False*, the objects created inside the test and by the 
+applymanifest/applymanifests markers are not automatically deleted.
 
 Examples
 ~~~~~~~~
+
 - Do not create a namespace for a given test
 
   .. code-block:: python
@@ -319,7 +324,8 @@ Examples
       def test_something(kube):
           ...
 
-- Do not create a namespace and create all objects in existing-ns
+- Do not create a namespace and create all objects in the ``existing-ns``
+  namespace
 
   .. code-block:: python
 

@@ -14,21 +14,21 @@ APPLYMANIFEST_INI = (
     'manifest via this marker will not prohibit you from loading other manifests '
     'manually. Use the "kube" fixture to get references to the created objects. The '
     'manifest loaded via this marker is registered with the internal test case '
-    'metainfo and can be waited up for creation via the "kube" fixture '
+    'metainfo and can be waited upon for creation via the "kube" fixture\'s '
     '"wait_until_created" method.'
 )
 
 APPLYMANIFESTS_INI = (
     'applymanifests(dir, files=None): '
-    'load the YAML manifests from the specified path and create them on the cluster. '
+    'load YAML manifests from the specified path and create them on the cluster. '
     'By default, all YAML files found in the specified path will be loaded and created. '
     'If a list is passed to the files parameter, only the files in the path matching '
-    'to a name in the files list will be loaded and created. This marker is similar to '
+    'a name in the files list will be loaded and created. This marker is similar to '
     'the "kubectl apply -f <dir>" command. Loading manifests via this marker will not '
     'prohibit you from loading other manifests manually. Use the "kube" fixture to get '
     'references to the created objects. Manifests loaded via this marker are registered '
     'with the internal test case metainfo and can be waited upon for creation via the '
-    '"kube" fixture "wait_until_created" method.'
+    '"kube" fixture\'s "wait_until_created" method.'
 )
 
 CLUSTERROLEBINDING_INI = (
@@ -42,7 +42,7 @@ CLUSTERROLEBINDING_INI = (
     'service accounts. If a subject is specified, both the subject kind and name must '
     'be present. The ClusterRoleBinding will always use the apiGroup '
     '"rbac.authorization.k8s.io" for both subjects and roleRefs. For more information, '
-    'see https://kubernetes.io/docs/reference/access-authn-authz/rbac/'
+    'see: https://kubernetes.io/docs/reference/access-authn-authz/rbac/'
 )
 
 ROLEBINDING_INI = (
@@ -57,16 +57,18 @@ ROLEBINDING_INI = (
     'service accounts. If a subject is specified, both the subject kind and name '
     'must be present. The RoleBinding will always use the apiGroup '
     '"rbac.authorization.k8s.io" for both subjects and roleRefs. For more information, '
-    'see https://kubernetes.io/docs/reference/access-authn-authz/rbac/'
+    'see: https://kubernetes.io/docs/reference/access-authn-authz/rbac/'
 )
 
 
 NAMESPACE_INI = (
     'namespace(create=True, name=None): '
-    'Namespace configuration for this test. '
-    'By default a new namespace with a randomized name is created for each test case. '
-    'Set create to False to not create a namespace at all. '
-    'Set name to a string to create a namespace with a given name.'
+    'finer-grained namespace configuration for the test case. By default, a new '
+    'Kubernetes namespace is generated for each test case, using the test name and a '
+    'timestamp to ensure uniqueness. This marker allows you to override this behavior '
+    'to define your own namespace names, or to use existing namespaces. Set "create" '
+    'to False to disable namespace  creation entirely. Set "name" to a string to set '
+    'the name of the namespace to create/use.'
 )
 
 

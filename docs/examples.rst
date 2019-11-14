@@ -6,6 +6,7 @@ Examples
 
 Deploy Nginx
 ------------
+
 In this example test, we define a simple Nginx deployment and test that when
 we deploy it, it has the expected number of replicas and each pod returns the
 default *"welcome to nginx"* text when we ``HTTP GET "/"``.
@@ -101,6 +102,7 @@ we can run the test
 
 Test in error
 -------------
+
 Looking at the same setup as the previous example, we can modify the test to fail in order to examine
 what a failure response would look like. We'll change ``test_nginx.py`` to instead expect 1 replica, when
 it will actually have three.
@@ -248,6 +250,7 @@ Debug output is omitted here for brevity).
 
 Container logs on test error
 ----------------------------
+
 In the above example, you got to see different log output that kubetest could provide. In
 addition to logging out the actions that kubetest performs (and at the "debug" level, the
 Kubernetes objects themselves), kubetest can also get logs out of the running contianers

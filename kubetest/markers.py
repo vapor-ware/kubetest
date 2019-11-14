@@ -61,6 +61,15 @@ ROLEBINDING_INI = (
 )
 
 
+NAMESPACE_INI = (
+    'namespace(create=True, name=None): '
+    'Namespace configuration for this test. '
+    'By default a new namespace with a randomized name is created for each test case. '
+    'Set create to False to not create a namespace at all. '
+    'Set name to a string to create a namespace with a given name.'
+)
+
+
 def register(config):
     """Register kubetest markers with pytest.
 
@@ -71,6 +80,7 @@ def register(config):
     config.addinivalue_line('markers', APPLYMANIFESTS_INI)
     config.addinivalue_line('markers', CLUSTERROLEBINDING_INI)
     config.addinivalue_line('markers', ROLEBINDING_INI)
+    config.addinivalue_line('markers', NAMESPACE_INI)
 
 
 def apply_manifest_from_marker(item, client):

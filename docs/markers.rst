@@ -284,3 +284,60 @@ Examples
       def test_something(kube):
           ...
 
+.. _namespace_marker:
+
+Namespace
+------------
+
+Summary
+~~~~~~~
+
+.. code-block:: python
+
+    @pytest.mark.namespace(create=True, name=None)
+
+``namespace`` helps define the way namespaces are handled for each test case.
+
+
+Description
+~~~~~~~~~~~
+
+The ``namespace`` marker exposes some configuration to control how namespaces are handled
+by kubetest.
+
+By default a new namespace with a randomized name is created for each test case.
+Set ``create`` to *False* to not create any namespace.
+Set ``name`` to a string to give the namespace a specific name, or set to *None*
+to use a randomized name.
+
+Note: When ``create`` is *False*, the objects created inside the test and by the 
+applymanifest/applymanifests markers are not automatically deleted.
+
+Examples
+~~~~~~~~
+
+- Do not create a namespace for a given test
+
+  .. code-block:: python
+
+      @pytest.mark.namespace(create=False)
+      def test_something(kube):
+          ...
+
+- Do not create a namespace and create all objects in the ``existing-ns``
+  namespace
+
+  .. code-block:: python
+
+      @pytest.mark.namespace(create=False, name='existing-ns')
+      def test_something(kube):
+          ...
+
+- Create a namespace with a specific name
+
+  .. code-block:: python
+
+      @pytest.namespace(create=True, name='specific-name')
+      def test_something(kube):
+          ...
+

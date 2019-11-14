@@ -125,10 +125,14 @@ class TestMeta:
         node_id (str): The id of the test node.
     """
 
-    def __init__(self, name, node_id):
+    def __init__(self, name, node_id, namespace_create, namespace_name):
         self.name = name
         self.node_id = node_id
-        self.ns = utils.new_namespace(name)
+
+        if namespace_name is None:
+            self.ns = utils.new_namespace(name)
+        else:
+            self.ns = namespace_name
 
         # Flag to designate whether pytest setup (not TestMeta.setup) failed.
         # If pytest setup failed for the case, we can skip teardown, as there
@@ -139,6 +143,7 @@ class TestMeta:
         self._client = None
         self._namespace = None
 
+        self.namespace_create = namespace_create
         self.rolebindings = []
         self.clusterrolebindings = []
 
@@ -165,7 +170,8 @@ class TestMeta:
         ready to use by a test case.
         """
         # create the test case namespace
-        self.namespace.create()
+        if self.namespace_create:
+            self.namespace.create()
 
         # if there are any role bindings, create them.
         for rb in self.rolebindings:
@@ -197,9 +203,9 @@ class TestMeta:
             )
             return
 
-        # delete the test case namespace. this will also delete anything
-        # in the namespace, which includes RoleBindings.
-        if self._namespace:
+        # Delete the test case namespace if we've created it.
+        # This will also delete anything in the namespace, which includes RoleBindings.
+        if self._namespace and self.namespace_create:
             self.namespace.delete()
 
         # ClusterRoleBindings are not bound to a namespace, so we will need
@@ -310,7 +316,7 @@ class KubetestManager:
         # is created for the test node.
         self.nodes = {}
 
-    def new_test(self, node_id, test_name):
+    def new_test(self, node_id, test_name, namespace_create, namespace_name):
         """Create a new TestMeta for a test case.
 
         This will be called by the test setup hook in order to create a new
@@ -327,7 +333,10 @@ class KubetestManager:
         meta = TestMeta(
             node_id=node_id,
             name=test_name,
+            namespace_create=namespace_create,
+            namespace_name=namespace_name
         )
+
         self.nodes[node_id] = meta
         return meta
 

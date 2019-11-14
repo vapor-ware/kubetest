@@ -216,10 +216,18 @@ def pytest_runtest_setup(item):
     # there should NOT be any gating around test case metadata creation since
     # it is too early to tell whether we have all of the info we need.
 
+    namespace_create = True
+    namespace_name = None
+    for mark in item.iter_markers(name="namespace"):
+        namespace_create = mark.kwargs.get('create', True)
+        namespace_name = mark.kwargs.get('name', None)
+
     # Register a new test case with the manager and setup the test case state.
     test_case = manager.new_test(
         node_id=item.nodeid,
         test_name=item.name,
+        namespace_create=namespace_create,
+        namespace_name=namespace_name,
     )
 
     # Note: These markers are not applied right now, meaning that the resource(s)

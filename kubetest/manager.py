@@ -203,8 +203,8 @@ class TestMeta:
             )
             return
 
-        # delete the test case namespace if we've created it. this will also delete anything
-        # in the namespace, which includes RoleBindings.
+        # Delete the test case namespace if we've created it.
+        # This will also delete anything in the namespace, which includes RoleBindings.
         if self._namespace and self.namespace_create:
             self.namespace.delete()
 

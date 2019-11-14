@@ -30,10 +30,20 @@ class TestClient:
         self.namespace = namespace
         self.pre_registered = []
 
+        self._api_client = None
+
+    @property
+    def api_client(self):
+        """"""
+        return self._api_client
+
+    @api_client.setter
+    def api_client(self, value):
+        self._api_client = value
+
     # ****** Manifest Loaders ******
 
-    @staticmethod
-    def load_clusterrolebinding(path):
+    def load_clusterrolebinding(self, path):
         """Load a manifest YAML into a ClusterRoleBinding object.
 
         Args:
@@ -45,6 +55,10 @@ class TestClient:
         """
         log.info('loading clusterrolebinding from path: %s', path)
         clusterrolebinding = objects.ClusterRoleBinding.load(path)
+
+        # Use the api_client defined for the test client for the object
+        # wrapper it creates.
+        clusterrolebinding._client = self.api_client
         return clusterrolebinding
 
     def load_configmap(self, path, set_namespace=True):
@@ -66,6 +80,10 @@ class TestClient:
         configmap = objects.ConfigMap.load(path)
         if set_namespace:
             configmap.namespace = self.namespace
+
+        # Use the api_client defined for the test client for the object
+        # wrapper it creates.
+        configmap._client = self.api_client
         return configmap
 
     def load_deployment(self, path, set_namespace=True):
@@ -87,6 +105,10 @@ class TestClient:
         deployment = objects.Deployment.load(path)
         if set_namespace:
             deployment.namespace = self.namespace
+
+        # Use the api_client defined for the test client for the object
+        # wrapper it creates.
+        deployment._client = self.api_client
         return deployment
 
     def load_statefulset(self, path, set_namespace=True):
@@ -108,6 +130,10 @@ class TestClient:
         statefulset = objects.StatefulSet.load(path)
         if set_namespace:
             statefulset.namespace = self.namespace
+
+        # Use the api_client defined for the test client for the object
+        # wrapper it creates.
+        statefulset._client = self.api_client
         return statefulset
 
     def load_daemonset(self, path, set_namespace=True):
@@ -129,6 +155,10 @@ class TestClient:
         daemonset = objects.DaemonSet.load(path)
         if set_namespace:
             daemonset.namespace = self.namespace
+
+        # Use the api_client defined for the test client for the object
+        # wrapper it creates.
+        daemonset._client = self.api_client
         return daemonset
 
     def load_pod(self, path, set_namespace=True):
@@ -150,6 +180,10 @@ class TestClient:
         pod = objects.Pod.load(path)
         if set_namespace:
             pod.namespace = self.namespace
+
+        # Use the api_client defined for the test client for the object
+        # wrapper it creates.
+        pod._client = self.api_client
         return pod
 
     def load_rolebinding(self, path, set_namespace=True):
@@ -171,6 +205,10 @@ class TestClient:
         rolebinding = objects.RoleBinding.load(path)
         if set_namespace:
             rolebinding.namespace = self.namespace
+
+        # Use the api_client defined for the test client for the object
+        # wrapper it creates.
+        rolebinding._client = self.api_client
         return rolebinding
 
     def load_secret(self, path, set_namespace=True):
@@ -192,6 +230,10 @@ class TestClient:
         secret = objects.Secret.load(path)
         if set_namespace:
             secret.namespace = self.namespace
+
+        # Use the api_client defined for the test client for the object
+        # wrapper it creates.
+        secret._client = self.api_client
         return secret
 
     def load_service(self, path, set_namespace=True):
@@ -213,6 +255,10 @@ class TestClient:
         service = objects.Service.load(path)
         if set_namespace:
             service.namespace = self.namespace
+
+        # Use the api_client defined for the test client for the object
+        # wrapper it creates.
+        service._client = self.api_client
         return service
 
     # ****** Generic Helpers on ApiObjects ******
@@ -228,6 +274,14 @@ class TestClient:
         """
         if obj.namespace is None:
             obj.namespace = self.namespace
+
+        # If the object which the TestClient is trying to create does not
+        # have its api client set, use the TestClient's api_client. This requires
+        # setting the client to None so it can be rebuilt with the TestClient's
+        # api_client.
+        if obj._client is None:
+            obj._api_client = None
+            obj._client = self.api_client
 
         obj.create()
 
@@ -247,15 +301,30 @@ class TestClient:
         if options is None:
             options = client.V1DeleteOptions()
 
+        # If the object which the TestClient is trying to create does not
+        # have its api client set, use the TestClient's api_client. This requires
+        # setting the client to None so it can be rebuilt with the TestClient's
+        # api_client.
+        if obj._client is None:
+            obj._api_client = None
+            obj._client = self.api_client
+
         obj.delete(options=options)
 
-    @staticmethod
-    def refresh(obj):
+    def refresh(self, obj):
         """Refresh the underlying Kubernetes resource status and state.
 
         Args:
             obj (objects.ApiObject): A kubetest API Object wrapper.
         """
+        # If the object which the TestClient is trying to create does not
+        # have its api client set, use the TestClient's api_client. This requires
+        # setting the client to None so it can be rebuilt with the TestClient's
+        # api_client.
+        if obj._client is None:
+            obj._api_client = None
+            obj._client = self.api_client
+
         obj.refresh()
 
     # ****** General Helpers ******
@@ -277,13 +346,13 @@ class TestClient:
         """
         selectors = utils.selector_kwargs(fields, labels)
 
-        namespace_list = client.CoreV1Api().list_namespace(
+        namespace_list = client.CoreV1Api(api_client=self.api_client).list_namespace(
             **selectors,
         )
 
         namespaces = {}
         for obj in namespace_list.items:
-            namespace = objects.Namespace(obj)
+            namespace = objects.Namespace(obj, client=self.api_client)
             namespaces[namespace.name] = namespace
 
         return namespaces
@@ -311,14 +380,14 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        deployment_list = client.AppsV1Api().list_namespaced_deployment(
+        deployment_list = client.AppsV1Api(api_client=self.api_client).list_namespaced_deployment(
             namespace=namespace,
             **selectors,
         )
 
         deployments = {}
         for obj in deployment_list.items:
-            deployment = objects.Deployment(obj)
+            deployment = objects.Deployment(obj, client=self.api_client)
             deployments[deployment.name] = deployment
 
         return deployments
@@ -346,14 +415,14 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        statefulset_list = client.AppsV1Api().list_namespaced_stateful_set(
+        statefulset_list = client.AppsV1Api(api_client=self.api_client).list_namespaced_stateful_set(
             namespace=namespace,
             **selectors,
         )
 
         statefulsets = {}
         for obj in statefulset_list.items:
-            statefulset = objects.StatefulSet(obj)
+            statefulset = objects.StatefulSet(obj, client=self.api_client)
             statefulsets[statefulset.name] = statefulset
 
         return statefulsets
@@ -381,14 +450,14 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        daemonset_list = client.AppsV1Api().list_namespaced_daemon_set(
+        daemonset_list = client.AppsV1Api(api_client=self.api_client).list_namespaced_daemon_set(
             namespace=namespace,
             **selectors,
         )
 
         daemonsets = {}
         for obj in daemonset_list.items:
-            daemonset = objects.DaemonSet(obj)
+            daemonset = objects.DaemonSet(obj, client=self.api_client)
             daemonsets[daemonset.name] = daemonset
 
         return daemonsets
@@ -416,14 +485,14 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        endpoints_list = client.CoreV1Api().list_namespaced_endpoints(
+        endpoints_list = client.CoreV1Api(api_client=self.api_client).list_namespaced_endpoints(
             namespace=namespace,
             **selectors,
         )
 
         endpoints = {}
         for obj in endpoints_list.items:
-            endpoint = objects.Endpoints(obj)
+            endpoint = objects.Endpoints(obj, client=self.api_client)
             endpoints[endpoint.name] = endpoint
 
         return endpoints
@@ -451,14 +520,14 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        secret_list = client.CoreV1Api().list_namespaced_secret(
+        secret_list = client.CoreV1Api(api_client=self.api_client).list_namespaced_secret(
             namespace=namespace,
             **selectors,
         )
 
         secrets = {}
         for obj in secret_list.items:
-            secret = objects.Secret(obj)
+            secret = objects.Secret(obj, client=self.api_client)
             secrets[secret.name] = secret
 
         return secrets
@@ -486,14 +555,14 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        configmap_list = client.CoreV1Api().list_namespaced_config_map(
+        configmap_list = client.CoreV1Api(api_client=self.api_client).list_namespaced_config_map(
             namespace=namespace,
             **selectors,
         )
 
         configmaps = {}
         for obj in configmap_list.items:
-            cm = objects.ConfigMap(obj)
+            cm = objects.ConfigMap(obj, client=self.api_client)
             configmaps[cm.name] = cm
 
         return configmaps
@@ -521,14 +590,14 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        pod_list = client.CoreV1Api().list_namespaced_pod(
+        pod_list = client.CoreV1Api(api_client=self.api_client).list_namespaced_pod(
             namespace=namespace,
             **selectors,
         )
 
         pods = {}
         for obj in pod_list.items:
-            pod = objects.Pod(obj)
+            pod = objects.Pod(obj, client=self.api_client)
             pods[pod.name] = pod
 
         return pods
@@ -556,20 +625,19 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        service_list = client.CoreV1Api().list_namespaced_service(
+        service_list = client.CoreV1Api(api_client=self.api_client).list_namespaced_service(
             namespace=namespace,
             **selectors,
         )
 
         services = {}
         for obj in service_list.items:
-            service = objects.Service(obj)
+            service = objects.Service(obj, client=self.api_client)
             services[service.name] = service
 
         return services
 
-    @staticmethod
-    def get_nodes(fields=None, labels=None):
+    def get_nodes(self, fields=None, labels=None):
         """Get the Nodes that make up the cluster.
 
         Args:
@@ -586,13 +654,13 @@ class TestClient:
         """
         selectors = utils.selector_kwargs(fields, labels)
 
-        node_list = client.CoreV1Api().list_node(
+        node_list = client.CoreV1Api(api_client=self.api_client).list_node(
             **selectors,
         )
 
         nodes = {}
         for obj in node_list.items:
-            node = objects.Node(obj)
+            node = objects.Node(obj, client=self.api_client)
             nodes[node.name] = node
 
         return nodes
@@ -617,11 +685,11 @@ class TestClient:
         selectors = utils.selector_kwargs(fields, labels)
 
         if all_namespaces:
-            event_list = client.CoreV1Api().list_event_for_all_namespaces(
+            event_list = client.CoreV1Api(api_client=self.api_client).list_event_for_all_namespaces(
                 **selectors
             )
         else:
-            event_list = client.CoreV1Api().list_namespaced_event(
+            event_list = client.CoreV1Api(api_client=self.api_client).list_namespaced_event(
                 namespace=self.namespace,
                 **selectors
             )

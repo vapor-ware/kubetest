@@ -14,7 +14,7 @@ from kubetest import utils
         ('Test1_FOO-BAR_2', 'kubetest-test1-foo-bar-2-1536849367'),
         ('123456', 'kubetest-123456-1536849367'),
         ('___', 'kubetest-----1536849367'),
-        ('test-'*14, 'kubetest-test-test-test-test-test-test-test-test-tes-1536849367')
+        ('test-' * 14, 'kubetest-test-test-test-test-test-test-test-test-tes-1536849367')
     ]
 )
 def test_new_namespace(name, expected):

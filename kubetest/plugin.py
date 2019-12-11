@@ -262,7 +262,27 @@ def pytest_runtest_teardown(item):
     See Also:
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_runtest_teardown
     """
-    if item.config.getoption('kube_config'):
+
+    # See #154: Previously, this was only checking if the --kube-config command line
+    # arg was passed to determine whether a test used kubetest for setup, and thus
+    # whether it needed to be torn down. With the introduction of the kubeconfig
+    # fixture, which allows users to override the kubeconfig in the test without having
+    # to specify the --kube-config arg, this would prevent cleanup with the config was
+    # specified via fixture.
+    #
+    # Unfortunately, due to the way the fixture is defined, we cannot simple check for
+    # the presence/absence of the kubeconfig fixture in the test `item`, as it is always
+    # present since there is a default kubeconfig fixture.
+    #
+    # As a bit of a hack, we can get the fixtures associated with the test item. When we
+    # get the fixtures for `kubeconfig`, there will only be one fixture defined if no
+    # custom fixture is specified - that is the default fixture. If there is a custom
+    # override, there will be more than one fixture associated with the 'kubeconfig'
+    # name. In such case, we should assume that a fixture was used to load the config
+    # and allow test cleanup to proceed.
+    _, _, fixtures = item.session._fixturemanager.getfixtureclosure(['kubeconfig'], item)
+
+    if item.config.getoption('kube_config') or len(fixtures.get('kubeconfig', [])) > 1:
         manager.teardown(item.nodeid)
 
 

@@ -386,7 +386,7 @@ class ClusterInfo:
 
 
 @pytest.fixture
-def clusterinfo(request):
+def clusterinfo(kubeconfig):
     """Get a ``ClusterInfo`` instance which provides basic information
     about the cluster the tests are being run on.
     """
@@ -398,7 +398,7 @@ def clusterinfo(request):
     # Get the current context.
     _, current = kubernetes.config.list_kube_config_contexts(
         os.path.expandvars(os.path.expanduser(
-            request.session.config.getoption('kube_config')
+            kubeconfig,
         ))
     )
 

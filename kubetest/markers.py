@@ -124,8 +124,7 @@ def apply_manifest_from_marker(item, client):
                     break
             if not found:
                 raise ValueError(
-                    'Unable to match loaded object to an internal wrapper '
-                    'class: {}'.format(obj)
+                    f'Unable to match loaded object to an internal wrapper class: {obj}',
                 )
 
         client.register_objects(wrapped)
@@ -181,8 +180,7 @@ def apply_manifests_from_marker(item, client):
                     break
             if not found:
                 raise ValueError(
-                    'Unable to match loaded object to an internal wrapper '
-                    'class: {}'.format(obj)
+                    f'Unable to match loaded object to an internal wrapper class: {obj}',
                 )
 
         client.register_objects(wrapped)
@@ -213,7 +211,7 @@ def rolebindings_from_marker(item, namespace):
 
         rolebindings.append(RoleBinding(client.V1RoleBinding(
             metadata=client.V1ObjectMeta(
-                name='kubetest:{}'.format(item.name),
+                name=f'kubetest:{item.name}',
                 namespace=namespace,
             ),
             role_ref=client.V1RoleRef(
@@ -251,7 +249,7 @@ def clusterrolebindings_from_marker(item, namespace):
 
         clusterrolebindings.append(ClusterRoleBinding(client.V1ClusterRoleBinding(
             metadata=client.V1ObjectMeta(
-                name='kubetest:{}'.format(item.name),
+                name=f'kubetest:{item.name}',
             ),
             role_ref=client.V1RoleRef(
                 api_group='rbac.authorization.k8s.io',

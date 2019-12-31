@@ -113,8 +113,8 @@ class Deployment(ApiObject):
         if namespace is None:
             namespace = self.namespace
 
-        log.info('creating deployment "%s" in namespace "%s"', self.name, self.namespace)
-        log.debug('deployment: %s', self.obj)
+        log.info(f'creating deployment "{self.name}" in namespace "{self.namespace}"')
+        log.debug(f'deployment: {self.obj}')
 
         self.obj = self.api_client.create_namespaced_deployment(
             namespace=namespace,
@@ -137,9 +137,9 @@ class Deployment(ApiObject):
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting deployment "%s"', self.name)
-        log.debug('delete options: %s', options)
-        log.debug('deployment: %s', self.obj)
+        log.info(f'deleting deployment "{self.name}"')
+        log.debug(f'delete options: {options}')
+        log.debug(f'deployment: {self.obj}')
 
         return self.api_client.delete_namespaced_deployment(
             name=self.name,
@@ -185,7 +185,7 @@ class Deployment(ApiObject):
         Returns:
             client.V1DeploymentStatus: The status of the Deployment.
         """
-        log.info('checking status of deployment "%s"', self.name)
+        log.info(f'checking status of deployment "{self.name}"')
         # first, refresh the deployment state to ensure the latest status
         self.refresh()
 
@@ -198,7 +198,7 @@ class Deployment(ApiObject):
         Returns:
             list[Pod]: A list of pods that belong to the deployment.
         """
-        log.info('getting pods for deployment "%s"', self.name)
+        log.info(f'getting pods for deployment "{self.name}"')
 
         pods = client.CoreV1Api().list_namespaced_pod(
             namespace=self.namespace,
@@ -206,5 +206,5 @@ class Deployment(ApiObject):
         )
 
         pods = [Pod(p) for p in pods.items]
-        log.debug('pods: %s', pods)
+        log.debug(f'pods: {pods}')
         return pods

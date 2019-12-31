@@ -31,7 +31,7 @@ def load_file(path):
             obj_type = get_type(manifest)
             if obj_type is None:
                 raise ValueError(
-                    'Unable to determine object type for manifest: {}'.format(manifest)
+                    f'Unable to determine object type for manifest: {manifest}',
                 )
             objs.append(new_object(obj_type, manifest))
 
@@ -53,7 +53,7 @@ def load_path(path):
         ValueError: The provided path is not a directory.
     """
     if not os.path.isdir(path):
-        raise ValueError('{} is not a directory'.format(path))
+        raise ValueError(f'{path} is not a directory')
 
     objs = []
     for f in os.listdir(path):
@@ -260,4 +260,4 @@ def cast_value(value, t):
     if k_type is not None:
         return new_object(k_type, value)
 
-    raise ValueError('Unable to determine cast type behavior: {}'.format(t))
+    raise ValueError(f'Unable to determine cast type behavior: {t}')

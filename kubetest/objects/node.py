@@ -42,7 +42,7 @@ class Node:
             if node.metadata.name == self.name:
                 self.obj = node
                 return
-        log.warning('unable to refresh node: no node found with name: %s', self.name)
+        log.warning(f'unable to refresh node: no node found with name: {self.name}')
 
     def status(self):
         """Get the status of the Node.
@@ -50,7 +50,7 @@ class Node:
         Returns:
             client.V1NodeStatus: The status of the Node.
         """
-        log.info('checking status of node "%s"', self.name)
+        log.info(f'checking status of node "{self.name}"')
         self.refresh()
         return self.obj.status
 

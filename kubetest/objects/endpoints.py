@@ -44,8 +44,8 @@ class Endpoints(ApiObject):
         if namespace is None:
             namespace = self.namespace
 
-        log.info('creating endpoints "%s" in namespace "%s"', self.name, self.namespace)
-        log.debug('endpoints: %s', self.obj)
+        log.info(f'creating endpoints "{self.name}" in namespace "{self.namespace}"')
+        log.debug(f'endpoints: {self.obj}')
 
         self.obj = self.api_client.create_namespaced_endpoints(
             namespace=namespace,
@@ -68,9 +68,9 @@ class Endpoints(ApiObject):
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting endpoints "%s"', self.name)
-        log.debug('delete options: %s', options)
-        log.debug('endpoints: %s', self.obj)
+        log.info(f'deleting endpoints "{self.name}"')
+        log.debug(f'delete options: {options}')
+        log.debug(f'endpoints: {self.obj}')
 
         return self.api_client.delete_namespaced_endpoints(
             name=self.name,

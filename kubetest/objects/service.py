@@ -47,8 +47,8 @@ class Service(ApiObject):
         if namespace is None:
             namespace = self.namespace
 
-        log.info('creating service "%s" in namespace "%s"', self.name, self.namespace)
-        log.debug('service: %s', self.obj)
+        log.info(f'creating service "{self.name}" in namespace "{self.namespace}"')
+        log.debug(f'service: {self.obj}')
 
         self.obj = self.api_client.create_namespaced_service(
             namespace=namespace,
@@ -71,9 +71,9 @@ class Service(ApiObject):
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting service "%s"', self.name)
-        log.debug('delete options: %s', options)
-        log.debug('service: %s', self.obj)
+        log.info(f'deleting service "{self.name}"')
+        log.debug(f'delete options: {options}')
+        log.debug(f'service: {self.obj}')
 
         return self.api_client.delete_namespaced_service(
             name=self.name,
@@ -144,7 +144,7 @@ class Service(ApiObject):
         Returns:
             client.V1ServiceStatus: The status of the Service.
         """
-        log.info('checking status of service "%s"', self.name)
+        log.info(f'checking status of service "{self.name}"')
         # first, refresh the service state to ensure the latest status
         self.refresh()
 
@@ -161,7 +161,7 @@ class Service(ApiObject):
             list[client.V1Endpoints]: A list of endpoints associated
             with the Service.
         """
-        log.info('getting endpoints for service "%s"', self.name)
+        log.info(f'getting endpoints for service "{self.name}"')
         endpoints = self.api_client.list_namespaced_endpoints(
             namespace=self.namespace,
         )
@@ -173,7 +173,7 @@ class Service(ApiObject):
             if endpoint.metadata.name == self.name:
                 svc_endpoints.append(endpoint)
 
-        log.debug('endpoints: %s', svc_endpoints)
+        log.debug(f'endpoints: {svc_endpoints}')
         return svc_endpoints
 
     def proxy_http_get(self, path):
@@ -186,7 +186,7 @@ class Service(ApiObject):
             str: The response data
         """
         return client.CoreV1Api().connect_get_namespaced_service_proxy_with_path(
-            name="{}:{}".format(self.name, self.obj.spec.ports[0].port),
+            name=f'{self.name}:{self.obj.spec.ports[0].port}',
             namespace=self.namespace,
             path=path,
         )

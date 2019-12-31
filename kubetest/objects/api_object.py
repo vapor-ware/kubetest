@@ -101,14 +101,13 @@ class ApiObject(abc.ABC):
             # preferred version.
             if c is None:
                 log.warning(
-                    'unknown version ({}), falling back to preferred version'
-                    .format(self.version)
+                    f'unknown version ({self.version}), falling back to preferred version'
                 )
                 c = self.api_clients.get('preferred')
                 if c is None:
                     raise ValueError(
                         'unknown version specified and no preferred version '
-                        'defined for resource ({})'.format(self.version)
+                        f'defined for resource ({self.version})'
                     )
             # If we did find it, initialize that client version.
             self._api_client = c()

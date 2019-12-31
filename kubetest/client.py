@@ -43,7 +43,7 @@ class TestClient:
             objects.ClusterRoleBinding: The ClusterRoleBinding for the
             specified manifest.
         """
-        log.info('loading clusterrolebinding from path: %s', path)
+        log.info(f'loading clusterrolebinding from path: {path}')
         clusterrolebinding = objects.ClusterRoleBinding.load(path)
         return clusterrolebinding
 
@@ -62,7 +62,7 @@ class TestClient:
         Returns:
             objects.ConfigMap: The ConfigMap for the specified manifest.
         """
-        log.info('loading configmap from path: %s', path)
+        log.info(f'loading configmap from path: {path}')
         configmap = objects.ConfigMap.load(path)
         if set_namespace:
             configmap.namespace = self.namespace
@@ -83,7 +83,7 @@ class TestClient:
         Returns:
             objects.Deployment: The Deployment for the specified manifest.
         """
-        log.info('loading deployment from path: %s', path)
+        log.info(f'loading deployment from path: {path}')
         deployment = objects.Deployment.load(path)
         if set_namespace:
             deployment.namespace = self.namespace
@@ -104,7 +104,7 @@ class TestClient:
         Returns:
             objects.StatefulSet: The StatefulSet for the specified manifest.
         """
-        log.info('loading statefulset from path: %s', path)
+        log.info(f'loading statefulset from path: {path}')
         statefulset = objects.StatefulSet.load(path)
         if set_namespace:
             statefulset.namespace = self.namespace
@@ -125,7 +125,7 @@ class TestClient:
         Returns:
             objects.DaemonSet: The DaemonSet for the specified manifest.
         """
-        log.info('loading daemonset from path: %s', path)
+        log.info(f'loading daemonset from path: {path}')
         daemonset = objects.DaemonSet.load(path)
         if set_namespace:
             daemonset.namespace = self.namespace
@@ -146,7 +146,7 @@ class TestClient:
         Returns:
             objects.Pod: The Pod for the specified manifest.
         """
-        log.info('loading pod from path: %s', path)
+        log.info(f'loading pod from path: {path}')
         pod = objects.Pod.load(path)
         if set_namespace:
             pod.namespace = self.namespace
@@ -167,7 +167,7 @@ class TestClient:
         Returns:
             objects.RoleBinding: The RoleBinding for the specified manifest.
         """
-        log.info('loading rolebinding from path: %s', path)
+        log.info(f'loading rolebinding from path: {path}')
         rolebinding = objects.RoleBinding.load(path)
         if set_namespace:
             rolebinding.namespace = self.namespace
@@ -188,7 +188,7 @@ class TestClient:
         Returns:
             objects.Secret: The Secret for the specified manifest.
         """
-        log.info('loading secret from path: %s', path)
+        log.info(f'loading secret from path: {path}')
         secret = objects.Secret.load(path)
         if set_namespace:
             secret.namespace = self.namespace
@@ -209,7 +209,7 @@ class TestClient:
         Returns:
             objects.Service: The Service for the specified manifest.
         """
-        log.info('loading service from path: %s', path)
+        log.info(f'loading service from path: {path}')
         service = objects.Service.load(path)
         if set_namespace:
             service.namespace = self.namespace
@@ -682,7 +682,7 @@ class TestClient:
             # condition checking policy
             met, unmet = check_and_sort(*conditions)
             if policy == Policy.ONCE:
-                log.info('check met: %s', met)
+                log.info(f'check met: {met}')
                 conditions[:] = unmet
                 return len(unmet) == 0
 
@@ -691,7 +691,7 @@ class TestClient:
 
             else:
                 raise ValueError(
-                    'Invalid condition policy specified: {}'.format(policy)
+                    f'Invalid condition policy specified: {policy}',
                 )
 
         wait_condition = Condition(
@@ -712,7 +712,7 @@ class TestClient:
             # that we weren't able to resolve in the error message, not
             # the 'wait for conditions' wrapper.
             raise TimeoutError(
-                'timed out wile waiting for conditions to be met: {}'.format(to_check)
+                f'timed out wile waiting for conditions to be met: {to_check}',
             )
 
     def wait_for_ready_nodes(self, count, timeout=None, interval=1):
@@ -734,7 +734,7 @@ class TestClient:
             return [n.is_ready() for n in nodes.values()].count(True) >= node_count
 
         wait_condition = Condition(
-            'wait for {} nodes'.format(count),
+            f'wait for {count} nodes',
             node_count_match,
             count,
         )
@@ -798,7 +798,7 @@ class TestClient:
             return True
 
         wait_condition = Condition(
-            'wait for {}:{} to be created'.format(type(obj).__name__, obj.name),
+            f'wait for {type(obj).__name__}:{obj.name} to be created',
             check_ready,
             obj,
         )

@@ -63,8 +63,8 @@ class Namespace(ApiObject):
         if name is not None:
             self.name = name
 
-        log.info('creating namespace "%s"', self.name)
-        log.debug('namespace: %s', self.obj)
+        log.info(f'creating namespace "{self.name}"')
+        log.debug(f'namespace: {self.obj}')
 
         self.obj = self.api_client.create_namespace(
             body=self.obj,
@@ -82,9 +82,9 @@ class Namespace(ApiObject):
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting namespace "%s"', self.name)
-        log.debug('delete options: %s', options)
-        log.debug('namespace: %s', self.obj)
+        log.info(f'deleting namespace "{self.name}"')
+        log.debug(f'delete options: {options}')
+        log.debug(f'namespace: {self.obj}')
 
         return self.api_client.delete_namespace(
             name=self.name,

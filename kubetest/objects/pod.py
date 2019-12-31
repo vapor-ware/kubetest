@@ -51,8 +51,8 @@ class Pod(ApiObject):
         if namespace is None:
             namespace = self.namespace
 
-        log.info('creating pod "%s" in namespace "%s"', self.name, self.namespace)
-        log.debug('pod: %s', self.obj)
+        log.info(f'creating pod "{self.name}" in namespace "{self.namespace}"')
+        log.debug(f'pod: {self.obj}')
 
         self.obj = self.api_client.create_namespaced_pod(
             namespace=namespace,
@@ -75,9 +75,9 @@ class Pod(ApiObject):
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting pod "%s"', self.name)
-        log.debug('delete options: %s', options)
-        log.debug('pod: %s', self.obj)
+        log.info(f'deleting pod "{self.name}"')
+        log.debug(f'delete options: {options}')
+        log.debug(f'pod: {self.obj}')
 
         return self.api_client.delete_namespaced_pod(
             name=self.name,
@@ -141,7 +141,7 @@ class Pod(ApiObject):
         Returns:
             list[Container]: A list of containers that belong to the Pod.
         """
-        log.info('getting containers for pod "%s"', self.name)
+        log.info(f'getting containers for pod "{self.name}"')
         self.refresh()
 
         return [Container(c, self) for c in self.obj.spec.containers]

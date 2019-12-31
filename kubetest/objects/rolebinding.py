@@ -49,8 +49,8 @@ class RoleBinding(ApiObject):
         if namespace is None:
             namespace = self.namespace
 
-        log.info('creating rolebinding "%s" in namespace "%s"', self.name, self.namespace)  # noqa
-        log.debug('rolebinding: %s', self.obj)
+        log.info(f'creating rolebinding "{self.name}" in namespace "{self.namespace}"')  # noqa
+        log.debug(f'rolebinding: {self.obj}')
 
         self.obj = self.api_client.create_namespaced_role_binding(
             namespace=namespace,
@@ -73,9 +73,9 @@ class RoleBinding(ApiObject):
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting rolebinding "%s"', self.name)
-        log.debug('delete options: %s', options)
-        log.debug('rolebinding: %s', self.obj)
+        log.info(f'deleting rolebinding "{self.name}"')
+        log.debug(f'delete options: {options}')
+        log.debug(f'rolebinding: {self.obj}')
 
         return self.api_client.delete_namespaced_role_binding(
             namespace=self.namespace,

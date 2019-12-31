@@ -55,7 +55,7 @@ class Container:
                 return status.restart_count
 
         raise RuntimeError(
-            'Unable to determine container status for {}'.format(container_name)
+            f'Unable to determine container status for {container_name}'
         )
 
     def get_logs(self):

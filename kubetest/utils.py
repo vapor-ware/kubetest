@@ -51,7 +51,7 @@ def selector_string(selectors):
     Returns:
         str: The selector string for the given dictionary.
     """
-    return ','.join(['{}={}'.format(k, v) for k, v in selectors.items()])
+    return ','.join([f'{k}={v}' for k, v in selectors.items()])
 
 
 def selector_kwargs(fields=None, labels=None):
@@ -99,7 +99,7 @@ def wait_for_condition(condition, timeout=None, interval=1, fail_on_api_error=Tr
     Raises:
         TimeoutError: The specified timeout was exceeded.
     """
-    log.info('waiting for condition: %s', condition)
+    log.info(f'waiting for condition: {condition}')
 
     # define the maximum time to wait. once this is met, we should
     # stop waiting.
@@ -112,8 +112,7 @@ def wait_for_condition(condition, timeout=None, interval=1, fail_on_api_error=Tr
     while True:
         if max_time and time.time() >= max_time:
             raise TimeoutError(
-                'timed out ({}s) while waiting for condition {}'
-                .format(timeout, condition)
+                f'timed out ({timeout}s) while waiting for condition {condition}'
             )
 
         # check if the condition is met and break out if it is
@@ -121,7 +120,7 @@ def wait_for_condition(condition, timeout=None, interval=1, fail_on_api_error=Tr
             if condition.check():
                 break
         except ApiException as e:
-            log.warning('got api exception while waiting: {}'.format(e))
+            log.warning(f'got api exception while waiting: {e}')
             if fail_on_api_error:
                 raise
 
@@ -130,4 +129,4 @@ def wait_for_condition(condition, timeout=None, interval=1, fail_on_api_error=Tr
         time.sleep(interval)
 
     end = time.time()
-    log.info('wait completed (total=%fs) %s', end - start, condition)
+    log.info(f'wait completed (total={end-start}s) {condition}')

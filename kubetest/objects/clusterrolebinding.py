@@ -43,8 +43,9 @@ class ClusterRoleBinding(ApiObject):
         Args:
             namespace (str): This argument is ignored for ClusterRoleBindings.
         """
-        log.info('creating clusterrolebinding "%s" in namespace "%s"', self.name, self.namespace)  # noqa
-        log.debug('clusterrolebinding: %s', self.obj)
+        log.info(
+            f'creating clusterrolebinding "{self.name}" in namespace "{self.namespace}"')
+        log.debug(f'clusterrolebinding: {self.obj}')
 
         self.obj = self.api_client.create_cluster_role_binding(
             body=self.obj,
@@ -66,9 +67,9 @@ class ClusterRoleBinding(ApiObject):
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting clusterrolebinding "%s"', self.name)
-        log.debug('delete options: %s', options)
-        log.debug('clusterrolebinding: %s', self.obj)
+        log.info(f'deleting clusterrolebinding "{self.name}"')
+        log.debug(f'delete options: {options}')
+        log.debug(f'clusterrolebinding: {self.obj}')
 
         return self.api_client.delete_cluster_role_binding(
             name=self.name,

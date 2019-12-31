@@ -62,7 +62,7 @@ class Response:
         try:
             data = ast.literal_eval(self.data)
         except Exception as e:
-            log.debug('failed literal eval of data {} ({})'.format(self.data, e))
+            log.debug(f'failed literal eval of data {self.data} ({e})')
             data = json.loads(self.data)
 
         return data

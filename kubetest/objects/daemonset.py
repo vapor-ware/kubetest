@@ -113,9 +113,8 @@ class DaemonSet(ApiObject):
         if namespace is None:
             namespace = self.namespace
 
-        log.info('creating daemonset "%s" in namespace "%s"', self.name,
-                 self.namespace)
-        log.debug('daemonset: %s', self.obj)
+        log.info(f'creating daemonset "{self.name}" in namespace "{self.namespace}"')
+        log.debug(f'daemonset: {self.obj}')
 
         self.obj = self.api_client.create_namespaced_daemon_set(
             namespace=namespace,
@@ -138,9 +137,9 @@ class DaemonSet(ApiObject):
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting daemonset "%s"', self.name)
-        log.debug('delete options: %s', options)
-        log.debug('daemonset: %s', self.obj)
+        log.info(f'deleting daemonset "{self.name}"')
+        log.debug(f'delete options: {options}')
+        log.debug(f'daemonset: {self.obj}')
 
         return self.api_client.delete_namespaced_daemon_set(
             name=self.name,
@@ -186,7 +185,7 @@ class DaemonSet(ApiObject):
         Returns:
             client.V1DaemonSetStatus: The status of the DaemonSet.
         """
-        log.info('checking status of daemonset "%s"', self.name)
+        log.info(f'checking status of daemonset "{self.name}"')
         # first, refresh the daemonset state to ensure the latest status
         self.refresh()
 
@@ -199,7 +198,7 @@ class DaemonSet(ApiObject):
         Returns:
             list[Pod]: A list of pods that belong to the daemonset.
         """
-        log.info('getting pods for daemonset "%s"', self.name)
+        log.info(f'getting pods for daemonset "{self.name}"')
 
         pods = client.CoreV1Api().list_namespaced_pod(
             namespace=self.namespace,
@@ -207,5 +206,5 @@ class DaemonSet(ApiObject):
         )
 
         pods = [Pod(p) for p in pods.items]
-        log.debug('pods: %s', pods)
+        log.debug(f'pods: {pods}')
         return pods

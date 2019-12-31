@@ -68,7 +68,7 @@ class ObjectManager:
             if not isinstance(arg, objects.ApiObject):
                 raise ValueError(
                     'Only ApiObject instances can be added to the ObjectManager, '
-                    'but was given: {}'.format(arg)
+                    f'but was given: {arg}'
                 )
 
             # Get the type name of the ApiObject wrapper and lower case it,
@@ -81,9 +81,7 @@ class ObjectManager:
             if name in self.ordered_buckets:
                 self.__getattribute__(name).append(arg)
             else:
-                raise ValueError(
-                    'Unable to determine bucket for ApiObject: {}'.format(arg)
-                )
+                raise ValueError(f'Unable to determine bucket for ApiObject: {arg}')
 
     def get_objects_in_apply_order(self):
         """Get all of the managed objects in the order that they
@@ -198,9 +196,8 @@ class TestMeta:
         # Only perform teardown if pytest setup was successful and there is a
         # possibility of things existing on the cluster.
         if self._pt_setup_failed:
-            log.info('pytest setup failed for {}: not running test case teardown'.format(
-                self.name)
-            )
+            log.info(
+                f'pytest setup failed for {self.name}: not running test case teardown')
             return
 
         # Delete the test case namespace if we've created it.
@@ -234,8 +231,7 @@ class TestMeta:
             )
         except Exception as e:
             log.warning(
-                'Unable to get pods for namespace "%s" to cache logs (%s)',
-                self.ns, e
+                f'Unable to get pods for namespace "{self.ns}" to cache logs ({e})',
             )
             return
 
@@ -257,15 +253,12 @@ class TestMeta:
                     )
                 except Exception as e:
                     log.warning(
-                        'Unable to cache logs for %s::%s (%s)',
-                        pod_name, container_name, e
+                        f'Unable to cache logs for {pod_name}::{container_name} ({e})',
                     )
                     continue
 
                 if logs != '':
-                    _id = '=== {} -> {}::{} ==='.format(
-                        self.node_id, pod_name, container_name
-                    )
+                    _id = f'=== {self.node_id} -> {pod_name}::{container_name} ==='
                     border = '=' * len(_id)
                     yield '\n'.join([border, _id, border, logs, '\n'])
         return
@@ -329,7 +322,7 @@ class KubetestManager:
         Returns:
             TestMeta: The newly created TestMeta for the test case.
         """
-        log.info('creating test meta for %s', node_id)
+        log.info(f'creating test meta for {node_id}')
         meta = TestMeta(
             node_id=node_id,
             name=test_name,

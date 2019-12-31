@@ -47,8 +47,8 @@ class ConfigMap(ApiObject):
         if namespace is None:
             namespace = self.namespace
 
-        log.info('creating configmap "%s" in namespace "%s"', self.name, self.namespace)
-        log.debug('configmap: %s', self.obj)
+        log.info(f'creating configmap "{self.name}" in namespace "{self.namespace}"')
+        log.debug(f'configmap: {self.obj}')
 
         self.obj = self.api_client.create_namespaced_config_map(
             namespace=namespace,
@@ -71,9 +71,9 @@ class ConfigMap(ApiObject):
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting configmap "%s"', self.name)
-        log.debug('delete options: %s', options)
-        log.debug('configmap: %s', self.obj)
+        log.info(f'deleting configmap "{self.name}"')
+        log.debug(f'delete options: {options}')
+        log.debug(f'configmap: {self.obj}')
 
         return self.api_client.delete_namespaced_config_map(
             name=self.name,

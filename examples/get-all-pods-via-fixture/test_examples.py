@@ -43,7 +43,8 @@ def test_pods_from_deployment_loaded_in_test_case(kube):
     use that to get the pods for the deployment.
     """
 
-    deployment = kube.load_deployment(os.path.join(os.path.dirname(__file__), 'manifests/deployment-redis.yaml'))
+    deployment = kube.load_deployment(os.path.join(
+        os.path.dirname(__file__), 'manifests/deployment-redis.yaml'))
     deployment.create()
     deployment.wait_until_ready(timeout=30)
 
@@ -132,4 +133,3 @@ def test_all_pods_via_custom_fixture(kube, custom_pods):
 
     assert count_frontend == 3
     assert count_master == 1
-

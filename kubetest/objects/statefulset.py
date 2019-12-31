@@ -113,9 +113,8 @@ class StatefulSet(ApiObject):
         if namespace is None:
             namespace = self.namespace
 
-        log.info('creating statefulset "%s" in namespace "%s"', self.name,
-                 self.namespace)
-        log.debug('statefulset: %s', self.obj)
+        log.info(f'creating statefulset "{self.name}" in namespace "{self.namespace}"')
+        log.debug(f'statefulset: {self.obj}')
 
         self.obj = self.api_client.create_namespaced_stateful_set(
             namespace=namespace,
@@ -138,9 +137,9 @@ class StatefulSet(ApiObject):
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting statefulset "%s"', self.name)
-        log.debug('delete options: %s', options)
-        log.debug('statefulset: %s', self.obj)
+        log.info(f'deleting statefulset "{self.name}"')
+        log.debug(f'delete options: {options}')
+        log.debug(f'statefulset: {self.obj}')
 
         return self.api_client.delete_namespaced_stateful_set(
             name=self.name,
@@ -186,7 +185,7 @@ class StatefulSet(ApiObject):
         Returns:
             client.V1StatefulSetStatus: The status of the StatefulSet.
         """
-        log.info('checking status of statefulset "%s"', self.name)
+        log.info(f'checking status of statefulset "{self.name}"')
         # first, refresh the statefulset state to ensure the latest status
         self.refresh()
 
@@ -199,7 +198,7 @@ class StatefulSet(ApiObject):
         Returns:
             list[Pod]: A list of pods that belong to the statefulset.
         """
-        log.info('getting pods for statefulset "%s"', self.name)
+        log.info(f'getting pods for statefulset "{self.name}"')
 
         pods = client.CoreV1Api().list_namespaced_pod(
             namespace=self.namespace,
@@ -207,5 +206,5 @@ class StatefulSet(ApiObject):
         )
 
         pods = [Pod(p) for p in pods.items]
-        log.debug('pods: %s', pods)
+        log.debug(f'pods: {pods}')
         return pods

@@ -38,7 +38,6 @@ setup(
         'kubernetes',
         'pyyaml>=4.2b1',
         'pytest',
-        'requests>=2.21.0',  # used by 'kubernetes'
     ],
     zip_safe=False,
     classifiers=[

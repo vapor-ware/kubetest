@@ -29,12 +29,6 @@ class Secret(ApiObject):
         'v1': client.CoreV1Api,
     }
 
-    def __str__(self) -> str:
-        return str(self.obj)
-
-    def __repr__(self) -> str:
-        return self.__str__()
-
     def create(self, namespace: str = None) -> None:
         """Create the Secret under the given namespace.
 

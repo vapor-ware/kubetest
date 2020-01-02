@@ -40,12 +40,6 @@ class StatefulSet(ApiObject):
         super(StatefulSet, self).__init__(*args, **kwargs)
         self._add_kubetest_labels()
 
-    def __str__(self) -> str:
-        return str(self.obj)
-
-    def __repr__(self) -> str:
-        return self.__str__()
-
     def _add_kubetest_labels(self) -> None:
         """Add a kubetest label to the StatefulSet object.
 

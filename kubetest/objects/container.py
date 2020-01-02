@@ -30,12 +30,6 @@ class Container:
         self.obj = api_object
         self.pod = pod
 
-    def __str__(self) -> str:
-        return str(self.obj)
-
-    def __repr__(self) -> str:
-        return self.__str__()
-
     def get_restart_count(self) -> int:
         """Get the number of times the Container has been restarted.
 

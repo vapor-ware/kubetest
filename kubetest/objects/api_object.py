@@ -57,6 +57,12 @@ class ApiObject(abc.ABC):
         # by the apiVersion of the object's manifest.
         self._api_client = None
 
+    def __str__(self) -> str:
+        return str(self.obj)
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
     @property
     def version(self) -> str:
         """The API version of the Kubernetes object (`obj.apiVersion``)."""

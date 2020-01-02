@@ -22,7 +22,7 @@ class Node:
     Node spec to make Node-based interactions easier
 
     .. _Node:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#node-v1-core
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#node-v1-core
     """
 
     def __init__(self, api_object) -> None:

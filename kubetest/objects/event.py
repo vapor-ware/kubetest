@@ -19,7 +19,7 @@ class Event:
     Event object to make Event-based interactions easier
 
     .. _Event:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#event-v1-core
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#event-v1-core
     """
 
     obj_type = client.V1Event

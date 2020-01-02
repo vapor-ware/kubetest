@@ -31,6 +31,46 @@ class TestClient:
         self.namespace = namespace
         self.pre_registered = []
 
+    # ****** Generic Helpers on ApiObjects ******
+
+    def create(self, obj: objects.ApiObject) -> None:
+        """Create the provided ApiObject on the Kubernetes cluster.
+
+        If the object does not already have a namespace assigned to it, the client's
+        generated test case namespace will be used.
+
+        Args:
+            obj: A kubetest API Object wrapper.
+        """
+        if obj.namespace is None:
+            obj.namespace = self.namespace
+
+        obj.create()
+
+    def delete(self, obj: objects.ApiObject, options: client.V1DeleteOptions = None) -> None:
+        """Delete the provided ApiObject from the Kubernetes cluster.
+
+        If the object does not already have a namespace assigned to it, the client's
+        generated test case namespace will be used.
+
+        Args:
+            obj: A kubetest API Object wrapper.
+            options: Additional options for deleting the resource from the cluster.
+        """
+        if obj.namespace is None:
+            obj.namespace = self.namespace
+
+        obj.delete(options=options)
+
+    @staticmethod
+    def refresh(obj: objects.ApiObject) -> None:
+        """Refresh the underlying Kubernetes resource status and state.
+
+        Args:
+            obj: A kubetest API Object wrapper.
+        """
+        obj.refresh()
+
     # ****** Manifest Loaders ******
 
     @staticmethod
@@ -67,6 +107,26 @@ class TestClient:
             configmap.namespace = self.namespace
         return configmap
 
+    def load_daemonset(self, path: str, set_namespace: bool = True) -> objects.DaemonSet:
+        """Load a manifest YAML into a DaemonSet object.
+
+        By default, this will augment the DaemonSet object with the generated test
+        case namespace. This behavior can be disabled with the ``set_namespace`` flag.
+
+        Args:
+            path: The path to the DaemonSet manifest.
+            set_namespace: Enable/disable the automatic augmentation of the
+                DaemonSet namespace.
+
+        Returns:
+            The DaemonSet for the specified manifest.
+        """
+        log.info(f'loading daemonset from path: {path}')
+        daemonset = objects.DaemonSet.load(path)
+        if set_namespace:
+            daemonset.namespace = self.namespace
+        return daemonset
+
     def load_deployment(self, path: str, set_namespace: bool = True) -> objects.Deployment:
         """Load a manifest YAML into a Deployment object.
 
@@ -87,47 +147,6 @@ class TestClient:
         if set_namespace:
             deployment.namespace = self.namespace
         return deployment
-
-    def load_statefulset(self, path: str, set_namespace: bool = True) -> objects.StatefulSet:
-        """Load a manifest YAML into a StatefulSet object.
-
-        By default, this will augment the StatefulSet object with the generated
-        test case namespace. This behavior can be disabled with the
-        ``set_namespace`` flag.
-
-        Args:
-            path: The path to the StatefulSet manifest.
-            set_namespace: Enable/disable the automatic augmentation of the
-                StatefulSet namespace.
-
-        Returns:
-            The StatefulSet for the specified manifest.
-        """
-        log.info(f'loading statefulset from path: {path}')
-        statefulset = objects.StatefulSet.load(path)
-        if set_namespace:
-            statefulset.namespace = self.namespace
-        return statefulset
-
-    def load_daemonset(self, path: str, set_namespace: bool = True) -> objects.DaemonSet:
-        """Load a manifest YAML into a DaemonSet object.
-
-        By default, this will augment the DaemonSet object with the generated test
-        case namespace. This behavior can be disabled with the ``set_namespace`` flag.
-
-        Args:
-            path: The path to the DaemonSet manifest.
-            set_namespace: Enable/disable the automatic augmentation of the
-                DaemonSet namespace.
-
-        Returns:
-            The DaemonSet for the specified manifest.
-        """
-        log.info(f'loading daemonset from path: {path}')
-        daemonset = objects.DaemonSet.load(path)
-        if set_namespace:
-            daemonset.namespace = self.namespace
-        return daemonset
 
     def load_pod(self, path: str, set_namespace: bool = True) -> objects.Pod:
         """Load a manifest YAML into a Pod object.
@@ -212,274 +231,28 @@ class TestClient:
             service.namespace = self.namespace
         return service
 
-    # ****** Generic Helpers on ApiObjects ******
+    def load_statefulset(self, path: str, set_namespace: bool = True) -> objects.StatefulSet:
+        """Load a manifest YAML into a StatefulSet object.
 
-    def create(self, obj: objects.ApiObject) -> None:
-        """Create the provided ApiObject on the Kubernetes cluster.
-
-        If the object does not already have a namespace assigned to it, the client's
-        generated test case namespace will be used.
-
-        Args:
-            obj: A kubetest API Object wrapper.
-        """
-        if obj.namespace is None:
-            obj.namespace = self.namespace
-
-        obj.create()
-
-    def delete(self, obj: objects.ApiObject, options: client.V1DeleteOptions = None) -> None:
-        """Delete the provided ApiObject from the Kubernetes cluster.
-
-        If the object does not already have a namespace assigned to it, the client's
-        generated test case namespace will be used.
+        By default, this will augment the StatefulSet object with the generated
+        test case namespace. This behavior can be disabled with the
+        ``set_namespace`` flag.
 
         Args:
-            obj: A kubetest API Object wrapper.
-            options: Additional options for deleting the resource from the cluster.
+            path: The path to the StatefulSet manifest.
+            set_namespace: Enable/disable the automatic augmentation of the
+                StatefulSet namespace.
+
+        Returns:
+            The StatefulSet for the specified manifest.
         """
-        if obj.namespace is None:
-            obj.namespace = self.namespace
-
-        obj.delete(options=options)
-
-    @staticmethod
-    def refresh(obj: objects.ApiObject) -> None:
-        """Refresh the underlying Kubernetes resource status and state.
-
-        Args:
-            obj: A kubetest API Object wrapper.
-        """
-        obj.refresh()
+        log.info(f'loading statefulset from path: {path}')
+        statefulset = objects.StatefulSet.load(path)
+        if set_namespace:
+            statefulset.namespace = self.namespace
+        return statefulset
 
     # ****** General Helpers ******
-
-    def get_namespaces(
-            self,
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
-    ) -> Dict[str, objects.Namespace]:
-        """Get Namespaces from the cluster.
-
-        Args:
-            fields: A dictionary of fields used to restrict the returned collection
-                of Namespaces to only those which match these field selectors. By
-                default, no restricting is done.
-            labels: A dictionary of labels used to restrict the returned collection
-                of Namespaces to only those which match these label selectors. By
-                default, no restricting is done.
-
-        Returns:
-            A dictionary where the key is the Namespace name and the value is the
-            Namespace itself.
-        """
-        selectors = utils.selector_kwargs(fields, labels)
-
-        results = client.CoreV1Api().list_namespace(
-            **selectors,
-        )
-
-        namespaces = {}
-        for obj in results.items:
-            namespace = objects.Namespace(obj)
-            namespaces[namespace.name] = namespace
-
-        return namespaces
-
-    def get_deployments(
-            self,
-            namespace: str = None,
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
-    ) -> Dict[str, objects.Deployment]:
-        """Get Deployments from the cluster.
-
-        Args:
-            namespace: The namespace to get the Deployments from. If not specified,
-                it will use the auto-generated test case namespace by default.
-            fields: A dictionary of fields used to restrict the returned collection
-                of Deployments to only those which match these field selectors. By
-                default, no restricting is done.
-            labels: A dictionary of labels used to restrict the returned collection
-                of Deployments to only those which match these label selectors. By
-                default, no restricting is done.
-
-        Returns:
-            A dictionary where the key is the Deployment name and the value is the
-            Deployment itself.
-        """
-        if namespace is None:
-            namespace = self.namespace
-
-        selectors = utils.selector_kwargs(fields, labels)
-
-        results = client.AppsV1Api().list_namespaced_deployment(
-            namespace=namespace,
-            **selectors,
-        )
-
-        deployments = {}
-        for obj in results.items:
-            deployment = objects.Deployment(obj)
-            deployments[deployment.name] = deployment
-
-        return deployments
-
-    def get_statefulsets(
-            self,
-            namespace: str = None,
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
-    ) -> Dict[str, objects.StatefulSet]:
-        """Get StatefulSets from the cluster.
-
-        Args:
-            namespace: The namespace to get the StatefulSets from. If not specified,
-                it will use the auto-generated test case namespace by default.
-            fields: A dictionary of fields used to restrict the returned collection
-                of StatefulSets to only those which match these field selectors. By
-                default, no restricting is done.
-            labels: A dictionary of labels used to restrict the returned collection
-                of StatefulSets to only those which match these label selectors. By
-                default, no restricting is done.
-
-        Returns:
-            A dictionary where the key is the StatefulSet name and the value is the
-            StatefulSet itself.
-        """
-        if namespace is None:
-            namespace = self.namespace
-
-        selectors = utils.selector_kwargs(fields, labels)
-
-        results = client.AppsV1Api().list_namespaced_stateful_set(
-            namespace=namespace,
-            **selectors,
-        )
-
-        statefulsets = {}
-        for obj in results.items:
-            statefulset = objects.StatefulSet(obj)
-            statefulsets[statefulset.name] = statefulset
-
-        return statefulsets
-
-    def get_daemonsets(
-            self,
-            namespace: str = None,
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
-    ) -> Dict[str, objects.DaemonSet]:
-        """Get DaemonSets from the cluster.
-
-        Args:
-            namespace: The namespace to get the DaemonSets from. If not specified,
-                it will use the auto-generated test case namespace by default.
-            fields: A dictionary of fields used to restrict the returned collection
-                of DaemonSets to only those which match these field selectors. By
-                default, no restricting is done.
-            labels: A dictionary of labels used to restrict the returned collection
-                of DaemonSets to only those which match these label selectors. By
-                default, no restricting is done.
-
-        Returns:
-            A dictionary where the key is the DaemonSet name and the value is the
-            DaemonSet itself.
-        """
-        if namespace is None:
-            namespace = self.namespace
-
-        selectors = utils.selector_kwargs(fields, labels)
-
-        results = client.AppsV1Api().list_namespaced_daemon_set(
-            namespace=namespace,
-            **selectors,
-        )
-
-        daemonsets = {}
-        for obj in results.items:
-            daemonset = objects.DaemonSet(obj)
-            daemonsets[daemonset.name] = daemonset
-
-        return daemonsets
-
-    def get_endpoints(
-            self,
-            namespace: str = None,
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
-    ) -> Dict[str, objects.Endpoints]:
-        """Get Endpoints from the cluster.
-
-        Args:
-            namespace: The namespace to get the Endpoints from. If not specified,
-                it will use the auto-generated test case namespace by default.
-            fields: A dictionary of fields used to restrict the returned collection
-                of Endpoints to only those which match these field selectors. By
-                default, no restricting is done.
-            labels: A dictionary of labels used to restrict the returned collection
-                of Endpoints to only those which match these label selectors. By
-                default, no restricting is done.
-
-        Returns:
-            A dictionary where the key is the Endpoint name and the value is the
-            Endpoint itself.
-        """
-        if namespace is None:
-            namespace = self.namespace
-
-        selectors = utils.selector_kwargs(fields, labels)
-
-        results = client.CoreV1Api().list_namespaced_endpoints(
-            namespace=namespace,
-            **selectors,
-        )
-
-        endpoints = {}
-        for obj in results.items:
-            endpoint = objects.Endpoints(obj)
-            endpoints[endpoint.name] = endpoint
-
-        return endpoints
-
-    def get_secrets(
-            self,
-            namespace: str = None,
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
-    ) -> Dict[str, objects.Secret]:
-        """Get Secrets from the cluster.
-
-        Args:
-            namespace: The namespace to get the Secrets from. If not specified,
-                it will use the auto-generated test case namespace by default.
-            fields: A dictionary of fields used to restrict the returned collection
-                of Secrets to only those which match these field selectors. By
-                default, no restricting is done.
-            labels: A dictionary of labels used to restrict the returned collection
-                of Secrets to only those which match these label selectors. By
-                default, no restricting is done.
-
-        Returns:
-            A dictionary where the key is the Secret name and the value is the
-            Secret itself.
-        """
-        if namespace is None:
-            namespace = self.namespace
-
-        selectors = utils.selector_kwargs(fields, labels)
-
-        results = client.CoreV1Api().list_namespaced_secret(
-            namespace=namespace,
-            **selectors,
-        )
-
-        secrets = {}
-        for obj in results.items:
-            secret = objects.Secret(obj)
-            secrets[secret.name] = secret
-
-        return secrets
 
     def get_configmaps(
             self,
@@ -520,115 +293,122 @@ class TestClient:
 
         return configmaps
 
-    def get_pods(
+    def get_daemonsets(
             self,
             namespace: str = None,
             fields: Dict[str, str] = None,
             labels: Dict[str, str] = None,
-    ) -> Dict[str, objects.Pod]:
-        """Get Pods from the cluster.
+    ) -> Dict[str, objects.DaemonSet]:
+        """Get DaemonSets from the cluster.
 
         Args:
-            namespace: The namespace to get the Pods from. If not specified,
+            namespace: The namespace to get the DaemonSets from. If not specified,
                 it will use the auto-generated test case namespace by default.
             fields: A dictionary of fields used to restrict the returned collection
-                of Pods to only those which match these field selectors. By
+                of DaemonSets to only those which match these field selectors. By
                 default, no restricting is done.
             labels: A dictionary of labels used to restrict the returned collection
-                of Pods to only those which match these label selectors. By default,
-                no restricting is done.
+                of DaemonSets to only those which match these label selectors. By
+                default, no restricting is done.
 
         Returns:
-            A dictionary where the key is the Pod name and the value is the
-            Pod itself.
+            A dictionary where the key is the DaemonSet name and the value is the
+            DaemonSet itself.
         """
         if namespace is None:
             namespace = self.namespace
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = client.CoreV1Api().list_namespaced_pod(
+        results = client.AppsV1Api().list_namespaced_daemon_set(
             namespace=namespace,
             **selectors,
         )
 
-        pods = {}
+        daemonsets = {}
         for obj in results.items:
-            pod = objects.Pod(obj)
-            pods[pod.name] = pod
+            daemonset = objects.DaemonSet(obj)
+            daemonsets[daemonset.name] = daemonset
 
-        return pods
+        return daemonsets
 
-    def get_services(
+    def get_deployments(
             self,
             namespace: str = None,
             fields: Dict[str, str] = None,
             labels: Dict[str, str] = None,
-    ) -> Dict[str, objects.Service]:
-        """Get Services under the test case namespace.
+    ) -> Dict[str, objects.Deployment]:
+        """Get Deployments from the cluster.
 
         Args:
-            namespace: The namespace to get the Services from. If not specified,
+            namespace: The namespace to get the Deployments from. If not specified,
                 it will use the auto-generated test case namespace by default.
             fields: A dictionary of fields used to restrict the returned collection
-                of Services to only those which match these field selectors. By
+                of Deployments to only those which match these field selectors. By
                 default, no restricting is done.
             labels: A dictionary of labels used to restrict the returned collection
-                of Services to only those which match these label selectors. By
+                of Deployments to only those which match these label selectors. By
                 default, no restricting is done.
 
         Returns:
-            A dictionary where the key is the Service name and the value is the
-            Service itself.
+            A dictionary where the key is the Deployment name and the value is the
+            Deployment itself.
         """
         if namespace is None:
             namespace = self.namespace
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = client.CoreV1Api().list_namespaced_service(
+        results = client.AppsV1Api().list_namespaced_deployment(
             namespace=namespace,
             **selectors,
         )
 
-        services = {}
+        deployments = {}
         for obj in results.items:
-            service = objects.Service(obj)
-            services[service.name] = service
+            deployment = objects.Deployment(obj)
+            deployments[deployment.name] = deployment
 
-        return services
+        return deployments
 
-    @staticmethod
-    def get_nodes(
+    def get_endpoints(
+            self,
+            namespace: str = None,
             fields: Dict[str, str] = None,
             labels: Dict[str, str] = None,
-    ) -> Dict[str, objects.Node]:
-        """Get the Nodes that make up the cluster.
+    ) -> Dict[str, objects.Endpoints]:
+        """Get Endpoints from the cluster.
 
         Args:
+            namespace: The namespace to get the Endpoints from. If not specified,
+                it will use the auto-generated test case namespace by default.
             fields: A dictionary of fields used to restrict the returned collection
-                of Nodes to only those which match these field selectors. By
+                of Endpoints to only those which match these field selectors. By
                 default, no restricting is done.
             labels: A dictionary of labels used to restrict the returned collection
-                of Nodes to only those which match these label selectors. By
+                of Endpoints to only those which match these label selectors. By
                 default, no restricting is done.
 
         Returns:
-            A dictionary where the key is the Node name and the value is the
-            Node itself.
+            A dictionary where the key is the Endpoint name and the value is the
+            Endpoint itself.
         """
+        if namespace is None:
+            namespace = self.namespace
+
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = client.CoreV1Api().list_node(
+        results = client.CoreV1Api().list_namespaced_endpoints(
+            namespace=namespace,
             **selectors,
         )
 
-        nodes = {}
+        endpoints = {}
         for obj in results.items:
-            node = objects.Node(obj)
-            nodes[node.name] = node
+            endpoint = objects.Endpoints(obj)
+            endpoints[endpoint.name] = endpoint
 
-        return nodes
+        return endpoints
 
     def get_events(
             self,
@@ -669,6 +449,226 @@ class TestClient:
             events[event.name] = event
 
         return events
+
+    def get_namespaces(
+            self,
+            fields: Dict[str, str] = None,
+            labels: Dict[str, str] = None,
+    ) -> Dict[str, objects.Namespace]:
+        """Get Namespaces from the cluster.
+
+        Args:
+            fields: A dictionary of fields used to restrict the returned collection
+                of Namespaces to only those which match these field selectors. By
+                default, no restricting is done.
+            labels: A dictionary of labels used to restrict the returned collection
+                of Namespaces to only those which match these label selectors. By
+                default, no restricting is done.
+
+        Returns:
+            A dictionary where the key is the Namespace name and the value is the
+            Namespace itself.
+        """
+        selectors = utils.selector_kwargs(fields, labels)
+
+        results = client.CoreV1Api().list_namespace(
+            **selectors,
+        )
+
+        namespaces = {}
+        for obj in results.items:
+            namespace = objects.Namespace(obj)
+            namespaces[namespace.name] = namespace
+
+        return namespaces
+
+    @staticmethod
+    def get_nodes(
+            fields: Dict[str, str] = None,
+            labels: Dict[str, str] = None,
+    ) -> Dict[str, objects.Node]:
+        """Get the Nodes that make up the cluster.
+
+        Args:
+            fields: A dictionary of fields used to restrict the returned collection
+                of Nodes to only those which match these field selectors. By
+                default, no restricting is done.
+            labels: A dictionary of labels used to restrict the returned collection
+                of Nodes to only those which match these label selectors. By
+                default, no restricting is done.
+
+        Returns:
+            A dictionary where the key is the Node name and the value is the
+            Node itself.
+        """
+        selectors = utils.selector_kwargs(fields, labels)
+
+        results = client.CoreV1Api().list_node(
+            **selectors,
+        )
+
+        nodes = {}
+        for obj in results.items:
+            node = objects.Node(obj)
+            nodes[node.name] = node
+
+        return nodes
+
+    def get_pods(
+            self,
+            namespace: str = None,
+            fields: Dict[str, str] = None,
+            labels: Dict[str, str] = None,
+    ) -> Dict[str, objects.Pod]:
+        """Get Pods from the cluster.
+
+        Args:
+            namespace: The namespace to get the Pods from. If not specified,
+                it will use the auto-generated test case namespace by default.
+            fields: A dictionary of fields used to restrict the returned collection
+                of Pods to only those which match these field selectors. By
+                default, no restricting is done.
+            labels: A dictionary of labels used to restrict the returned collection
+                of Pods to only those which match these label selectors. By default,
+                no restricting is done.
+
+        Returns:
+            A dictionary where the key is the Pod name and the value is the
+            Pod itself.
+        """
+        if namespace is None:
+            namespace = self.namespace
+
+        selectors = utils.selector_kwargs(fields, labels)
+
+        results = client.CoreV1Api().list_namespaced_pod(
+            namespace=namespace,
+            **selectors,
+        )
+
+        pods = {}
+        for obj in results.items:
+            pod = objects.Pod(obj)
+            pods[pod.name] = pod
+
+        return pods
+
+    def get_secrets(
+            self,
+            namespace: str = None,
+            fields: Dict[str, str] = None,
+            labels: Dict[str, str] = None,
+    ) -> Dict[str, objects.Secret]:
+        """Get Secrets from the cluster.
+
+        Args:
+            namespace: The namespace to get the Secrets from. If not specified,
+                it will use the auto-generated test case namespace by default.
+            fields: A dictionary of fields used to restrict the returned collection
+                of Secrets to only those which match these field selectors. By
+                default, no restricting is done.
+            labels: A dictionary of labels used to restrict the returned collection
+                of Secrets to only those which match these label selectors. By
+                default, no restricting is done.
+
+        Returns:
+            A dictionary where the key is the Secret name and the value is the
+            Secret itself.
+        """
+        if namespace is None:
+            namespace = self.namespace
+
+        selectors = utils.selector_kwargs(fields, labels)
+
+        results = client.CoreV1Api().list_namespaced_secret(
+            namespace=namespace,
+            **selectors,
+        )
+
+        secrets = {}
+        for obj in results.items:
+            secret = objects.Secret(obj)
+            secrets[secret.name] = secret
+
+        return secrets
+
+    def get_services(
+            self,
+            namespace: str = None,
+            fields: Dict[str, str] = None,
+            labels: Dict[str, str] = None,
+    ) -> Dict[str, objects.Service]:
+        """Get Services under the test case namespace.
+
+        Args:
+            namespace: The namespace to get the Services from. If not specified,
+                it will use the auto-generated test case namespace by default.
+            fields: A dictionary of fields used to restrict the returned collection
+                of Services to only those which match these field selectors. By
+                default, no restricting is done.
+            labels: A dictionary of labels used to restrict the returned collection
+                of Services to only those which match these label selectors. By
+                default, no restricting is done.
+
+        Returns:
+            A dictionary where the key is the Service name and the value is the
+            Service itself.
+        """
+        if namespace is None:
+            namespace = self.namespace
+
+        selectors = utils.selector_kwargs(fields, labels)
+
+        results = client.CoreV1Api().list_namespaced_service(
+            namespace=namespace,
+            **selectors,
+        )
+
+        services = {}
+        for obj in results.items:
+            service = objects.Service(obj)
+            services[service.name] = service
+
+        return services
+
+    def get_statefulsets(
+            self,
+            namespace: str = None,
+            fields: Dict[str, str] = None,
+            labels: Dict[str, str] = None,
+    ) -> Dict[str, objects.StatefulSet]:
+        """Get StatefulSets from the cluster.
+
+        Args:
+            namespace: The namespace to get the StatefulSets from. If not specified,
+                it will use the auto-generated test case namespace by default.
+            fields: A dictionary of fields used to restrict the returned collection
+                of StatefulSets to only those which match these field selectors. By
+                default, no restricting is done.
+            labels: A dictionary of labels used to restrict the returned collection
+                of StatefulSets to only those which match these label selectors. By
+                default, no restricting is done.
+
+        Returns:
+            A dictionary where the key is the StatefulSet name and the value is the
+            StatefulSet itself.
+        """
+        if namespace is None:
+            namespace = self.namespace
+
+        selectors = utils.selector_kwargs(fields, labels)
+
+        results = client.AppsV1Api().list_namespaced_stateful_set(
+            namespace=namespace,
+            **selectors,
+        )
+
+        statefulsets = {}
+        for obj in results.items:
+            statefulset = objects.StatefulSet(obj)
+            statefulsets[statefulset.name] = statefulset
+
+        return statefulsets
 
     # ****** Test Helpers ******
 

@@ -19,7 +19,7 @@ class ConfigMap(ApiObject):
     API Object and provides some state management for the `ConfigMap`_.
 
     .. _ConfigMap:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#configmap-v1-core
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#configmap-v1-core
     """
 
     obj_type = client.V1ConfigMap

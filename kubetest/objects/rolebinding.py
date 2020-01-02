@@ -19,7 +19,7 @@ class RoleBinding(ApiObject):
     API Object and provides some state management for the `RoleBinding`_.
 
     .. _RoleBinding:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#rolebinding-v1-rbac-authorization-k8s-io
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#rolebinding-v1-rbac-authorization-k8s-io
     """
 
     obj_type = client.V1RoleBinding

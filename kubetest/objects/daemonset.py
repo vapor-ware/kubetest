@@ -116,7 +116,7 @@ class DaemonSet(ApiObject):
             body=self.obj,
         )
 
-    def delete(self, options: client.V1DeleteOptions) -> client.V1Status:
+    def delete(self, options: client.V1DeleteOptions = None) -> client.V1Status:
         """Delete the DaemonSet.
 
         This method expects the DaemonSet to have been loaded or otherwise

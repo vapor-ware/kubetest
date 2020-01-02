@@ -44,8 +44,7 @@ class TestClient:
             The ClusterRoleBinding for the specified manifest.
         """
         log.info(f'loading clusterrolebinding from path: {path}')
-        clusterrolebinding = objects.ClusterRoleBinding.load(path)
-        return clusterrolebinding
+        return objects.ClusterRoleBinding.load(path)
 
     def load_configmap(self, path: str, set_namespace: bool = True) -> objects.ConfigMap:
         """Load a manifest YAML into a ConfigMap object.
@@ -241,8 +240,6 @@ class TestClient:
         """
         if obj.namespace is None:
             obj.namespace = self.namespace
-        if options is None:
-            options = client.V1DeleteOptions()
 
         obj.delete(options=options)
 
@@ -278,12 +275,12 @@ class TestClient:
         """
         selectors = utils.selector_kwargs(fields, labels)
 
-        namespace_list = client.CoreV1Api().list_namespace(
+        results = client.CoreV1Api().list_namespace(
             **selectors,
         )
 
         namespaces = {}
-        for obj in namespace_list.items:
+        for obj in results.items:
             namespace = objects.Namespace(obj)
             namespaces[namespace.name] = namespace
 
@@ -316,13 +313,13 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        deployment_list = client.AppsV1Api().list_namespaced_deployment(
+        results = client.AppsV1Api().list_namespaced_deployment(
             namespace=namespace,
             **selectors,
         )
 
         deployments = {}
-        for obj in deployment_list.items:
+        for obj in results.items:
             deployment = objects.Deployment(obj)
             deployments[deployment.name] = deployment
 
@@ -355,13 +352,13 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        statefulset_list = client.AppsV1Api().list_namespaced_stateful_set(
+        results = client.AppsV1Api().list_namespaced_stateful_set(
             namespace=namespace,
             **selectors,
         )
 
         statefulsets = {}
-        for obj in statefulset_list.items:
+        for obj in results.items:
             statefulset = objects.StatefulSet(obj)
             statefulsets[statefulset.name] = statefulset
 
@@ -394,13 +391,13 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        daemonset_list = client.AppsV1Api().list_namespaced_daemon_set(
+        results = client.AppsV1Api().list_namespaced_daemon_set(
             namespace=namespace,
             **selectors,
         )
 
         daemonsets = {}
-        for obj in daemonset_list.items:
+        for obj in results.items:
             daemonset = objects.DaemonSet(obj)
             daemonsets[daemonset.name] = daemonset
 
@@ -433,13 +430,13 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        endpoints_list = client.CoreV1Api().list_namespaced_endpoints(
+        results = client.CoreV1Api().list_namespaced_endpoints(
             namespace=namespace,
             **selectors,
         )
 
         endpoints = {}
-        for obj in endpoints_list.items:
+        for obj in results.items:
             endpoint = objects.Endpoints(obj)
             endpoints[endpoint.name] = endpoint
 
@@ -472,13 +469,13 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        secret_list = client.CoreV1Api().list_namespaced_secret(
+        results = client.CoreV1Api().list_namespaced_secret(
             namespace=namespace,
             **selectors,
         )
 
         secrets = {}
-        for obj in secret_list.items:
+        for obj in results.items:
             secret = objects.Secret(obj)
             secrets[secret.name] = secret
 
@@ -511,13 +508,13 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        configmap_list = client.CoreV1Api().list_namespaced_config_map(
+        results = client.CoreV1Api().list_namespaced_config_map(
             namespace=namespace,
             **selectors,
         )
 
         configmaps = {}
-        for obj in configmap_list.items:
+        for obj in results.items:
             cm = objects.ConfigMap(obj)
             configmaps[cm.name] = cm
 
@@ -550,13 +547,13 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        pod_list = client.CoreV1Api().list_namespaced_pod(
+        results = client.CoreV1Api().list_namespaced_pod(
             namespace=namespace,
             **selectors,
         )
 
         pods = {}
-        for obj in pod_list.items:
+        for obj in results.items:
             pod = objects.Pod(obj)
             pods[pod.name] = pod
 
@@ -589,13 +586,13 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        service_list = client.CoreV1Api().list_namespaced_service(
+        results = client.CoreV1Api().list_namespaced_service(
             namespace=namespace,
             **selectors,
         )
 
         services = {}
-        for obj in service_list.items:
+        for obj in results.items:
             service = objects.Service(obj)
             services[service.name] = service
 
@@ -622,12 +619,12 @@ class TestClient:
         """
         selectors = utils.selector_kwargs(fields, labels)
 
-        node_list = client.CoreV1Api().list_node(
+        results = client.CoreV1Api().list_node(
             **selectors,
         )
 
         nodes = {}
-        for obj in node_list.items:
+        for obj in results.items:
             node = objects.Node(obj)
             nodes[node.name] = node
 
@@ -657,17 +654,17 @@ class TestClient:
         selectors = utils.selector_kwargs(fields, labels)
 
         if all_namespaces:
-            event_list = client.CoreV1Api().list_event_for_all_namespaces(
+            results = client.CoreV1Api().list_event_for_all_namespaces(
                 **selectors
             )
         else:
-            event_list = client.CoreV1Api().list_namespaced_event(
+            results = client.CoreV1Api().list_namespaced_event(
                 namespace=self.namespace,
                 **selectors
             )
 
         events = {}
-        for obj in event_list.items:
+        for obj in results.items:
             event = objects.Event(obj)
             events[event.name] = event
 

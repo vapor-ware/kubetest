@@ -49,7 +49,7 @@ class Secret(ApiObject):
             body=self.obj,
         )
 
-    def delete(self, options: client.V1DeleteOptions) -> client.V1Status:
+    def delete(self, options: client.V1DeleteOptions = None) -> client.V1Status:
         """Delete the Secret.
 
         This method expects the Secret to have been loaded or otherwise

@@ -29,12 +29,6 @@ class Node:
         self.obj = api_object
         self.name = api_object.metadata.name
 
-    def __str__(self) -> str:
-        return str(self.obj)
-
-    def __repr__(self) -> str:
-        return self.__str__()
-
     def refresh(self) -> None:
         """Refresh the underlying Kubernetes Node resource."""
         nodes = client.CoreV1Api().list_node()

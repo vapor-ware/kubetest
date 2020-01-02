@@ -32,9 +32,3 @@ class Event:
     def __init__(self, api_object) -> None:
         self.obj = api_object
         self.name = api_object.metadata.name
-
-    def __str__(self) -> str:
-        return str(self.obj)
-
-    def __repr__(self) -> str:
-        return self.__str__()

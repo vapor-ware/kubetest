@@ -29,12 +29,6 @@ class Namespace(ApiObject):
         'v1': client.CoreV1Api,
     }
 
-    def __str__(self) -> str:
-        return str(self.obj)
-
-    def __repr__(self) -> str:
-        return self.__str__()
-
     @classmethod
     def new(cls, name: str) -> 'Namespace':
         """Create a new Namespace with object backing.

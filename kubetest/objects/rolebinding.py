@@ -31,12 +31,6 @@ class RoleBinding(ApiObject):
         'rbac.authorization.k8s.io/v1beta1': client.RbacAuthorizationV1beta1Api,
     }
 
-    def __str__(self) -> str:
-        return str(self.obj)
-
-    def __repr__(self) -> str:
-        return self.__str__()
-
     def create(self, namespace: str = None) -> None:
         """Create the RoleBinding under the given namespace.
 

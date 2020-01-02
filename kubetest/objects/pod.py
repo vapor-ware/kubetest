@@ -54,7 +54,7 @@ class Pod(ApiObject):
             body=self.obj,
         )
 
-    def delete(self, options: client.V1DeleteOptions) -> client.V1Status:
+    def delete(self, options: client.V1DeleteOptions = None) -> client.V1Status:
         """Delete the Pod.
 
         This method expects the Pod to have been loaded or otherwise

@@ -29,17 +29,17 @@ class ConfigMap(ApiObject):
         'v1': client.CoreV1Api,
     }
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.obj)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
-    def create(self, namespace=None):
+    def create(self, namespace: str = None) -> None:
         """Create the ConfigMap under the given namespace.
 
         Args:
-            namespace (str): The namespace to create the ConfigMap under.
+            namespace: The namespace to create the ConfigMap under.
                 If the ConfigMap was loaded via the kubetest client, the
                 namespace will already be set, so it is not needed here.
                 Otherwise, the namespace will need to be provided.
@@ -55,7 +55,7 @@ class ConfigMap(ApiObject):
             body=self.obj,
         )
 
-    def delete(self, options):
+    def delete(self, options: client.V1DeleteOptions) -> client.V1Status:
         """Delete the ConfigMap.
 
         This method expects the ConfigMap to have been loaded or otherwise
@@ -63,10 +63,10 @@ class ConfigMap(ApiObject):
         to be set manually.
 
         Args:
-             options (client.V1DeleteOptions): Options for ConfigMap deletion.
+             options: Options for ConfigMap deletion.
 
         Returns:
-            client.V1Status: The status of the delete operation.
+            The status of the delete operation.
         """
         if options is None:
             options = client.V1DeleteOptions()
@@ -81,14 +81,14 @@ class ConfigMap(ApiObject):
             body=options,
         )
 
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh the underlying Kubernetes ConfigMap resource."""
         self.obj = self.api_client.read_namespaced_config_map(
             name=self.name,
             namespace=self.namespace,
         )
 
-    def is_ready(self):
+    def is_ready(self) -> bool:
         """Check if the ConfigMap is in the ready state.
 
         ConfigMaps do not have a "status" field to check, so we will
@@ -96,7 +96,7 @@ class ConfigMap(ApiObject):
         on the cluster.
 
         Returns:
-            bool: True if in the ready state; False otherwise.
+            True if in the ready state; False otherwise.
         """
         try:
             self.refresh()

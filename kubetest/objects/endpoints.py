@@ -29,17 +29,17 @@ class Endpoints(ApiObject):
         'v1': client.CoreV1Api,
     }
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.obj)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
-    def create(self, namespace=None):
+    def create(self, namespace: str = None) -> None:
         """Create the Endpoints under the given namespace.
 
         Args:
-            namespace (str): The namespace to create the Endpoints under.
+            namespace: The namespace to create the Endpoints under.
         """
         if namespace is None:
             namespace = self.namespace
@@ -52,7 +52,7 @@ class Endpoints(ApiObject):
             body=self.obj,
         )
 
-    def delete(self, options):
+    def delete(self, options: client.V1DeleteOptions) -> client.V1Status:
         """Delete the Endpoints.
 
         This method expects the Endpoints to have been loaded or otherwise
@@ -60,10 +60,10 @@ class Endpoints(ApiObject):
         to be set manually.
 
         Args:
-            options (client.V1DeleteOptions): Options for Endpoint deletion.
+            options: Options for Endpoint deletion.
 
         Returns:
-            client.V1Status: The status of the delete operation.
+            The status of the delete operation.
         """
         if options is None:
             options = client.V1DeleteOptions()
@@ -78,21 +78,21 @@ class Endpoints(ApiObject):
             body=options,
         )
 
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh the underlying Kubernetes Endpoints resource."""
         self.obj = self.api_client.read_namespaced_endpoints(
             name=self.name,
             namespace=self.namespace,
         )
 
-    def is_ready(self):
+    def is_ready(self) -> bool:
         """Check if the Endpoints are in the ready state.
 
         The readiness of an Endpoint is determined by whether all of its
         subsets have no addresses in the "not ready" state.
 
         Returns:
-            bool: True if in the ready state; False otherwise.
+            True if in the ready state; False otherwise.
         """
         self.refresh()
 

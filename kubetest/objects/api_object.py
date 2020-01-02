@@ -2,7 +2,9 @@
 
 import abc
 import logging
+from typing import Union
 
+from kubernetes import client
 from kubernetes.client.rest import ApiException
 
 from kubetest import condition, utils
@@ -47,7 +49,7 @@ class ApiObject(abc.ABC):
     is not specified for the resource.
     '''
 
-    def __init__(self, api_object):
+    def __init__(self, api_object) -> None:
         # The underlying Kubernetes Api Object
         self.obj = api_object
 
@@ -56,27 +58,27 @@ class ApiObject(abc.ABC):
         self._api_client = None
 
     @property
-    def version(self):
-        """str: The API version of the Kubernetes object (`obj.apiVersion``)."""
+    def version(self) -> str:
+        """The API version of the Kubernetes object (`obj.apiVersion``)."""
         return self.obj.api_version
 
     @property
-    def name(self):
-        """str: The name of the Kubernetes object (``obj.metadata.name``)."""
+    def name(self) -> str:
+        """The name of the Kubernetes object (``obj.metadata.name``)."""
         return self.obj.metadata.name
 
     @name.setter
-    def name(self, name):
+    def name(self, name: str):
         """Set the name of the Kubernetes objects (``obj.metadata.name``)."""
         self.obj.metadata.name = name
 
     @property
-    def namespace(self):
+    def namespace(self) -> str:
         """The namespace of the Kubernetes object (``obj.metadata.namespace``)."""
         return self.obj.metadata.namespace
 
     @namespace.setter
-    def namespace(self, name):
+    def namespace(self, name: str):
         """Set the namespace of the object, if it hasn't already been set.
 
         Raises:
@@ -113,22 +115,26 @@ class ApiObject(abc.ABC):
             self._api_client = c()
         return self._api_client
 
-    def wait_until_ready(self, timeout=None, interval=1, fail_on_api_error=False):
+    def wait_until_ready(
+            self,
+            timeout: int = None,
+            interval: Union[int, float] = 1,
+            fail_on_api_error: bool = False,
+    ) -> None:
         """Wait until the resource is in the ready state.
 
         Args:
-            timeout (int): The maximum time to wait, in seconds, for
-                the resource to reach the ready state. If unspecified,
-                this will wait indefinitely. If specified and the timeout
-                is met or exceeded, a TimeoutError will be raised.
-            interval (int|float): The time, in seconds, to wait before
-                re-checking if the object is ready.
-            fail_on_api_error (bool): Fail if an API error is raised. An
-                API error can be raised for a number of reasons, such as
-                'resource not found', which could be the case when a resource
-                is just being started or restarted. When waiting for readiness
-                we generally do not want to fail on these conditions.
-                (default: False)
+            timeout: The maximum time to wait, in seconds, for the resource
+                to reach the ready state. If unspecified, this will wait
+                indefinitely. If specified and the timeout is met or exceeded,
+                a TimeoutError will be raised.
+            interval: The time, in seconds, to wait before re-checking if the
+                object is ready.
+            fail_on_api_error: Fail if an API error is raised. An API error can
+                be raised for a number of reasons, such as 'resource not found',
+                which could be the case when a resource is just being started or
+                restarted. When waiting for readiness we generally do not want to
+                fail on these conditions.
 
         Raises:
              TimeoutError: The specified timeout was exceeded.
@@ -145,17 +151,16 @@ class ApiObject(abc.ABC):
             fail_on_api_error=fail_on_api_error,
         )
 
-    def wait_until_deleted(self, timeout=None, interval=1):
+    def wait_until_deleted(self, timeout: int = None, interval: Union[int, float] = 1) -> None:
         """Wait until the resource is deleted from the cluster.
 
         Args:
-            timeout (int): The maximum time to wait, in seconds, for
-                the resource to be deleted from the cluster. If
-                unspecified, this will wait indefinitely. If specified
-                and the timeout is met or exceeded, a TimeoutError will
-                be raised.
-            interval (int|float): The time, in seconds, to wait before
-                re-checking if the object has been deleted.
+            timeout: The maximum time to wait, in seconds, for the resource to
+                be deleted from the cluster. If unspecified, this will wait
+                indefinitely. If specified and the timeout is met or exceeded,
+                a TimeoutError will be raised.
+            interval: The time, in seconds, to wait before re-checking if the
+                object has been deleted.
 
         Raises:
             TimeoutError: The specified timeout was exceeded.
@@ -187,18 +192,18 @@ class ApiObject(abc.ABC):
         )
 
     @classmethod
-    def load(cls, path):
+    def load(cls, path: str) -> 'ApiObject':
         """Load the Kubernetes resource from file.
 
         Generally, this is used to load the Kubernetes manifest files
         and parse them into their appropriate API Object type.
 
         Args:
-            path (str): The path to the YAML config file (manifest)
+            path: The path to the YAML config file (manifest)
                 containing the configuration for the resource.
 
         Returns:
-            ApiObject: The API object wrapper corresponding to the configuration
+            The API object wrapper corresponding to the configuration
             loaded from manifest YAML file.
         """
         objs = load_file(path)
@@ -210,19 +215,19 @@ class ApiObject(abc.ABC):
         return cls(objs[0])
 
     @abc.abstractmethod
-    def create(self, namespace=None):
+    def create(self, namespace: str = None) -> None:
         """Create the underlying Kubernetes resource in the cluster
         under the given namespace.
 
         Args:
-            namespace (str): The namespace to create the resource under.
+            namespace: The namespace to create the resource under.
                 If no namespace is provided, it will use the instance's
                 namespace member, which is set when the object is created
-                via the kubetest client. (optional)
+                via the kubetest client.
         """
 
     @abc.abstractmethod
-    def delete(self, options):
+    def delete(self, options: client.V1DeleteOptions) -> client.V1Status:
         """Delete the underlying Kubernetes resource from the cluster.
 
         This method expects the resource to have been loaded or otherwise
@@ -230,20 +235,20 @@ class ApiObject(abc.ABC):
         to be set manually.
 
         Args:
-            options (client.V1DeleteOptions): Options for resource deletion.
+            options: Options for resource deletion.
         """
 
     @abc.abstractmethod
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh the local state (``obj``) of the underlying Kubernetes resource."""
 
     @abc.abstractmethod
-    def is_ready(self):
+    def is_ready(self) -> bool:
         """Check if the resource is in the ready state.
 
         It is up to the wrapper subclass to define what "ready" means for
         that particular resource.
 
         Returns:
-            bool: True if in the ready state; False otherwise.
+            True if in the ready state; False otherwise.
         """

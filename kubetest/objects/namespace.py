@@ -29,21 +29,21 @@ class Namespace(ApiObject):
         'v1': client.CoreV1Api,
     }
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.obj)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
     @classmethod
-    def new(cls, name):
+    def new(cls, name: str) -> 'Namespace':
         """Create a new Namespace with object backing.
 
         Args:
-            name (str): The name of the new Namespace.
+            name: The name of the new Namespace.
 
         Returns:
-            Namespace: A new Namespace instance.
+            A new Namespace instance.
         """
         return cls(client.V1Namespace(
             metadata=client.V1ObjectMeta(
@@ -51,11 +51,11 @@ class Namespace(ApiObject):
             )
         ))
 
-    def create(self, name=None):
+    def create(self, name: str = None) -> None:
         """Create the Namespace under the given name.
 
         Args:
-            name (str): The name to create the Namespace under. If the
+            name: The name to create the Namespace under. If the
                 name is not provided, it will be assumed to already be
                 in the underlying object spec. If it is not, namespace
                 operations will fail.
@@ -70,14 +70,14 @@ class Namespace(ApiObject):
             body=self.obj,
         )
 
-    def delete(self, options=None):
+    def delete(self, options: client.V1DeleteOptions = None) -> client.V1Status:
         """Delete the Namespace.
 
         Args:
-             options (client.V1DeleteOptions): Options for Namespace deletion.
+             options: Options for Namespace deletion.
 
         Returns:
-            client.V1Status: The status of the delete operation.
+            The status of the delete operation.
         """
         if options is None:
             options = client.V1DeleteOptions()
@@ -91,17 +91,17 @@ class Namespace(ApiObject):
             body=options,
         )
 
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh the underlying Kubernetes Namespace resource."""
         self.obj = self.api_client.read_namespace(
             name=self.name,
         )
 
-    def is_ready(self):
+    def is_ready(self) -> bool:
         """Check if the Namespace is in the ready state.
 
         Returns:
-            bool: True if in the ready state; False otherwise.
+            True if in the ready state; False otherwise.
         """
         self.refresh()
 

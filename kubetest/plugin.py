@@ -14,6 +14,7 @@ import pytest
 import urllib3
 
 from kubetest import errors, markers
+from kubetest.client import TestClient
 from kubetest.manager import KubetestManager
 
 GOOGLE_APPLICATION_CREDENTIALS = 'GOOGLE_APPLICATION_CREDENTIALS'
@@ -384,7 +385,7 @@ class ClusterInfo:
 
 
 @pytest.fixture
-def clusterinfo(kubeconfig):
+def clusterinfo(kubeconfig) -> ClusterInfo:
     """Get a ``ClusterInfo`` instance which provides basic information
     about the cluster the tests are being run on.
     """
@@ -407,7 +408,7 @@ def clusterinfo(kubeconfig):
 
 
 @pytest.fixture
-def kubeconfig(request):
+def kubeconfig(request) -> str:
     """Return the name of the configured kube config file loaded for the tests."""
 
     config_file = request.session.config.getoption('kube_config')
@@ -415,7 +416,7 @@ def kubeconfig(request):
 
 
 @pytest.fixture()
-def kube(kubeconfig, request):
+def kube(kubeconfig, request) -> TestClient:
     """Return a client for managing a Kubernetes cluster for testing."""
 
     if not kubeconfig:

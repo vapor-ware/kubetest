@@ -5,20 +5,21 @@ the corresponding Kubernetes API models.
 import builtins
 import os
 import re
+from typing import Any, Dict, List, Union
 
 import kubernetes
 import yaml
 from kubernetes.client import models
 
 
-def load_file(path):
+def load_file(path: str) -> List[object]:
     """Load an individual Kubernetes manifest YAML file.
 
     This file may contain multiple YAML documents. It will attempt to auto-detect
     the type of each object to load.
 
     Args:
-        path (str): The fully qualified path to the file.
+        path: The fully qualified path to the file.
 
     Returns:
         A list of the Kubernetes API objects for this manifest file.
@@ -38,16 +39,15 @@ def load_file(path):
     return objs
 
 
-def load_path(path):
+def load_path(path: str) -> List[object]:
     """Load all of the Kubernetes YAML manifest files found in the
     specified directory path.
 
     Args:
-        path (str): The path to the directory of manifest files.
+        path: The path to the directory of manifest files.
 
     Returns:
-        list: A list of all the Kubernetes objects loaded from
-            manifest file.
+        A list of all the Kubernetes objects loaded from manifest file.
 
     Raises:
         ValueError: The provided path is not a directory.
@@ -62,22 +62,20 @@ def load_path(path):
     return objs
 
 
-def get_type(manifest):
-    """Get the Kubernetes object type from the manifest kind and
-    version.
+def get_type(manifest: Dict[str, Any]) -> Union[object, None]:
+    """Get the Kubernetes object type from the manifest kind and version.
 
-    There is no easy way for determining the internal model that a
-    manifest should use. What this tries to do is use the version
-    info and the kind info to create a potential internal object
-    name for the pair and look that up in the kubernetes package
-    locals.
+    There is no easy way for determining the internal model that a manifest should
+    use. What this tries to do is use the version info and the kind info to create
+    a potential internal object name for the pair and look that up in the
+    kubernetes package locals.
 
     Args:
-        manifest (dict): The manifest file, loaded into a dictionary.
+        manifest: The manifest file, loaded into a dictionary.
 
     Returns:
-        object: The Kubernetes API object for the manifest.
-        None: No Kubernetes API object type could be determined.
+        The Kubernetes API object for the manifest. If no Kubernetes API object
+        type can be determined, None is returned.
 
     Raises:
         ValueError: The manifest dictionary does not have a
@@ -224,20 +222,20 @@ def new_object(root_type, config):
     return root_type(**constructor_args)
 
 
-def cast_value(value, t):
+def cast_value(value: Any, t: str) -> Any:
     """Cast the given value to the specified type.
 
     There are two general cases for possible casts:
       - A cast to a builtin type (int, str, etc.)
       - A cast to a Kubernetes object (V1ObjectMeta, etc)
 
-    In either case, check to see if the specified type exists in the
-    correct type pool. If so, cast to that type, otherwise fail.
+    In either case, check to see if the specified type exists in the correct
+    type pool. If so, cast to that type, otherwise fail.
 
     Args:
         value: The value to cast.
-        t (str): The type to cast the value to. This can be a builtin
-            type or a Kubernetes API object type.
+        t: The type to cast the value to. This can be a builtin type or a
+            Kubernetes API object type.
 
     Returns:
         The value, casted to the appropriate type.

@@ -31,17 +31,17 @@ class ClusterRoleBinding(ApiObject):
         'rbac.authorization.k8s.io/v1beta1': client.RbacAuthorizationV1beta1Api,
     }
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.obj)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
-    def create(self, namespace=None):
+    def create(self, namespace: str = None) -> None:
         """Create the ClusterRoleBinding under the given namespace.
 
         Args:
-            namespace (str): This argument is ignored for ClusterRoleBindings.
+            namespace: This argument is ignored for ClusterRoleBindings.
         """
         log.info(
             f'creating clusterrolebinding "{self.name}" in namespace "{self.namespace}"')
@@ -51,7 +51,7 @@ class ClusterRoleBinding(ApiObject):
             body=self.obj,
         )
 
-    def delete(self, options):
+    def delete(self, options: client.V1DeleteOptions) -> client.V1Status:
         """Delete the ClusterRoleBinding.
 
         This method expects the ClusterRoleBinding to have been loaded or otherwise
@@ -59,10 +59,10 @@ class ClusterRoleBinding(ApiObject):
         to be set manually.
 
         Args:
-             options (client.V1DeleteOptions): Options for ClusterRoleBinding deletion.
+             options: Options for ClusterRoleBinding deletion.
 
         Returns:
-            client.V1Status: The status of the delete operation.
+            The status of the delete operation.
         """
         if options is None:
             options = client.V1DeleteOptions()
@@ -76,13 +76,13 @@ class ClusterRoleBinding(ApiObject):
             body=options,
         )
 
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh the underlying Kubernetes ClusterRoleBinding resource."""
         self.obj = self.api_client.read_cluster_role_binding(
             name=self.name
         )
 
-    def is_ready(self):
+    def is_ready(self) -> bool:
         """Check if the ClusterRoleBinding is in the ready state.
 
         ClusterRoleBindings do not have a "status" field to check, so we
@@ -90,7 +90,7 @@ class ClusterRoleBinding(ApiObject):
         on the cluster.
 
         Returns:
-            bool: True if in the ready state; False otherwise.
+            True if in the ready state; False otherwise.
         """
         try:
             self.refresh()

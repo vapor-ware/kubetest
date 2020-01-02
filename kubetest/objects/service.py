@@ -1,6 +1,7 @@
 """Kubetest wrapper for the Kubernetes ``Service`` API Object."""
 
 import logging
+from typing import List
 
 from kubernetes import client
 
@@ -29,17 +30,17 @@ class Service(ApiObject):
         'v1': client.CoreV1Api,
     }
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.obj)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
-    def create(self, namespace=None):
+    def create(self, namespace: str = None) -> None:
         """Create the Service under the given namespace.
 
         Args:
-            namespace (str): The namespace to create the Service under.
+            namespace: The namespace to create the Service under.
                 If the Service was loaded via the kubetest client, the
                 namespace will already be set, so it is not needed here.
                 Otherwise, the namespace will need to be provided.
@@ -55,7 +56,7 @@ class Service(ApiObject):
             body=self.obj,
         )
 
-    def delete(self, options):
+    def delete(self, options: client.V1DeleteOptions) -> client.V1Status:
         """Delete the Service.
 
         This method expects the Service to have been loaded or otherwise
@@ -63,10 +64,10 @@ class Service(ApiObject):
         to be set manually.
 
         Args:
-            options (client.V1DeleteOptions): Options for Service deletion.
+            options: Options for Service deletion.
 
         Returns:
-            client.V1Status: The status of the delete operation.
+            The status of the delete operation.
         """
         if options is None:
             options = client.V1DeleteOptions()
@@ -81,14 +82,14 @@ class Service(ApiObject):
             body=options,
         )
 
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh the underlying Kubernetes Service resource."""
         self.obj = self.api_client.read_namespaced_service(
             name=self.name,
             namespace=self.namespace,
         )
 
-    def is_ready(self):
+    def is_ready(self) -> bool:
         """Check if the Service is in the ready state.
 
         The readiness state is not clearly available from the Service
@@ -101,7 +102,7 @@ class Service(ApiObject):
         so this will never resolve to True.
 
         Returns:
-            bool: True if in the ready state; False otherwise.
+            True if in the ready state; False otherwise.
         """
         self.refresh()
 
@@ -138,11 +139,11 @@ class Service(ApiObject):
         # must also be ready
         return True
 
-    def status(self):
+    def status(self) -> client.V1ServiceStatus:
         """Get the status of the Service.
 
         Returns:
-            client.V1ServiceStatus: The status of the Service.
+            The status of the Service.
         """
         log.info(f'checking status of service "{self.name}"')
         # first, refresh the service state to ensure the latest status
@@ -151,15 +152,14 @@ class Service(ApiObject):
         # return the status from the service
         return self.obj.status
 
-    def get_endpoints(self):
+    def get_endpoints(self) -> List[client.V1Endpoints]:
         """Get the endpoints for the Service.
 
         This can be useful for checking internal IP addresses used
         in containers, e.g. for container auto-discovery.
 
         Returns:
-            list[client.V1Endpoints]: A list of endpoints associated
-            with the Service.
+            A list of endpoints associated with the Service.
         """
         log.info(f'getting endpoints for service "{self.name}"')
         endpoints = self.api_client.list_namespaced_endpoints(
@@ -176,14 +176,14 @@ class Service(ApiObject):
         log.debug(f'endpoints: {svc_endpoints}')
         return svc_endpoints
 
-    def proxy_http_get(self, path):
+    def proxy_http_get(self, path: str) -> str:
         """Issue a GET request to proxy of a Service.
 
         Args:
-            path (str): The URI path for the request.
+            path: The URI path for the request.
 
         Returns:
-            str: The response data
+            The response data
         """
         return client.CoreV1Api().connect_get_namespaced_service_proxy_with_path(
             name=f'{self.name}:{self.obj.spec.ports[0].port}',

@@ -3,6 +3,7 @@
 import ast
 import json
 import logging
+from typing import Any, Dict
 
 import urllib3
 
@@ -10,9 +11,8 @@ log = logging.getLogger('kubetest')
 
 
 class Response:
-    """Response is a wrapper around the Kubernetes API's response data
-    when a request is proxied to a Kubernetes resource, like a Pod or
-    Service.
+    """Response is a wrapper around the Kubernetes API's response data when a
+    request is proxied to a Kubernetes resource, like a Pod or Service.
 
     A proxied request will return:
     - The response data
@@ -33,13 +33,13 @@ class Response:
         self.status = status
         self.headers = headers
 
-    def json(self):
+    def json(self) -> Dict[str, Any]:
         """Convert the response data to JSON.
 
         If the response data is not valid JSON, an error will be raised.
 
         Returns:
-            dict: The JSON data.
+            The JSON data loaded into a Python dictionary.
         """
         # This should generally be the case, since the primary source of Response
         # instances are the HTTP methods on Pods (e.g. http_proxy_get), where

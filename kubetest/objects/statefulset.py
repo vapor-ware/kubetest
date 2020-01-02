@@ -2,6 +2,7 @@
 
 import logging
 import uuid
+from typing import List
 
 from kubernetes import client
 
@@ -35,17 +36,17 @@ class StatefulSet(ApiObject):
         'apps/v1beta2': client.AppsV1beta2Api,
     }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super(StatefulSet, self).__init__(*args, **kwargs)
         self._add_kubetest_labels()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.obj)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
-    def _add_kubetest_labels(self):
+    def _add_kubetest_labels(self) -> None:
         """Add a kubetest label to the StatefulSet object.
 
         This allows kubetest to more easily and reliably search for and aggregate
@@ -101,11 +102,11 @@ class StatefulSet(ApiObject):
         if self.klabel_key not in self.obj.spec.template.metadata.labels:
             self.obj.spec.template.metadata.labels[self.klabel_key] = self.klabel_uid
 
-    def create(self, namespace=None):
+    def create(self, namespace: str = None) -> None:
         """Create the StatefulSet under the given namespace.
 
         Args:
-            namespace (str): The namespace to create the StatefulSet under.
+            namespace: The namespace to create the StatefulSet under.
                 If the StatefulSet was loaded via the kubetest client, the
                 namespace will already be set, so it is not needed here.
                 Otherwise, the namespace will need to be provided.
@@ -121,7 +122,7 @@ class StatefulSet(ApiObject):
             body=self.obj,
         )
 
-    def delete(self, options):
+    def delete(self, options: client.V1DeleteOptions) -> client.V1Status:
         """Delete the StatefulSet.
 
         This method expects the StatefulSet to have been loaded or otherwise
@@ -129,10 +130,10 @@ class StatefulSet(ApiObject):
         to be set manually.
 
         Args:
-            options (client.V1DeleteOptions): Options for StatefulSet deletion.
+            options: Options for StatefulSet deletion.
 
         Returns:
-            client.V1Status: The status of the delete operation.
+            The status of the delete operation.
         """
         if options is None:
             options = client.V1DeleteOptions()
@@ -147,18 +148,18 @@ class StatefulSet(ApiObject):
             body=options,
         )
 
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh the underlying Kubernetes StatefulSet resource."""
         self.obj = self.api_client.read_namespaced_stateful_set_status(
             name=self.name,
             namespace=self.namespace,
         )
 
-    def is_ready(self):
+    def is_ready(self) -> bool:
         """Check if the StatefulSet is in the ready state.
 
         Returns:
-            bool: True if in the ready state; False otherwise.
+            True if in the ready state; False otherwise.
         """
         self.refresh()
 
@@ -179,11 +180,11 @@ class StatefulSet(ApiObject):
 
         return total == ready
 
-    def status(self):
+    def status(self) -> client.V1StatefulSetStatus:
         """Get the status of the StatefulSet.
 
         Returns:
-            client.V1StatefulSetStatus: The status of the StatefulSet.
+            The status of the StatefulSet.
         """
         log.info(f'checking status of statefulset "{self.name}"')
         # first, refresh the statefulset state to ensure the latest status
@@ -192,11 +193,11 @@ class StatefulSet(ApiObject):
         # return the status from the statefulset
         return self.obj.status
 
-    def get_pods(self):
+    def get_pods(self) -> List[Pod]:
         """Get the pods for the StatefulSet.
 
         Returns:
-            list[Pod]: A list of pods that belong to the statefulset.
+            A list of pods that belong to the statefulset.
         """
         log.info(f'getting pods for statefulset "{self.name}"')
 

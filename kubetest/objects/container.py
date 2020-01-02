@@ -26,21 +26,21 @@ class Container:
         https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#container-v1-core
     """
 
-    def __init__(self, api_object, pod):
+    def __init__(self, api_object, pod) -> None:
         self.obj = api_object
         self.pod = pod
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.obj)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self.__str__()
 
-    def get_restart_count(self):
+    def get_restart_count(self) -> int:
         """Get the number of times the Container has been restarted.
 
         Returns:
-            int: The number of times the Container has been restarted.
+            The number of times the Container has been restarted.
         """
         container_name = self.obj.name
         pod_status = self.pod.status()
@@ -58,11 +58,11 @@ class Container:
             f'Unable to determine container status for {container_name}'
         )
 
-    def get_logs(self):
+    def get_logs(self) -> str:
         """Get all the logs for the Container.
 
         Returns:
-            str: The Container logs.
+            The Container logs.
         """
         return client.CoreV1Api().read_namespaced_pod_log(
             name=self.pod.name,
@@ -70,14 +70,14 @@ class Container:
             container=self.obj.name,
         )
 
-    def search_logs(self, *keyword):
+    def search_logs(self, *keyword: str) -> bool:
         """Search for keywords/phrases in the Container's logs.
 
         Args:
-            *keyword (str): Keywords to search for within the logs.
+            *keyword: Keywords to search for within the logs.
 
         Returns:
-            bool: True if found; False otherwise.
+            True if found; False otherwise.
         """
         logs = self.get_logs()
 

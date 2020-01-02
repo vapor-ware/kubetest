@@ -1,9 +1,12 @@
 """Custom pytest markers for kubetest."""
 
 import os
+from typing import List
 
+import pytest
 from kubernetes import client
 
+from kubetest import manager
 from kubetest.manifest import load_file, load_path
 from kubetest.objects import ApiObject, ClusterRoleBinding, RoleBinding
 
@@ -72,7 +75,7 @@ NAMESPACE_INI = (
 )
 
 
-def register(config):
+def register(config) -> None:
     """Register kubetest markers with pytest.
 
     Args:
@@ -85,20 +88,19 @@ def register(config):
     config.addinivalue_line('markers', NAMESPACE_INI)
 
 
-def apply_manifest_from_marker(item, client):
+def apply_manifest_from_marker(item: pytest.Item, meta: manager.TestMeta) -> None:
     """Load a manifest and create the API objects for teh specified file.
 
     This gets called for every `pytest.mark.applymanifest` marker on
     test cases.
 
-    Once the manifest has been loaded, the API object(s) will be registered
-    with the test cases' TestMeta. This allows easier control via the
-    "kube" fixture, such as waiting for all objects to be created.
+    Once the manifest has been loaded, the API object(s) will be registered with
+    the test cases' TestMeta. This allows easier control via the "kube" fixture,
+    such as waiting for all objects to be created.
 
     Args:
         item: The pytest test item.
-        client (manager.TestMeta): The metainfo object for the marked
-            test case.
+        meta: The metainfo object for the marked test case.
     """
     for mark in item.iter_markers(name='applymanifest'):
         path = mark.args[0]
@@ -127,23 +129,21 @@ def apply_manifest_from_marker(item, client):
                     f'Unable to match loaded object to an internal wrapper class: {obj}',
                 )
 
-        client.register_objects(wrapped)
+        meta.register_objects(wrapped)
 
 
-def apply_manifests_from_marker(item, client):
+def apply_manifests_from_marker(item: pytest.Item, meta: manager.TestMeta) -> None:
     """Load manifests and create the API objects for the specified files.
 
-    This gets called for every `pytest.mark.applymanifests` marker on
-    test cases.
+    This gets called for every `pytest.mark.applymanifests` marker on test cases.
 
-    Once a manifest has been loaded, the API objects will be registered
-    with the test cases' TestMeta. This allows some easier control via
-    the "kube" fixture, such as waiting for all objects to be created.
+    Once a manifest has been loaded, the API objects will be registered with the
+    test cases' TestMeta. This allows some easier control via the "kube" fixture,
+    such as waiting for all objects to be created.
 
     Args:
         item: The pytest test item.
-        client (manager.TestMeta): The metainfo object for the marked
-            test case.
+        meta: The metainfo object for the marked test case.
     """
     for mark in item.iter_markers(name='applymanifests'):
         dir_path = mark.args[0]
@@ -183,20 +183,19 @@ def apply_manifests_from_marker(item, client):
                     f'Unable to match loaded object to an internal wrapper class: {obj}',
                 )
 
-        client.register_objects(wrapped)
+        meta.register_objects(wrapped)
 
 
-def rolebindings_from_marker(item, namespace):
+def rolebindings_from_marker(item: pytest.Item, namespace: str) -> List[RoleBinding]:
     """Create RoleBindings for the test case if the test is marked
     with the `pytest.mark.rolebinding` marker.
 
     Args:
-        item (pytest.Item): The pytest test item.
-        namespace (str): The namespace of the test case.
+        item: The pytest test item.
+        namespace: The namespace of the test case.
 
     Returns:
-        list[objects.RoleBinding]: The RoleBindings that were
-            generated from the test case markers.
+        The RoleBindings that were generated from the test case markers.
     """
     rolebindings = []
     for mark in item.iter_markers(name='rolebinding'):
@@ -225,17 +224,16 @@ def rolebindings_from_marker(item, namespace):
     return rolebindings
 
 
-def clusterrolebindings_from_marker(item, namespace):
-    """Create ClusterRoleBindings for the test case if the test case
-    is marked with the `pytest.mark.clusterrolebinding` marker.
+def clusterrolebindings_from_marker(item: pytest.Item, namespace: str) -> List[ClusterRoleBinding]:
+    """Create ClusterRoleBindings for the test case if the test case is marked
+    with the `pytest.mark.clusterrolebinding` marker.
 
     Args:
-        item (pytest.Item): The pytest test item.
-        namespace (str): The namespace of the test case.
+        item: The pytest test item.
+        namespace: The namespace of the test case.
 
     Return:
-        list[objects.ClusterRoleBinding]: The ClusterRoleBindings that
-            were generated from the test case markers.
+        The ClusterRoleBindings which were generated from the test case markers.
     """
     clusterrolebindings = []
     for mark in item.iter_markers(name='clusterrolebinding'):
@@ -262,20 +260,20 @@ def clusterrolebindings_from_marker(item, namespace):
     return clusterrolebindings
 
 
-def get_custom_rbac_subject(namespace, kind, name):
+def get_custom_rbac_subject(namespace: str, kind: str, name: str) -> List[client.V1Subject]:
     """Create a custom RBAC subject for the given namespace.
 
     Both `kind` and `name` must be specified. If one is set and
     the other is not (None), an error will be raised.
 
     Args:
-        namespace (str): The namespace of the Subject.
-        kind (str): The subject kind. This should be one of:
-            'User', 'Group', or 'ServiceAccount'.
-        name (str): The name of the Subject.
+        namespace: The namespace of the Subject.
+        kind: The subject kind. This should be one of: 'User', 'Group',
+            or 'ServiceAccount'.
+        name: The name of the Subject.
 
     Returns:
-        list[client.V1Subject]: The custom RBAC subject.
+        The custom RBAC subject.
 
     Raises:
         ValueError: One of `kind` and `name` are None.
@@ -301,7 +299,7 @@ def get_custom_rbac_subject(namespace, kind, name):
         return []
 
 
-def get_default_rbac_subjects(namespace):
+def get_default_rbac_subjects(namespace: str) -> List[client.V1Subject]:
     """Get the default RBAC Subjects.
 
     The default subjects will allow:
@@ -310,10 +308,10 @@ def get_default_rbac_subjects(namespace):
       - all service accounts
 
     Args:
-        namespace (str): The namespace of the Subjects.
+        namespace: The namespace of the Subjects.
 
     Returns:
-        list[client.V1Subject]: The default RBAC subjects.
+        The default RBAC subjects.
     """
     return [
         # all authenticated users

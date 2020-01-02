@@ -2,27 +2,29 @@
 
 import logging
 import time
+from typing import Dict, Mapping, Union
 
 from kubernetes.client.rest import ApiException
+
+from kubetest.condition import Condition
 
 log = logging.getLogger('kubetest')
 
 
-def new_namespace(test_name):
+def new_namespace(test_name: str) -> str:
     """Create a new namespace for the given test name.
 
-    Kubernetes namespace names follow a DNS-1123 label that consists
-    of lower case alphanumeric characters or '-' and must start with
-    an alphanumeric.
+    Kubernetes namespace names follow a DNS-1123 label that consists of lower case
+    alphanumeric characters or '-' and must start with an alphanumeric.
 
-    The test name and current timestamp are formatted to comply to
-    this spec and appended to the 'kubetest' prefix.
+    The test name and current timestamp are formatted to comply to this spec and
+    appended to the 'kubetest' prefix.
 
     Args:
-        test_name (str): The name of the test case for the namespace.
+        test_name: The name of the test case for the namespace.
 
     Returns:
-        str: The namespace name.
+        The namespace name.
     """
     prefix = 'kubetest'
     timestamp = str(int(time.time()))
@@ -42,32 +44,35 @@ def new_namespace(test_name):
     return '-'.join((prefix, test_name, timestamp))
 
 
-def selector_string(selectors):
+def selector_string(selectors: Mapping[str, str]) -> str:
     """Create a selector string from the given dictionary of selectors.
 
     Args:
-        selectors (dict): The selectors to stringify.
+        selectors: The selectors to stringify.
 
     Returns:
-        str: The selector string for the given dictionary.
+        The selector string for the given dictionary.
     """
     return ','.join([f'{k}={v}' for k, v in selectors.items()])
 
 
-def selector_kwargs(fields=None, labels=None):
+def selector_kwargs(
+        fields: Mapping[str, str] = None,
+        labels: Mapping[str, str] = None,
+) -> Dict[str, str]:
     """Create a dictionary of kwargs for Kubernetes object selectors.
 
     Args:
-        fields (dict[str, str]): A dictionary of fields used to restrict
-            the returned collection of Objects to only those which match
-            these field selectors. By default, no restricting is done.
-        labels (dict[str, str]): A dictionary of labels used to restrict
-            the returned collection of Objects to only those which match
-            these label selectors. By default, no restricting is done.
+        fields: A mapping of fields used to restrict the returned collection of
+            Objects to only those which match these field selectors. By default,
+            no restricting is done.
+        labels: A mapping of labels used to restrict the returned collection of
+            Objects to only those which match these label selectors. By default,
+            no restricting is done.
 
     Returns:
-        dict[str, str]: A dictionary that can be used as kwargs for
-            many Kubernetes API calls for label and field selectors.
+        A dictionary that can be used as kwargs for many Kubernetes API calls for
+        label and field selectors.
     """
     kwargs = {}
     if fields is not None:
@@ -78,23 +83,25 @@ def selector_kwargs(fields=None, labels=None):
     return kwargs
 
 
-def wait_for_condition(condition, timeout=None, interval=1, fail_on_api_error=True):
+def wait_for_condition(
+        condition: Condition,
+        timeout: int = None,
+        interval: Union[int, float] = 1,
+        fail_on_api_error: bool = True,
+) -> None:
     """Wait for a condition to be met.
 
     Args:
-        condition (condition.Condition): The Condition to wait for.
-        timeout (int): The maximum time to wait, in seconds, for the
-            condition to be met. If unspecified, this function will
-            wait indefinitely. If specified and the timeout is met
-            or exceeded, a TimeoutError will be raised.
-        interval (int|float): The time, in seconds, to wait before
-            re-checking the condition.
-        fail_on_api_error (bool): Fail the condition checks if a Kubernetes
-            API error is incurred. An API error can be raised for a number
-            of reasons, including a Pod being restarted and temporarily
-            unavailable. Disabling this will cause those errors to be
-            ignored, allowing the check to continue until timeout or
-            resolution. (default: True).
+        condition: The Condition to wait for.
+        timeout: The maximum time to wait, in seconds, for the condition to be met.
+            If unspecified, this function will wait indefinitely. If specified and
+            the timeout is met or exceeded, a TimeoutError will be raised.
+        interval: The time, in seconds, to wait before re-checking the condition.
+        fail_on_api_error: Fail the condition checks if a Kubernetes API error is
+            incurred. An API error can be raised for a number of reasons, including
+            a Pod being restarted and temporarily unavailable. Disabling this will
+            cause those errors to be ignored, allowing the check to continue until
+            timeout or resolution. (default: True).
 
     Raises:
         TimeoutError: The specified timeout was exceeded.

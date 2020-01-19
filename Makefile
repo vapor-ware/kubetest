@@ -40,6 +40,14 @@ lint:  ## Run linting checks on the project source code (isort, flake8, twine)
 test:  ## Run the project unit tests
 	tox
 
+.PHONY: docker-build
+docker-build:	## Build test docker image
+	docker build --tag=kubetest:docker-build-test .
+
+.PHONY: docker-test
+docker-test: docker-build	## Run tests in docker
+	docker run --volume=/$$(pwd):/app --rm kubetest:docker-build-test tox
+
 .PHONY: version
 version:  ## Print the version of the project
 	@echo "${PKG_VERSION}"

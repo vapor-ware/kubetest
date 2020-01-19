@@ -1,0 +1,18 @@
+name: Test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: docker build
+      run: docker build --tag=kubetest .
+
+    - name: lint
+      run: docker run --volume=/$$(pwd):/app --rm kubetest tox -e lint
+
+    - name: test
+      run: docker run --volume=/$$(pwd):/app --rm kubetest tox

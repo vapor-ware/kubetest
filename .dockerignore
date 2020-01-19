@@ -1,0 +1,4 @@
+.tox
+htmlcov
+kubetest.egg-info
+.coverage

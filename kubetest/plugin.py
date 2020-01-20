@@ -14,6 +14,7 @@ import pytest
 import urllib3
 
 from kubetest import errors, markers
+from kubetest.client import TestClient
 from kubetest.manager import KubetestManager
 
 GOOGLE_APPLICATION_CREDENTIALS = 'GOOGLE_APPLICATION_CREDENTIALS'
@@ -112,8 +113,8 @@ def pytest_report_header(config):
         context = 'current context'
 
     return [
-        'kubetest config file: {}'.format(config_file),
-        'kubetest context: {}'.format(context),
+        f'kubetest config file: {config_file}',
+        f'kubetest context: {context}',
     ]
 
 
@@ -216,10 +217,18 @@ def pytest_runtest_setup(item):
     # there should NOT be any gating around test case metadata creation since
     # it is too early to tell whether we have all of the info we need.
 
+    namespace_create = True
+    namespace_name = None
+    for mark in item.iter_markers(name='namespace'):
+        namespace_create = mark.kwargs.get('create', True)
+        namespace_name = mark.kwargs.get('name', None)
+
     # Register a new test case with the manager and setup the test case state.
     test_case = manager.new_test(
         node_id=item.nodeid,
         test_name=item.name,
+        namespace_create=namespace_create,
+        namespace_name=namespace_name,
     )
 
     # Note: These markers are not applied right now, meaning that the resource(s)
@@ -254,7 +263,27 @@ def pytest_runtest_teardown(item):
     See Also:
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_runtest_teardown
     """
-    if item.config.getoption('kube_config'):
+
+    # See #154: Previously, this was only checking if the --kube-config command line
+    # arg was passed to determine whether a test used kubetest for setup, and thus
+    # whether it needed to be torn down. With the introduction of the kubeconfig
+    # fixture, which allows users to override the kubeconfig in the test without having
+    # to specify the --kube-config arg, this would prevent cleanup with the config was
+    # specified via fixture.
+    #
+    # Unfortunately, due to the way the fixture is defined, we cannot simple check for
+    # the presence/absence of the kubeconfig fixture in the test `item`, as it is always
+    # present since there is a default kubeconfig fixture.
+    #
+    # As a bit of a hack, we can get the fixtures associated with the test item. When we
+    # get the fixtures for `kubeconfig`, there will only be one fixture defined if no
+    # custom fixture is specified - that is the default fixture. If there is a custom
+    # override, there will be more than one fixture associated with the 'kubeconfig'
+    # name. In such case, we should assume that a fixture was used to load the config
+    # and allow test cleanup to proceed.
+    _, _, fixtures = item.session._fixturemanager.getfixtureclosure(['kubeconfig'], item)
+
+    if item.config.getoption('kube_config') or len(fixtures.get('kubeconfig', [])) > 1:
         manager.teardown(item.nodeid)
 
 
@@ -266,7 +295,12 @@ def pytest_runtest_makereport(item, call):
     See Also:
         https://docs.pytest.org/en/latest/reference.html#_pytest.hookspec.pytest_runtest_makereport
     """
-    if call.when == 'call':
+
+    # skip for tests without fixtures (eg: doctests)
+    if not hasattr(item, 'fixturenames'):
+        return
+
+    if 'kube' in item.fixturenames and call.when == 'call':
         if call.excinfo is not None and call.excinfo.typename != 'Skipped':
             tail_lines = item.config.getoption('kube_error_log_lines')
             if tail_lines != 0:
@@ -302,7 +336,7 @@ def pytest_keyboard_interrupt():
                     status is not None and
                     status.phase.lower() == 'active'
             ):
-                print('keyboard interrupt: cleaning up namespace "{}"'.format(name))
+                print(f'keyboard interrupt: cleaning up namespace "{name}"')
                 kubernetes.client.CoreV1Api().delete_namespace(
                     body=kubernetes.client.V1DeleteOptions(),
                     name=name,
@@ -313,9 +347,7 @@ def pytest_keyboard_interrupt():
             # if the cluster role binding has a 'kubetest:' prefix, remove it.
             name = crb.metadata.name
             if name.startswith('kubetest:'):
-                print(
-                    'keyboard interrupt: cleaning up clusterrolebinding "{}"'.format(crb)
-                )
+                print(f'keyboard interrupt: cleaning up clusterrolebinding "{crb}"')
                 kubernetes.client.RbacAuthorizationV1Api().delete_cluster_role_binding(
                     body=kubernetes.client.V1DeleteOptions(),
                     name=name,
@@ -325,7 +357,7 @@ def pytest_keyboard_interrupt():
             'Failed to clean up kubetest artifacts from cluster on keyboard interrupt. '
             'You may need to manually remove items from your cluster. Check for '
             'namespaces with the "kubetest-" prefix and cluster role bindings with '
-            'the "kubetest:" prefix. ({})'.format(e)
+            f'the "kubetest:" prefix. ({e})'
         )
 
 
@@ -353,7 +385,7 @@ class ClusterInfo:
 
 
 @pytest.fixture
-def clusterinfo(request):
+def clusterinfo(kubeconfig) -> ClusterInfo:
     """Get a ``ClusterInfo`` instance which provides basic information
     about the cluster the tests are being run on.
     """
@@ -365,7 +397,7 @@ def clusterinfo(request):
     # Get the current context.
     _, current = kubernetes.config.list_kube_config_contexts(
         os.path.expandvars(os.path.expanduser(
-            request.session.config.getoption('kube_config')
+            kubeconfig,
         ))
     )
 
@@ -376,7 +408,7 @@ def clusterinfo(request):
 
 
 @pytest.fixture
-def kubeconfig(request):
+def kubeconfig(request) -> str:
     """Return the name of the configured kube config file loaded for the tests."""
 
     config_file = request.session.config.getoption('kube_config')
@@ -384,7 +416,7 @@ def kubeconfig(request):
 
 
 @pytest.fixture()
-def kube(kubeconfig, request):
+def kube(kubeconfig, request) -> TestClient:
     """Return a client for managing a Kubernetes cluster for testing."""
 
     if not kubeconfig:
@@ -392,14 +424,12 @@ def kube(kubeconfig, request):
             'kube fixture used when no --kube-config is set; unable to install test '
             'resources onto a cluster.'
         )
-        raise errors.SetupError('--kube-config not set')
+        raise errors.SetupError('--kube-config option not set')
 
     test_case = manager.get_test(request.node.nodeid)
     if test_case is None:
         log.error(
-            'No kubetest client found for test using the "kube" fixture. ({})'.format(
-                request.node.nodeid,
-            )
+            f'No kubetest client found for test using the "kube" fixture. ({request.node.nodeid})',  # noqa
         )
         raise errors.SetupError('error generating test client')
 

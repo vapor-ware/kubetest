@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kamus-nginx
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kamus
+      component: nginx
+  template:
+    metadata:
+      labels:
+        app: kamus
+        component: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.7.9
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 80

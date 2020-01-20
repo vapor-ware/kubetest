@@ -19,7 +19,7 @@ class Namespace(ApiObject):
     API Object and provides some state management for the `Namespace`_.
 
     .. _Namespace:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#namespace-v1-core
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#namespace-v1-core
     """
 
     obj_type = client.V1Namespace
@@ -29,21 +29,15 @@ class Namespace(ApiObject):
         'v1': client.CoreV1Api,
     }
 
-    def __str__(self):
-        return str(self.obj)
-
-    def __repr__(self):
-        return self.__str__()
-
     @classmethod
-    def new(cls, name):
+    def new(cls, name: str) -> 'Namespace':
         """Create a new Namespace with object backing.
 
         Args:
-            name (str): The name of the new Namespace.
+            name: The name of the new Namespace.
 
         Returns:
-            Namespace: A new Namespace instance.
+            A new Namespace instance.
         """
         return cls(client.V1Namespace(
             metadata=client.V1ObjectMeta(
@@ -51,11 +45,11 @@ class Namespace(ApiObject):
             )
         ))
 
-    def create(self, name=None):
+    def create(self, name: str = None) -> None:
         """Create the Namespace under the given name.
 
         Args:
-            name (str): The name to create the Namespace under. If the
+            name: The name to create the Namespace under. If the
                 name is not provided, it will be assumed to already be
                 in the underlying object spec. If it is not, namespace
                 operations will fail.
@@ -63,45 +57,45 @@ class Namespace(ApiObject):
         if name is not None:
             self.name = name
 
-        log.info('creating namespace "%s"', self.name)
-        log.debug('namespace: %s', self.obj)
+        log.info(f'creating namespace "{self.name}"')
+        log.debug(f'namespace: {self.obj}')
 
         self.obj = self.api_client.create_namespace(
             body=self.obj,
         )
 
-    def delete(self, options=None):
+    def delete(self, options: client.V1DeleteOptions = None) -> client.V1Status:
         """Delete the Namespace.
 
         Args:
-             options (client.V1DeleteOptions): Options for Namespace deletion.
+             options: Options for Namespace deletion.
 
         Returns:
-            client.V1Status: The status of the delete operation.
+            The status of the delete operation.
         """
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting namespace "%s"', self.name)
-        log.debug('delete options: %s', options)
-        log.debug('namespace: %s', self.obj)
+        log.info(f'deleting namespace "{self.name}"')
+        log.debug(f'delete options: {options}')
+        log.debug(f'namespace: {self.obj}')
 
         return self.api_client.delete_namespace(
             name=self.name,
             body=options,
         )
 
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh the underlying Kubernetes Namespace resource."""
         self.obj = self.api_client.read_namespace(
             name=self.name,
         )
 
-    def is_ready(self):
+    def is_ready(self) -> bool:
         """Check if the Namespace is in the ready state.
 
         Returns:
-            bool: True if in the ready state; False otherwise.
+            True if in the ready state; False otherwise.
         """
         self.refresh()
 

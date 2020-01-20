@@ -22,43 +22,37 @@ class Node:
     Node spec to make Node-based interactions easier
 
     .. _Node:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#node-v1-core
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#node-v1-core
     """
 
-    def __init__(self, api_object):
+    def __init__(self, api_object) -> None:
         self.obj = api_object
         self.name = api_object.metadata.name
 
-    def __str__(self):
-        return str(self.obj)
-
-    def __repr__(self):
-        return self.__str__()
-
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh the underlying Kubernetes Node resource."""
         nodes = client.CoreV1Api().list_node()
         for node in nodes.items:
             if node.metadata.name == self.name:
                 self.obj = node
                 return
-        log.warning('unable to refresh node: no node found with name: %s', self.name)
+        log.warning(f'unable to refresh node: no node found with name: {self.name}')
 
-    def status(self):
+    def status(self) -> client.V1NodeStatus:
         """Get the status of the Node.
 
         Returns:
-            client.V1NodeStatus: The status of the Node.
+            The status of the Node.
         """
-        log.info('checking status of node "%s"', self.name)
+        log.info(f'checking status of node "{self.name}"')
         self.refresh()
         return self.obj.status
 
-    def is_ready(self):
+    def is_ready(self) -> bool:
         """Check whether the Node is in the ready state.
 
         Returns:
-            bool: True if in the ready state; False otherwise.
+            True if in the ready state; False otherwise.
         """
         status = self.status()
 

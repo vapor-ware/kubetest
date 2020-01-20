@@ -1,9 +1,10 @@
 
 import pytest
 import time
+import os
 
 
-@pytest.mark.applymanifest('manifests/deployment-redis.yaml')
+@pytest.mark.applymanifest(os.path.join(os.path.dirname(__file__), 'manifests/deployment-redis.yaml'))
 def test_pods_from_deployment_loaded_from_marker(kube):
     """Get the Pods for a Deployment which is loaded via the kubetest
     'applymanifest' marker.
@@ -42,7 +43,8 @@ def test_pods_from_deployment_loaded_in_test_case(kube):
     use that to get the pods for the deployment.
     """
 
-    deployment = kube.load_deployment('manifests/deployment-redis.yaml')
+    deployment = kube.load_deployment(os.path.join(
+        os.path.dirname(__file__), 'manifests/deployment-redis.yaml'))
     deployment.create()
     deployment.wait_until_ready(timeout=30)
 
@@ -119,4 +121,15 @@ def test_all_pods_via_custom_fixture(kube, custom_pods):
     # deployment is configured with one replica, and the frontend deployment
     # has 3 replicas. We should expect to have a total of 4 pods.
     assert len(custom_pods) == 4
-    print(custom_pods)
+
+    count_frontend = 0
+    count_master = 0
+
+    for pod_name in custom_pods:
+        if 'frontend' in pod_name:
+            count_frontend += 1
+        if 'redis-master' in pod_name:
+            count_master += 1
+
+    assert count_frontend == 3
+    assert count_master == 1

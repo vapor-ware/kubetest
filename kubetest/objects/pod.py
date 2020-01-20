@@ -1,6 +1,7 @@
 """Kubetest wrapper for the Kubernetes `Pod` API Object."""
 
 import logging
+from typing import Dict, List, Union
 
 from kubernetes import client
 from kubernetes.client.rest import ApiException
@@ -23,7 +24,7 @@ class Pod(ApiObject):
     API Object and provides some state management for the `Pod`_.
 
     .. _Pod:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#pod-v1-core
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#pod-v1-core
     """
 
     obj_type = client.V1Pod
@@ -33,17 +34,11 @@ class Pod(ApiObject):
         'v1': client.CoreV1Api,
     }
 
-    def __str__(self):
-        return str(self.obj)
-
-    def __repr__(self):
-        return self.__str__()
-
-    def create(self, namespace=None):
+    def create(self, namespace: str = None) -> None:
         """Create the Pod under the given namespace.
 
         Args:
-            namespace (str): The namespace to create the Pod under.
+            namespace: The namespace to create the Pod under.
                 If the Pod was loaded via the kubetest client, the
                 namespace will already be set, so it is not needed
                 here. Otherwise, the namespace will need to be provided.
@@ -51,15 +46,15 @@ class Pod(ApiObject):
         if namespace is None:
             namespace = self.namespace
 
-        log.info('creating pod "%s" in namespace "%s"', self.name, self.namespace)
-        log.debug('pod: %s', self.obj)
+        log.info(f'creating pod "{self.name}" in namespace "{self.namespace}"')
+        log.debug(f'pod: {self.obj}')
 
         self.obj = self.api_client.create_namespaced_pod(
             namespace=namespace,
             body=self.obj,
         )
 
-    def delete(self, options):
+    def delete(self, options: client.V1DeleteOptions = None) -> client.V1Status:
         """Delete the Pod.
 
         This method expects the Pod to have been loaded or otherwise
@@ -67,17 +62,17 @@ class Pod(ApiObject):
         need to be set manually.
 
         Args:
-            options (client.V1DeleteOptions): Options for Pod deletion.
+            options: Options for Pod deletion.
 
         Return:
-            client.V1Status: The status of the delete operation.
+            The status of the delete operation.
         """
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting pod "%s"', self.name)
-        log.debug('delete options: %s', options)
-        log.debug('pod: %s', self.obj)
+        log.info(f'deleting pod "{self.name}"')
+        log.debug(f'delete options: {options}')
+        log.debug(f'pod: {self.obj}')
 
         return self.api_client.delete_namespaced_pod(
             name=self.name,
@@ -85,18 +80,18 @@ class Pod(ApiObject):
             body=options,
         )
 
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh the underlying Kubernetes Pod resource."""
         self.obj = self.api_client.read_namespaced_pod_status(
             name=self.name,
             namespace=self.namespace,
         )
 
-    def is_ready(self):
+    def is_ready(self) -> bool:
         """Check if the Pod is in the ready state.
 
         Returns:
-            bool: True if in the ready state; False otherwise.
+            True if in the ready state; False otherwise.
         """
         self.refresh()
 
@@ -123,11 +118,11 @@ class Pod(ApiObject):
         # Catchall
         return False
 
-    def status(self):
+    def status(self) -> client.V1PodStatus:
         """Get the status of the Pod.
 
         Returns:
-            client.V1PodStatus: The status of the Pod.
+            The status of the Pod.
         """
         # first, refresh the pod state to ensure latest status
         self.refresh()
@@ -135,18 +130,18 @@ class Pod(ApiObject):
         # return the status of the pod
         return self.obj.status
 
-    def get_containers(self):
+    def get_containers(self) -> List[Container]:
         """Get the Pod's containers.
 
         Returns:
-            list[Container]: A list of containers that belong to the Pod.
+            A list of containers that belong to the Pod.
         """
-        log.info('getting containers for pod "%s"', self.name)
+        log.info(f'getting containers for pod "{self.name}"')
         self.refresh()
 
         return [Container(c, self) for c in self.obj.spec.containers]
 
-    def get_container(self, name):
+    def get_container(self, name: str) -> Union[Container, None]:
         """Get a container in the Pod by name.
 
         Args:
@@ -161,11 +156,11 @@ class Pod(ApiObject):
                 return c
         return None
 
-    def get_restart_count(self):
+    def get_restart_count(self) -> int:
         """Get the total number of Container restarts for the Pod.
 
         Returns:
-            int: The total number of Container restarts.
+            The total number of Container restarts.
         """
         container_statuses = self.status().container_statuses
         if container_statuses is None:
@@ -177,7 +172,7 @@ class Pod(ApiObject):
 
         return total
 
-    def http_proxy_get(self, path, query_params=None):
+    def http_proxy_get(self, path: str, query_params: Dict[str, str] = None) -> response.Response:
         """Issue a GET request to a proxy for the Pod.
 
         Notes:
@@ -190,12 +185,11 @@ class Pod(ApiObject):
             passed along.
 
         Args:
-            path (str): The URI path for the request.
-            query_params (dict[str, str]): Any query parameters for
-                the request. (default: None)
+            path: The URI path for the request.
+            query_params: Any query parameters for the request.
 
         Returns:
-            response.Response: The response data.
+            The response data.
         """
         c = client.CoreV1Api()
 
@@ -245,7 +239,9 @@ class Pod(ApiObject):
 
         return resp
 
-    def http_proxy_post(self, path, query_params=None, data=None):
+    def http_proxy_post(
+            self, path: str, query_params: Dict[str, str] = None, data=None,
+    ) -> response.Response:
         """Issue a POST request to a proxy for the Pod.
 
         Notes:
@@ -258,13 +254,12 @@ class Pod(ApiObject):
             passed along.
 
         Args:
-            path (str): The URI path for the request.
-            query_params (dict[str, str]): Any query parameters for
-                the request. (default: None)
+            path: The URI path for the request.
+            query_params: Any query parameters for the request.
             data: The data to POST.
 
         Returns:
-            response.Response: The response data.
+            The response data.
         """
         c = client.CoreV1Api()
 
@@ -314,11 +309,11 @@ class Pod(ApiObject):
 
         return resp
 
-    def containers_started(self):
+    def containers_started(self) -> bool:
         """Check if the Pod's Containers have all started.
 
         Returns:
-            bool: True if all Containers have started; False otherwise.
+            True if all Containers have started; False otherwise.
         """
         # start the flag as true - we will check the state and set
         # this to False if any container is not yet running.
@@ -339,7 +334,7 @@ class Pod(ApiObject):
 
         return containers_started
 
-    def wait_until_containers_start(self, timeout=None):
+    def wait_until_containers_start(self, timeout: int = None) -> None:
         """Wait until all containers in the Pod have started.
 
         This will wait for the images to be pulled and for the containers
@@ -350,7 +345,7 @@ class Pod(ApiObject):
         not be ready immediately after it has been started.
 
         Args:
-            timeout (int): The maximum time to wait, in seconds, for the
+            timeout: The maximum time to wait, in seconds, for the
                 Pod's containers to be started. If unspecified, this will
                 wait indefinitely. If specified and the timeout is met or
                 exceeded, a TimeoutError will be raised.

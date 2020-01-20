@@ -19,7 +19,7 @@ class Event:
     Event object to make Event-based interactions easier
 
     .. _Event:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#event-v1-core
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#event-v1-core
     """
 
     obj_type = client.V1Event
@@ -29,12 +29,6 @@ class Event:
         'v1': client.CoreV1Api,
     }
 
-    def __init__(self, api_object):
+    def __init__(self, api_object) -> None:
         self.obj = api_object
         self.name = api_object.metadata.name
-
-    def __str__(self):
-        return str(self.obj)
-
-    def __repr__(self):
-        return self.__str__()

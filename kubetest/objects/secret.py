@@ -19,7 +19,7 @@ class Secret(ApiObject):
     API Object and provides some state management for the `Secret`_.
 
     .. _Secret:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#secret-v1-core
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#secret-v1-core
     """
 
     obj_type = client.V1Secret
@@ -29,17 +29,11 @@ class Secret(ApiObject):
         'v1': client.CoreV1Api,
     }
 
-    def __str__(self):
-        return str(self.obj)
-
-    def __repr__(self):
-        return self.__str__()
-
-    def create(self, namespace=None):
+    def create(self, namespace: str = None) -> None:
         """Create the Secret under the given namespace.
 
         Args:
-            namespace (str): The namespace to create the Secret under.
+            namespace: The namespace to create the Secret under.
                 If the Secret was loaded via the kubetest client, the
                 namespace will already be set, so it is not needed here.
                 Otherwise, the namespace will need to be provided.
@@ -47,15 +41,15 @@ class Secret(ApiObject):
         if namespace is None:
             namespace = self.namespace
 
-        log.info('creating secret "%s" in namespace "%s"', self.name, self.namespace)
-        log.debug('secret: %s', self.obj)
+        log.info(f'creating secret "{self.name}" in namespace "{self.namespace}"')
+        log.debug(f'secret: {self.obj}')
 
         self.obj = self.api_client.create_namespaced_secret(
             namespace=namespace,
             body=self.obj,
         )
 
-    def delete(self, options):
+    def delete(self, options: client.V1DeleteOptions = None) -> client.V1Status:
         """Delete the Secret.
 
         This method expects the Secret to have been loaded or otherwise
@@ -63,31 +57,32 @@ class Secret(ApiObject):
         to be set manually.
 
         Args:
-            options (client.V1DeleteOptions): Options for Secret deletion.
+            options: Options for Secret deletion.
 
         Returns:
-            client.V1Status: The status of the delete operation.
+            The status of the delete operation.
         """
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting secret "%s"', self.name)
-        log.debug('delete options: %s', options)
-        log.debug('secret: %s', self.obj)
+        log.info(f'deleting secret "{self.name}"')
+        log.debug(f'delete options: {options}')
+        log.debug(f'secret: {self.obj}')
+
         return self.api_client.delete_namespaced_secret(
             name=self.name,
             namespace=self.namespace,
             body=options,
         )
 
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh the underlying Kubernetes Secret resource."""
         self.obj = self.api_client.read_namespaced_secret(
             name=self.name,
             namespace=self.namespace,
         )
 
-    def is_ready(self):
+    def is_ready(self) -> bool:
         """Check if the Secret is in the ready state.
 
         Secrets do not have a "status" field to check, so we will
@@ -95,7 +90,7 @@ class Secret(ApiObject):
         on the cluster.
 
         Returns:
-            bool: True if in the ready state; False otherwise.
+            True if in the ready state; False otherwise.
         """
         try:
             self.refresh()

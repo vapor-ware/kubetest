@@ -1,6 +1,7 @@
 
 kubetest
 ========
+
 ``kubetest`` is a `pytest <https://docs.pytest.org/en/latest/>`_ plugin that
 makes it easier to write integration tests on Kubernetes. This allows you to
 automate tests for your Kubernetes infrastructure, networking, and disaster recovery.
@@ -33,6 +34,7 @@ Features
 
 Installation
 ------------
+
 kubetest can be installed with ``pip``
 
 .. code-block:: bash
@@ -51,6 +53,7 @@ kubetest can be installed with ``pip``
 
 Feedback
 --------
+
 Feedback for kubetest is greatly appreciated! If you experience any issues, find the
 documentation unclear, have feature requests, or just have questions about it, we'd
 love to know. Feel free to open an issue on `GitHub <https://github.com/vapor-ware/kubetest/issues>`_
@@ -60,6 +63,7 @@ context as you can.
 
 License
 -------
+
 kubetest is free and open source software distributed under the terms of
 the `GPLv3`_ license.
 

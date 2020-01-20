@@ -1,6 +1,7 @@
 
 Writing Tests
 =============
+
 kubetest is designed to interface with a Kubernetes cluster, so before you
 begin writing tests with kubetest, be sure that you have access to a cluster,
 whether on Google Container Engine, via minikube, or through your own custom
@@ -9,6 +10,7 @@ you can access it from wherever the tests are being run.
 
 Cluster Configuration
 ---------------------
+
 By default, kubetest will look for a config file at ``~/.kube/config`` -- this
 is the same place that ``kubectl`` looks for the cluster config. Generally, if
 you can reach your cluster via. ``kubectl``, you should be able to use it with
@@ -43,6 +45,7 @@ of the tests.
 
 Loading Manifests
 -----------------
+
 It is recommended, though not required, to test against pre-defined manifest
 files. These files can be kept anywhere relative to your tests and can be
 organized however you like. Each test can have its own directory of manifests,
@@ -113,6 +116,7 @@ created API Objects which offer more functionality.
 
 Creating Resources
 ------------------
+
 If you use the :ref:`applymanifests_marker`, as described in the previous section,
 the manifest will be loaded and created for you in the test case namespace of your
 cluster (test case namespaces are automatically managed via the :ref:`kube_fixture`).
@@ -147,6 +151,7 @@ It can also be done through the resource reference itself
 
 Deleting Resources
 ------------------
+
 It is not necessary to delete resources at the end of a test case. kubetest
 automatically manages the namespace for the test case. When the test completes,
 it will delete the namespace from the cluster which will also delete any remaining
@@ -172,8 +177,18 @@ through the ``kube`` client
         # Method #2 - delete via the object reference
         deployment.delete()
 
+Test Namespaces
+---------------
+
+By default, ``kubetest`` will automatically generate a new Namespace for each test case,
+using the test name and a timestamp for the namespace name to ensure uniqueness. This behavior
+may not be desired in all cases, such as when users may not have permissions to create a new
+namespace on the cluster, or the tests are written against an already-running deployment in
+an existing namespace. In such cases, the :ref:`_namespace_marker` may be used.
+
 Waiting
 -------
+
 The time it takes for a resource to start, stop, or become ready can vary across
 numerous factors. It is not always reliable to just ``time.sleep(10)`` and hope that
 the desired state is met (nor is it efficient). To help with this, there are a number
@@ -184,6 +199,7 @@ Below are some simple examples of select wait function usage.
 
 Ready Nodes
 ~~~~~~~~~~~
+
 If you are running on a cluster that can scale automatically, you may need to wait
 for the correct number of nodes to be available and ready before the test can run.
 
@@ -197,6 +213,7 @@ for the correct number of nodes to be available and ready before the test can ru
 
 Created Object
 ~~~~~~~~~~~~~~
+
 Wait until an object has been created on the cluster.
 
 .. code-block:: python
@@ -209,6 +226,7 @@ Wait until an object has been created on the cluster.
 
 Pod Containers Start
 ~~~~~~~~~~~~~~~~~~~~
+
 Wait until a Pod's containers have all started.
 
 .. code-block:: python

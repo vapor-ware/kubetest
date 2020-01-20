@@ -1,6 +1,7 @@
 
 Fixtures
 ========
+
 This section defines the `fixtures <https://docs.pytest.org/en/latest/fixture.html>`_
 that ``kubetest`` makes available when installed.
 
@@ -20,6 +21,7 @@ kube
 
 Summary
 ~~~~~~~
+
 The ``kube`` fixture is the "entrypoint" for using kubetest. In addition to returning
 a client that can be used to manage your cluster from within the test case, it also
 provides automatic management of the test case on the cluster.
@@ -34,6 +36,7 @@ For the full API for the test client provided by the ``kube`` fixture, see the
 
 Example Usage
 ~~~~~~~~~~~~~
+
 Below is a simple trivial example of how the ``kube`` fixture can be used.
 See the :ref:`examples` page for more.
 

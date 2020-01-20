@@ -19,7 +19,7 @@ class ClusterRoleBinding(ApiObject):
     API Object and provides some state management for the `ClusterRoleBinding`_.
 
     .. _ClusterRoleBinding:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#clusterrolebinding-v1-rbac-authorization-k8s-io
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#clusterrolebinding-v1-rbac-authorization-k8s-io
     """
 
     obj_type = client.V1ClusterRoleBinding
@@ -31,26 +31,21 @@ class ClusterRoleBinding(ApiObject):
         'rbac.authorization.k8s.io/v1beta1': client.RbacAuthorizationV1beta1Api,
     }
 
-    def __str__(self):
-        return str(self.obj)
-
-    def __repr__(self):
-        return self.__str__()
-
-    def create(self, namespace=None):
+    def create(self, namespace: str = None) -> None:
         """Create the ClusterRoleBinding under the given namespace.
 
         Args:
-            namespace (str): This argument is ignored for ClusterRoleBindings.
+            namespace: This argument is ignored for ClusterRoleBindings.
         """
-        log.info('creating clusterrolebinding "%s" in namespace "%s"', self.name, self.namespace)  # noqa
-        log.debug('clusterrolebinding: %s', self.obj)
+        log.info(
+            f'creating clusterrolebinding "{self.name}" in namespace "{self.namespace}"')
+        log.debug(f'clusterrolebinding: {self.obj}')
 
         self.obj = self.api_client.create_cluster_role_binding(
             body=self.obj,
         )
 
-    def delete(self, options):
+    def delete(self, options: client.V1DeleteOptions = None) -> client.V1Status:
         """Delete the ClusterRoleBinding.
 
         This method expects the ClusterRoleBinding to have been loaded or otherwise
@@ -58,30 +53,30 @@ class ClusterRoleBinding(ApiObject):
         to be set manually.
 
         Args:
-             options (client.V1DeleteOptions): Options for ClusterRoleBinding deletion.
+             options: Options for ClusterRoleBinding deletion.
 
         Returns:
-            client.V1Status: The status of the delete operation.
+            The status of the delete operation.
         """
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting clusterrolebinding "%s"', self.name)
-        log.debug('delete options: %s', options)
-        log.debug('clusterrolebinding: %s', self.obj)
+        log.info(f'deleting clusterrolebinding "{self.name}"')
+        log.debug(f'delete options: {options}')
+        log.debug(f'clusterrolebinding: {self.obj}')
 
         return self.api_client.delete_cluster_role_binding(
             name=self.name,
             body=options,
         )
 
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh the underlying Kubernetes ClusterRoleBinding resource."""
         self.obj = self.api_client.read_cluster_role_binding(
             name=self.name
         )
 
-    def is_ready(self):
+    def is_ready(self) -> bool:
         """Check if the ClusterRoleBinding is in the ready state.
 
         ClusterRoleBindings do not have a "status" field to check, so we
@@ -89,7 +84,7 @@ class ClusterRoleBinding(ApiObject):
         on the cluster.
 
         Returns:
-            bool: True if in the ready state; False otherwise.
+            True if in the ready state; False otherwise.
         """
         try:
             self.refresh()

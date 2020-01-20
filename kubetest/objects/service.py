@@ -1,6 +1,7 @@
 """Kubetest wrapper for the Kubernetes ``Service`` API Object."""
 
 import logging
+from typing import List
 
 from kubernetes import client
 
@@ -19,7 +20,7 @@ class Service(ApiObject):
     API Object and provides some state management for the `Service`_.
 
     .. _Service:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#service-v1-core
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#service-v1-core
     """
 
     obj_type = client.V1Service
@@ -29,17 +30,11 @@ class Service(ApiObject):
         'v1': client.CoreV1Api,
     }
 
-    def __str__(self):
-        return str(self.obj)
-
-    def __repr__(self):
-        return self.__str__()
-
-    def create(self, namespace=None):
+    def create(self, namespace: str = None) -> None:
         """Create the Service under the given namespace.
 
         Args:
-            namespace (str): The namespace to create the Service under.
+            namespace: The namespace to create the Service under.
                 If the Service was loaded via the kubetest client, the
                 namespace will already be set, so it is not needed here.
                 Otherwise, the namespace will need to be provided.
@@ -47,15 +42,15 @@ class Service(ApiObject):
         if namespace is None:
             namespace = self.namespace
 
-        log.info('creating service "%s" in namespace "%s"', self.name, self.namespace)
-        log.debug('service: %s', self.obj)
+        log.info(f'creating service "{self.name}" in namespace "{self.namespace}"')
+        log.debug(f'service: {self.obj}')
 
         self.obj = self.api_client.create_namespaced_service(
             namespace=namespace,
             body=self.obj,
         )
 
-    def delete(self, options):
+    def delete(self, options: client.V1DeleteOptions = None) -> client.V1Status:
         """Delete the Service.
 
         This method expects the Service to have been loaded or otherwise
@@ -63,17 +58,17 @@ class Service(ApiObject):
         to be set manually.
 
         Args:
-            options (client.V1DeleteOptions): Options for Service deletion.
+            options: Options for Service deletion.
 
         Returns:
-            client.V1Status: The status of the delete operation.
+            The status of the delete operation.
         """
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting service "%s"', self.name)
-        log.debug('delete options: %s', options)
-        log.debug('service: %s', self.obj)
+        log.info(f'deleting service "{self.name}"')
+        log.debug(f'delete options: {options}')
+        log.debug(f'service: {self.obj}')
 
         return self.api_client.delete_namespaced_service(
             name=self.name,
@@ -81,14 +76,14 @@ class Service(ApiObject):
             body=options,
         )
 
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh the underlying Kubernetes Service resource."""
         self.obj = self.api_client.read_namespaced_service(
             name=self.name,
             namespace=self.namespace,
         )
 
-    def is_ready(self):
+    def is_ready(self) -> bool:
         """Check if the Service is in the ready state.
 
         The readiness state is not clearly available from the Service
@@ -101,7 +96,7 @@ class Service(ApiObject):
         so this will never resolve to True.
 
         Returns:
-            bool: True if in the ready state; False otherwise.
+            True if in the ready state; False otherwise.
         """
         self.refresh()
 
@@ -138,30 +133,29 @@ class Service(ApiObject):
         # must also be ready
         return True
 
-    def status(self):
+    def status(self) -> client.V1ServiceStatus:
         """Get the status of the Service.
 
         Returns:
-            client.V1ServiceStatus: The status of the Service.
+            The status of the Service.
         """
-        log.info('checking status of service "%s"', self.name)
+        log.info(f'checking status of service "{self.name}"')
         # first, refresh the service state to ensure the latest status
         self.refresh()
 
         # return the status from the service
         return self.obj.status
 
-    def get_endpoints(self):
+    def get_endpoints(self) -> List[client.V1Endpoints]:
         """Get the endpoints for the Service.
 
         This can be useful for checking internal IP addresses used
         in containers, e.g. for container auto-discovery.
 
         Returns:
-            list[client.V1Endpoints]: A list of endpoints associated
-            with the Service.
+            A list of endpoints associated with the Service.
         """
-        log.info('getting endpoints for service "%s"', self.name)
+        log.info(f'getting endpoints for service "{self.name}"')
         endpoints = self.api_client.list_namespaced_endpoints(
             namespace=self.namespace,
         )
@@ -173,20 +167,20 @@ class Service(ApiObject):
             if endpoint.metadata.name == self.name:
                 svc_endpoints.append(endpoint)
 
-        log.debug('endpoints: %s', svc_endpoints)
+        log.debug(f'endpoints: {svc_endpoints}')
         return svc_endpoints
 
-    def proxy_http_get(self, path):
+    def proxy_http_get(self, path: str) -> str:
         """Issue a GET request to proxy of a Service.
 
         Args:
-            path (str): The URI path for the request.
+            path: The URI path for the request.
 
         Returns:
-            str: The response data
+            The response data
         """
         return client.CoreV1Api().connect_get_namespaced_service_proxy_with_path(
-            name="{}:{}".format(self.name, self.obj.spec.ports[0].port),
+            name=f'{self.name}:{self.obj.spec.ports[0].port}',
             namespace=self.namespace,
             path=path,
         )

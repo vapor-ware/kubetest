@@ -2,6 +2,7 @@
 
 import logging
 import uuid
+from typing import List
 
 from kubernetes import client
 
@@ -23,7 +24,7 @@ class Deployment(ApiObject):
     API Object and provides some state management for the `Deployment`_.
 
     .. _Deployment:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#deployment-v1-apps
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#deployment-v1-apps
     """
 
     obj_type = client.V1Deployment
@@ -35,17 +36,11 @@ class Deployment(ApiObject):
         'apps/v1beta2': client.AppsV1beta2Api,
     }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         super(Deployment, self).__init__(*args, **kwargs)
         self._add_kubetest_labels()
 
-    def __str__(self):
-        return str(self.obj)
-
-    def __repr__(self):
-        return self.__str__()
-
-    def _add_kubetest_labels(self):
+    def _add_kubetest_labels(self) -> None:
         """Add a kubetest label to the Deployment object.
 
         This allows kubetest to more easily and reliably search for and aggregate
@@ -54,8 +49,13 @@ class Deployment(ApiObject):
         The kubetest label key is "kubetest/<obj kind>" where the obj kind is
         the lower-cased kind of the obj.
         """
-        self.klabel_uid = str(uuid.uuid4())
         self.klabel_key = 'kubetest/deployment'
+        if self.obj.metadata.labels:
+            self.klabel_uid = self.obj.metadata.labels.get(self.klabel_key, None)
+        else:
+            self.klabel_uid = None
+        if not self.klabel_uid:
+            self.klabel_uid = str(uuid.uuid4())
 
         # fixme: it would be nice to clean up this label setting logic a bit
         #   and possibly abstract it out to something more generalized, but
@@ -96,11 +96,11 @@ class Deployment(ApiObject):
         if self.klabel_key not in self.obj.spec.template.metadata.labels:
             self.obj.spec.template.metadata.labels[self.klabel_key] = self.klabel_uid
 
-    def create(self, namespace=None):
+    def create(self, namespace: str = None) -> None:
         """Create the Deployment under the given namespace.
 
         Args:
-            namespace (str): The namespace to create the Deployment under.
+            namespace: The namespace to create the Deployment under.
                 If the Deployment was loaded via the kubetest client, the
                 namespace will already be set, so it is not needed here.
                 Otherwise, the namespace will need to be provided.
@@ -108,15 +108,15 @@ class Deployment(ApiObject):
         if namespace is None:
             namespace = self.namespace
 
-        log.info('creating deployment "%s" in namespace "%s"', self.name, self.namespace)
-        log.debug('deployment: %s', self.obj)
+        log.info(f'creating deployment "{self.name}" in namespace "{self.namespace}"')
+        log.debug(f'deployment: {self.obj}')
 
         self.obj = self.api_client.create_namespaced_deployment(
             namespace=namespace,
             body=self.obj,
         )
 
-    def delete(self, options):
+    def delete(self, options: client.V1DeleteOptions = None) -> client.V1Status:
         """Delete the Deployment.
 
         This method expects the Deployment to have been loaded or otherwise
@@ -124,17 +124,17 @@ class Deployment(ApiObject):
         to be set manually.
 
         Args:
-            options (client.V1DeleteOptions): Options for Deployment deletion.
+            options: Options for Deployment deletion.
 
         Returns:
-            client.V1Status: The status of the delete operation.
+            The status of the delete operation.
         """
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting deployment "%s"', self.name)
-        log.debug('delete options: %s', options)
-        log.debug('deployment: %s', self.obj)
+        log.info(f'deleting deployment "{self.name}"')
+        log.debug(f'delete options: {options}')
+        log.debug(f'deployment: {self.obj}')
 
         return self.api_client.delete_namespaced_deployment(
             name=self.name,
@@ -142,18 +142,18 @@ class Deployment(ApiObject):
             body=options,
         )
 
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh the underlying Kubernetes Deployment resource."""
         self.obj = self.api_client.read_namespaced_deployment_status(
             name=self.name,
             namespace=self.namespace,
         )
 
-    def is_ready(self):
+    def is_ready(self) -> bool:
         """Check if the Deployment is in the ready state.
 
         Returns:
-            bool: True if in the ready state; False otherwise.
+            True if in the ready state; False otherwise.
         """
         self.refresh()
 
@@ -174,26 +174,26 @@ class Deployment(ApiObject):
 
         return total == ready
 
-    def status(self):
+    def status(self) -> client.V1DeploymentStatus:
         """Get the status of the Deployment.
 
         Returns:
-            client.V1DeploymentStatus: The status of the Deployment.
+            The status of the Deployment.
         """
-        log.info('checking status of deployment "%s"', self.name)
+        log.info(f'checking status of deployment "{self.name}"')
         # first, refresh the deployment state to ensure the latest status
         self.refresh()
 
         # return the status from the deployment
         return self.obj.status
 
-    def get_pods(self):
+    def get_pods(self) -> List[Pod]:
         """Get the pods for the Deployment.
 
         Returns:
-            list[Pod]: A list of pods that belong to the deployment.
+            A list of pods that belong to the deployment.
         """
-        log.info('getting pods for deployment "%s"', self.name)
+        log.info(f'getting pods for deployment "{self.name}"')
 
         pods = client.CoreV1Api().list_namespaced_pod(
             namespace=self.namespace,
@@ -201,5 +201,5 @@ class Deployment(ApiObject):
         )
 
         pods = [Pod(p) for p in pods.items]
-        log.debug('pods: %s', pods)
+        log.debug(f'pods: {pods}')
         return pods

@@ -19,7 +19,7 @@ class RoleBinding(ApiObject):
     API Object and provides some state management for the `RoleBinding`_.
 
     .. _RoleBinding:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#rolebinding-v1-rbac-authorization-k8s-io
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#rolebinding-v1-rbac-authorization-k8s-io
     """
 
     obj_type = client.V1RoleBinding
@@ -31,17 +31,11 @@ class RoleBinding(ApiObject):
         'rbac.authorization.k8s.io/v1beta1': client.RbacAuthorizationV1beta1Api,
     }
 
-    def __str__(self):
-        return str(self.obj)
-
-    def __repr__(self):
-        return self.__str__()
-
-    def create(self, namespace=None):
+    def create(self, namespace: str = None) -> None:
         """Create the RoleBinding under the given namespace.
 
         Args:
-            namespace (str): The namespace to create the RoleBinding under.
+            namespace: The namespace to create the RoleBinding under.
                 If the RoleBinding was loaded via the kubetest client, the
                 namespace will already be set, so it is not needed here.
                 Otherwise, the namespace will need to be provided.
@@ -49,15 +43,15 @@ class RoleBinding(ApiObject):
         if namespace is None:
             namespace = self.namespace
 
-        log.info('creating rolebinding "%s" in namespace "%s"', self.name, self.namespace)  # noqa
-        log.debug('rolebinding: %s', self.obj)
+        log.info(f'creating rolebinding "{self.name}" in namespace "{self.namespace}"')  # noqa
+        log.debug(f'rolebinding: {self.obj}')
 
         self.obj = self.api_client.create_namespaced_role_binding(
             namespace=namespace,
             body=self.obj,
         )
 
-    def delete(self, options):
+    def delete(self, options: client.V1DeleteOptions = None) -> client.V1Status:
         """Delete the RoleBinding.
 
         This method expects the RoleBinding to have been loaded or otherwise
@@ -65,17 +59,17 @@ class RoleBinding(ApiObject):
         to be set manually.
 
         Args:
-             options (client.V1DeleteOptions): Options for RoleBinding deletion.
+             options: Options for RoleBinding deletion.
 
         Returns:
-            client.V1Status: The status of the delete operation.
+            The status of the delete operation.
         """
         if options is None:
             options = client.V1DeleteOptions()
 
-        log.info('deleting rolebinding "%s"', self.name)
-        log.debug('delete options: %s', options)
-        log.debug('rolebinding: %s', self.obj)
+        log.info(f'deleting rolebinding "{self.name}"')
+        log.debug(f'delete options: {options}')
+        log.debug(f'rolebinding: {self.obj}')
 
         return self.api_client.delete_namespaced_role_binding(
             namespace=self.namespace,
@@ -83,14 +77,14 @@ class RoleBinding(ApiObject):
             body=options,
         )
 
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh the underlying Kubernetes RoleBinding resource."""
         self.obj = self.api_client.read_namespaced_role_binding(
             namespace=self.namespace,
             name=self.name,
         )
 
-    def is_ready(self):
+    def is_ready(self) -> bool:
         """Check if the RoleBinding is in the ready state.
 
         RoleBindings do not have a "status" field to check, so we
@@ -98,7 +92,7 @@ class RoleBinding(ApiObject):
         on the cluster.
 
         Returns:
-            bool: True if in the ready state; False otherwise.
+            True if in the ready state; False otherwise.
         """
         try:
             self.refresh()

@@ -155,7 +155,9 @@ class TestLoadType:
                 os.path.join(manifest_dir, 'simple-service.yaml')
             )
 
-    def test_simple_customresourcedefinition_ok(self, manifest_dir, simple_customresourcedefinition):
+    def test_simple_customresourcedefinition_ok(self,
+                                                manifest_dir,
+                                                simple_customresourcedefinition):
         """Test loading the simple customresourcedefinition successfully."""
         obj = manifest.load_type(
             client.V1beta1CustomResourceDefinition,

@@ -8,7 +8,8 @@ from kubernetes import client
 
 from kubetest import manager
 from kubetest.manifest import load_file, load_path
-from kubetest.objects import ApiObject, ClusterRoleBinding, RoleBinding
+from kubetest.objects import (ApiObject, ClusterRoleBinding, PersistentVolume,
+                              RoleBinding)
 
 APPLYMANIFEST_INI = (
     'applymanifest(path): '
@@ -63,6 +64,13 @@ ROLEBINDING_INI = (
     'see: https://kubernetes.io/docs/reference/access-authn-authz/rbac/'
 )
 
+PERSISTENTVOLUME_INI = (
+    'persistentvolume(name, subject_kind=None, subject_name=None): '
+    'create and use a Kubernetes PersistentVolume for the test case. The generated '
+    'persistent volume will be automatically created and removed for each marked '
+    'test. The name of the volume must be specified. Only existing PersistentVolume can be '
+    'used.'
+)
 
 NAMESPACE_INI = (
     'namespace(create=True, name=None): '
@@ -85,6 +93,7 @@ def register(config) -> None:
     config.addinivalue_line('markers', APPLYMANIFESTS_INI)
     config.addinivalue_line('markers', CLUSTERROLEBINDING_INI)
     config.addinivalue_line('markers', ROLEBINDING_INI)
+    config.addinivalue_line('markers', PERSISTENTVOLUME_INI)
     config.addinivalue_line('markers', NAMESPACE_INI)
 
 
@@ -258,6 +267,37 @@ def clusterrolebindings_from_marker(item: pytest.Item, namespace: str) -> List[C
         )))
 
     return clusterrolebindings
+
+
+def persistentvolumes_from_marker(item: pytest.Item) -> List[PersistentVolume]:
+    """Create PersistentVolume for the test case if the test case is marked
+    with the `pytest.mark.persistentvolume` marker.
+
+    Args:
+        item: The pytest test item.
+
+    Return:
+        The PersistentVolumes which were generated from the test case markers.
+    """
+
+    persistentvolumes = []
+    for mark in item.iter_markers(name='persistentvolume'):
+        name = mark.args[0]
+        subj_kind = mark.kwargs.get('subject_kind')
+        subj_name = mark.kwargs.get('subject_name')
+
+        persistentvolumes.append(PersistentVolume(client.V1PersistentVolume(
+            metadata=client.V1ObjectMeta(
+                name=f'kubetest:{item.name}',
+            ),
+            spec=client.V1PersistentVolumeSpec(
+                api_group='storage.k8s.io',
+                kind='PersistentVolume',
+                name=name,
+            )
+        )))
+
+    return persistentvolumes
 
 
 def get_custom_rbac_subject(namespace: str, kind: str, name: str) -> List[client.V1Subject]:

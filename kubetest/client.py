@@ -231,7 +231,7 @@ class TestClient:
             service.namespace = self.namespace
         return service
 
-    def load_persistentvolume(self, path, set_namespace=False):
+    def load_persistentvolume(self, path, set_namespace=False) -> objects.PersistentVolume:
         """Load a manifest YAML into a PersistentVolume object.
 
         By default, this will not augment the PersistentVolume object with
@@ -252,7 +252,7 @@ class TestClient:
             persistentvolume.namespace = self.namespace
         return persistentvolume
 
-    def load_persistentvolumeclaim(self, path, set_namespace=True):
+    def load_persistentvolumeclaim(self, path, set_namespace=True) -> objects.PersistentVolumeClaim:
         """Load a manifest YAML into a PersistentVolumeClaim object.
 
         By default, this will augment the PersistentVolumeClaim object with
@@ -635,8 +635,8 @@ class TestClient:
 
         return secrets
 
-    def get_persistentvolume(self, fields=None, labels=None):
-        """Get PersistentVolume from the cluster.
+    def get_persistentvolumes(self, fields=None, labels=None):
+        """Get PersistentVolumes from the cluster.
 
         Args:
             fields (dict[str, str]): A dictionary of fields used to restrict
@@ -663,8 +663,8 @@ class TestClient:
 
         return persistentvolumes
 
-    def get_persistentvolumeclaim(self, namespace=None, fields=None, labels=None):
-        """Get PersistentVolumeClaim from the cluster.
+    def get_persistentvolumeclaims(self, namespace=None, fields=None, labels=None):
+        """Get PersistentVolumeClaims from the cluster.
 
         Args:
             namespace (str): The namespace to get the PersistentVolumeClaim from. If not

@@ -247,6 +247,9 @@ def pytest_runtest_setup(item):
         test_case.register_clusterrolebindings(
             *markers.clusterrolebindings_from_marker(item, test_case.ns)
         )
+        test_case.register_persistentvolumes(
+            *markers.persistentvolumes_from_marker(item)
+        )
 
         # Apply manifests for the test case, if any are specified.
         markers.apply_manifests_from_marker(item, test_case)

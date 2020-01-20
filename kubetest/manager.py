@@ -160,7 +160,7 @@ class TestMeta:
         self.namespace_create = namespace_create
         self.rolebindings = []
         self.clusterrolebindings = []
-        self.persistentvolume = []
+        self.persistentvolumes = []
 
         self.test_objects = ObjectManager()
 
@@ -233,7 +233,7 @@ class TestMeta:
 
         # PersistentVolume are not bound to a namespace, so we will need
         # to delete them ourselves.
-        for pv in self.persistentvolume:
+        for pv in self.persistentvolumes:
             self.client.delete(pv)
 
     def yield_container_logs(self, tail_lines: int = None) -> Generator[str, None, None]:
@@ -309,7 +309,10 @@ class TestMeta:
         """
         self.clusterrolebindings.extend(clusterrolebindings)
 
-    def register_persistentvolumes(self, *persistentvolumes):
+    def register_persistentvolumes(
+        self,
+        *persistentvolumes: objects.PersistentVolume
+    ) -> None:
         """Register a PersistentVolume requirement with the test case.
 
         Args:

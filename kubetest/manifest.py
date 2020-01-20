@@ -147,13 +147,13 @@ def new_object(root_type, config):
     """Create a new Kubernetes API object and recursively populate it with
     the provided manifest configuration.
 
-    The recursive population utilizes the swagger_types and attribute_map
+    The recursive population utilizes the swagger_types/openapi_types and attribute_map
     members of the Kubernetes API object class to determine which config
     fields correspond to which input parameter, and to cast them to their
     expected type.
 
     This is all based on the premise that the Python Kubernetes client will
-    continue to be based off of an auto-generated Swagger spec and that these
+    continue to be based off of an auto-generated Swagger/Openapi spec and that these
     fields will be available for all API objects.
 
     Args:
@@ -180,8 +180,11 @@ def new_object(root_type, config):
 
             # The config value matches an expected key in the attribute dict.
             # Now, we want to cast that config to the appropriate type based
-            # on the contents of the 'swagger_types' dict.
-            t = root_type.swagger_types[k]
+            # on the contents of the 'swagger_types'/'openapi_types' dict.
+            if hasattr(root_type, 'swagger_types'):
+                t = root_type.swagger_types[k]
+            else:
+                t = root_type.openapi_types[k]
 
             # There are two classes of types we will want to check against:
             # 'base types' (like: str, int, etc) and 'collection types'

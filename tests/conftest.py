@@ -170,41 +170,40 @@ def simple_service():
 def simple_customresourcedefinition():
     """Return the Kubernetes config matching the simple-customresourcedefinition.yaml manifest."""
     return client.V1beta1CustomResourceDefinition(
-            api_version="apiextensions.k8s.io/v1beta1",
-            kind="CustomResourceDefinition",
-            metadata=client.V1ObjectMeta(name="accounts.example.com"),
-            spec=client.V1beta1CustomResourceDefinitionSpec(
-                group="example.com",
-                scope="Namespaced",
-                names=client.V1beta1CustomResourceDefinitionNames(
+        api_version="apiextensions.k8s.io/v1beta1",
+        kind="CustomResourceDefinition",
+        metadata=client.V1ObjectMeta(name="accounts.example.com"),
+        spec=client.V1beta1CustomResourceDefinitionSpec(
+            group="example.com",
+            scope="Namespaced",
+            names=client.V1beta1CustomResourceDefinitionNames(
                     plural="accounts",
                     singular="account",
                     kind="Account",
                     short_names=["acc"],
-                ),
-                versions=[
-                    client.V1beta1CustomResourceDefinitionVersion(
-                        name="v1alpha1",
-                        served=True,
-                        storage=True,
-                        schema=client.V1beta1CustomResourceValidation(
-                            open_apiv3_schema=client.V1beta1JSONSchemaProps(
-                                type="object",
-                                properties={
-                                    "spec": client.V1beta1JSONSchemaProps(
-                                        type="object",
-                                        properties={
-                                            "login": client.V1beta1JSONSchemaProps(type="string"),
-                                            "password": client.V1beta1JSONSchemaProps(type="string"),
-                                            "auth_plugin": client.V1beta1JSONSchemaProps(type="string"),
-                                        },
-                                        required=["login", "password", "auth_plugin"]
-                                    )
-                                },
-                            )
+            ),
+            versions=[
+                client.V1beta1CustomResourceDefinitionVersion(
+                    name="v1alpha1",
+                    served=True,
+                    storage=True,
+                    schema=client.V1beta1CustomResourceValidation(
+                        open_apiv3_schema=client.V1beta1JSONSchemaProps(
+                            type="object",
+                            properties={
+                                "spec": client.V1beta1JSONSchemaProps(
+                                    type="object",
+                                    properties={
+                                        "login": client.V1beta1JSONSchemaProps(type="string"),
+                                        "password": client.V1beta1JSONSchemaProps(type="string"),
+                                        "auth_plugin": client.V1beta1JSONSchemaProps(type="string"),
+                                    },
+                                    required=["login", "password", "auth_plugin"]
+                                )
+                            },
                         )
                     )
-                ]
-            ),
-        )
-
+                )
+            ]
+        ),
+    )

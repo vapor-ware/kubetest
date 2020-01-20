@@ -28,6 +28,7 @@ class ObjectManager:
     # applied when creating them on the cluster.
     ordered_buckets = [
         'namespace',
+        'customresourcedefinition',
         'rolebinding',
         'clusterrolebinding',
         'secret',

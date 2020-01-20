@@ -4,6 +4,7 @@
 
 from .api_object import ApiObject
 from .clusterrolebinding import ClusterRoleBinding
+from .customresourcedefinition import CustomResourceDefinition
 from .configmap import ConfigMap
 from .container import Container
 from .daemonset import DaemonSet

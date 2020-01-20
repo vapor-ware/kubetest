@@ -155,6 +155,14 @@ class TestLoadType:
                 os.path.join(manifest_dir, 'simple-service.yaml')
             )
 
+    def test_simple_customresourcedefinition_ok(self, manifest_dir, simple_customresourcedefinition):
+        """Test loading the simple customresourcedefinition successfully."""
+        obj = manifest.load_type(
+            client.V1beta1CustomResourceDefinition,
+            os.path.join(manifest_dir, 'simple-customresourcedefinition.yaml')
+        )
+        assert obj == simple_customresourcedefinition
+
     def test_bad_path(self, manifest_dir):
         """Test specifying an invalid manifest path."""
         with pytest.raises(FileNotFoundError):
@@ -214,6 +222,13 @@ class TestGetType:
                     'kind': 'ClusterRoleBinding'
                 },
                 client.V1beta1ClusterRoleBinding
+            ),
+            (
+                {
+                    'apiVersion': 'apiextensions.k8s.io/v1beta1',
+                    'kind': 'CustomResourceDefinition'
+                },
+                client.V1beta1CustomResourceDefinition
             ),
         ]
     )

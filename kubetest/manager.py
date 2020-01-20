@@ -145,6 +145,7 @@ class TestMeta:
 
         self.rolebindings = []
         self.clusterrolebindings = []
+        self.persistentvolume = []
 
         self.test_objects = ObjectManager()
 
@@ -179,6 +180,10 @@ class TestMeta:
         for crb in self.clusterrolebindings:
             self.client.create(crb)
 
+        # if there are any persistent volumes, create them.
+        for pv in self.persistentvolumes:
+            self.client.create(pv)
+
         # if any objects were registered with the test case via the
         # `applymanifests` marker, register them to the test client
         # and add them to the cluster now
@@ -210,6 +215,11 @@ class TestMeta:
         # to delete them ourselves.
         for crb in self.clusterrolebindings:
             self.client.delete(crb)
+
+        # PersistentVolume are not bound to a namespace, so we will need
+        # to delete them ourselves.
+        for pv in self.persistentvolume:
+            self.client.delete(pv)
 
     def yield_container_logs(self, tail_lines=None):
         """Yield the container logs for the test case.
@@ -285,6 +295,15 @@ class TestMeta:
                 that are needed for the test case.
         """
         self.clusterrolebindings.extend(clusterrolebindings)
+
+    def register_persistentvolumes(self, *persistentvolumes):
+        """Register a PersistentVolume requirement with the test case.
+
+        Args:
+            *persistentvolumes (PersistentVolume): The PersistentVolumes
+                that are needed for the test case.
+        """
+        self.persistentvolumes.extend(persistentvolumes)
 
     def register_objects(self, api_objects):
         """Register the provided objects with the test case.

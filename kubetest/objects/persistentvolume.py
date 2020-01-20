@@ -35,9 +35,11 @@ class PersistentVolume(ApiObject):
     def __repr__(self):
         return self.__str__()
 
-    def create(self):
-        """Create the PersistentVolume.
+    def create(self, namespace=None):
+        """Create the PersistentVolume under the given namespace.
 
+        Args:
+            namespace (str): This argument is ignored for PersistentVolumes.
         """
         log.info('creating persistentvolume "%s"', self.name)
         log.debug('persistentvolume: %s', self.obj)

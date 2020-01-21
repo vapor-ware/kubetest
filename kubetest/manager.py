@@ -33,6 +33,7 @@ class ObjectManager:
         'secret',
         'service',
         'configmap',
+        'persistentvolume',
         'daemonset',
         'statefulset',
         'deployment',
@@ -102,6 +103,7 @@ class ObjectManager:
           - Secret
           - Service
           - ConfigMap
+          - PersistentVolume
           - DaemonSet
           - StatefulSet
           - Deployment
@@ -156,6 +158,7 @@ class TestMeta:
         self.namespace_create = namespace_create
         self.rolebindings = []
         self.clusterrolebindings = []
+        self.persistentvolumes = []
 
         self.test_objects = ObjectManager()
 
@@ -221,6 +224,9 @@ class TestMeta:
         # to delete them ourselves.
         for crb in self.clusterrolebindings:
             self.client.delete(crb)
+
+        for pv in self.persistentvolumes:
+            self.client.delete(pv)
 
     def yield_container_logs(self, tail_lines: int = None) -> Generator[str, None, None]:
         """Yield the container logs for the test case.
@@ -294,6 +300,18 @@ class TestMeta:
                 the test case.
         """
         self.clusterrolebindings.extend(clusterrolebindings)
+
+    def register_persistentvolumes(
+            self,
+            *persistentvolumes: objects.PersistentVolume,
+    ) -> None:
+        """Register a PersistentVolume requirement with the test case.
+
+        Args:
+            persistentvolumes: The PersistentVolume that are needed for
+                the test case.
+        """
+        self.persistentvolumes.extend(persistentvolumes)
 
     def register_objects(self, api_objects: List[objects.ApiObject]):
         """Register the provided objects with the test case.

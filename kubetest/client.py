@@ -231,6 +231,29 @@ class TestClient:
             service.namespace = self.namespace
         return service
 
+    def load_persistentvolume(self, path, set_namespace=False):
+        """Load a manifest YAML into a Service object.
+
+        By default, this will augment the Service object with
+        the generated test case namespace. This behavior can be
+        disabled with the ``set_namespace`` flag.
+
+        Args:
+            path (str): The path to the Service manifest.
+            set_namespace (bool): Enable/disable the automatic
+                augmentation of the Service namespace.
+
+        Returns:
+            objects.Service: The Service for the specified manifest.
+        """
+        log.info('loading persistentvolume from path: %s', path)
+        persistentvolume = objects.PersistentVolume.load(path)
+        if set_namespace:
+            persistentvolume.namespace = self.namespace
+        return persistentvolume
+
+    # ****** Generic Helpers on ApiObjects ******
+
     def load_statefulset(self, path: str, set_namespace: bool = True) -> objects.StatefulSet:
         """Load a manifest YAML into a StatefulSet object.
 
@@ -630,6 +653,34 @@ class TestClient:
             services[service.name] = service
 
         return services
+
+    def get_persistentvolumes(self, fields=None, labels=None):
+        """Get PersistentVolume from the cluster.
+
+        Args:
+            fields (dict[str, str]): A dictionary of fields used to restrict
+                the returned collection of PersistentVolume to only those which match
+                these field selectors. By default, no restricting is done.
+            labels (dict[str, str]): A dictionary of labels used to restrict
+                the returned collection of PersistentVolume to only those which match
+                these label selectors. By default, no restricting is done.
+
+        Returns:
+            dict[str, objects.PersistentVolume]: A dictionary where the key is
+            the PersistentVolume name and the value is the PersistentVolume itself.
+        """
+        selectors = utils.selector_kwargs(fields, labels)
+
+        persistentvolume_list = client.CoreV1Api().list_persistent_volume(
+                **selectors
+        )
+
+        persistentvolumes = {}
+        for obj in persistentvolume_list.items:
+            persistentvolume = objects.PersistentVolume(obj)
+            persistentvolumes[persistentvolume.name] = persistentvolume
+
+        return persistentvolumes
 
     def get_statefulsets(
             self,

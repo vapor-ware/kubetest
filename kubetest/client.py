@@ -231,6 +231,28 @@ class TestClient:
             service.namespace = self.namespace
         return service
 
+    def load_persistentvolumeclaim(self, path, set_namespace=True):
+        """Load a manifest YAML into a PersistentVolumeClaim object.
+
+        By default, this will augment the PersistentVolumeClaim object with
+        the generated test case namespace. This behavior can be
+        disabled with the ``set_namespace`` flag.
+
+        Args:
+            path (str): The path to the PersistentVolumeClaim manifest.
+            set_namespace (bool): Enable/disable the automatic
+                augmentation of the PersistentVolumeClaim namespace.
+
+        Returns:
+            objects.PersistentVolumeClaim: The PersistentVolumeClaim for the specified
+            manifest.
+        """
+        log.info('loading persistentvolumeclaim from path: %s', path)
+        persistentvolumeclaim = objects.PersistentVolumeClaim.load(path)
+        if set_namespace:
+            persistentvolumeclaim.namespace = self.namespace
+        return persistentvolumeclaim
+
     def load_statefulset(self, path: str, set_namespace: bool = True) -> objects.StatefulSet:
         """Load a manifest YAML into a StatefulSet object.
 
@@ -630,6 +652,43 @@ class TestClient:
             services[service.name] = service
 
         return services
+
+    def get_persistentvolumeclaims(self, namespace=None, fields=None, labels=None):
+        """Get PersistentVolumeClaims from the cluster.
+
+        Args:
+            namespace (str): The namespace to get the PersistentVolumeClaim from. If not
+                specified, it will use the auto-generated test case namespace
+                by default.
+            fields (dict[str, str]): A dictionary of fields used to restrict
+                the returned collection of PersistentVolumeClaim to only those which match
+                these field selectors. By default, no restricting is done.
+            labels (dict[str, str]): A dictionary of labels used to restrict
+                the returned collection of PersistentVolumeClaim to only those which match
+                these label selectors. By default, no restricting is done.
+
+        Returns:
+            dict[str, objects.PersistentVolumeClaim]: A dictionary where the key is
+            the PersistentVolumeClaim name and the value is the PersistentVolumeClaim
+            itself.
+        """
+        if namespace is None:
+            namespace = self.namespace
+
+        selectors = utils.selector_kwargs(fields, labels)
+
+        persistentvolumeclaim_list = client.CoreV1Api().\
+            list_namespaced_persistent_volume_claim(
+            namespace=namespace,
+            **selectors,
+        )
+
+        persistentvolumeclaims = {}
+        for obj in persistentvolumeclaim_list.items:
+            persistentvolumeclaim = objects.PersistentVolumeClaim(obj)
+            persistentvolumeclaims[persistentvolumeclaim.name] = persistentvolumeclaim
+
+        return persistentvolumeclaims
 
     def get_statefulsets(
             self,

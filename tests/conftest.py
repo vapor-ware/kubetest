@@ -164,3 +164,26 @@ def simple_service():
             ]
         )
     )
+
+
+@pytest.fixture()
+def simple_persistentvolumeclaim():
+    """Return the Kubernetes config matching the simple-persistentvolumeclaim.yaml
+    manifest."""
+    return client.V1PersistentVolumeClaim(
+        api_version='v1',
+        kind='PersistentVolumeClaim',
+        metadata=client.V1ObjectMeta(
+            name='my-pvc'
+        ),
+        spec=client.V1PersistentVolumeClaimSpec(
+            access_modes=[
+                'ReadWriteMany'
+            ],
+            resources=client.V1ResourceRequirements(
+                requests={
+                  'storage': '16Mi'
+                }
+            )
+        )
+    )

@@ -155,6 +155,28 @@ class TestLoadType:
                 os.path.join(manifest_dir, 'simple-service.yaml')
             )
 
+    def test_simple_persistentvolumeclaim_ok(
+        self,
+        manifest_dir,
+        simple_persistentvolumeclaim
+    ):
+        """Test loading the simple persistentvolumeclaim successfully."""
+        obj = manifest.load_type(
+            client.V1PersistentVolumeClaim,
+            os.path.join(manifest_dir, 'simple-persistentvolumeclaim.yaml')
+        )
+        assert obj == simple_persistentvolumeclaim
+
+    def test_simple_persistentvolumeclaim_wrong_type(self, manifest_dir):
+        """Test loading the simple persistentvolumeclaim to the wrong type."""
+        with pytest.raises(ValueError):
+            # The V1Container requires a name -- since the manifest has no name,
+            # it will cause V1Container construction to fail with ValueError.
+            manifest.load_type(
+                client.V1Container,
+                os.path.join(manifest_dir, 'simple-persistentvolumeclaim.yaml')
+            )
+
     def test_bad_path(self, manifest_dir):
         """Test specifying an invalid manifest path."""
         with pytest.raises(FileNotFoundError):

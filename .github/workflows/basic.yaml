@@ -12,7 +12,7 @@ jobs:
       run: docker build --tag=kubetest .
 
     - name: lint
-      run: docker run --volume=/${PWD}:/app --rm kubetest tox -e lint
+      run: docker run --volume=/$$(pwd):/app --rm kubetest tox -e lint
 
     - name: test
-      run: docker run --volume=/${PWD}:/app --rm kubetest tox
+      run: docker run --volume=/$$(pwd):/app --rm kubetest tox

@@ -8,7 +8,8 @@ from kubernetes import client
 
 from kubetest import manager
 from kubetest.manifest import load_file, load_path
-from kubetest.objects import ApiObject, ClusterRoleBinding, RoleBinding
+from kubetest.objects import (ApiObject, ClusterRoleBinding, PersistentVolume,
+                              RoleBinding)
 
 APPLYMANIFEST_INI = (
     'applymanifest(path): '
@@ -74,6 +75,11 @@ NAMESPACE_INI = (
     'the name of the namespace to create/use.'
 )
 
+PERSISTENTVOLUME_INI = (
+    'persistentvolume(create=True, name=None): '
+    'XXX TODO'
+)
+
 
 def register(config) -> None:
     """Register kubetest markers with pytest.
@@ -86,6 +92,7 @@ def register(config) -> None:
     config.addinivalue_line('markers', CLUSTERROLEBINDING_INI)
     config.addinivalue_line('markers', ROLEBINDING_INI)
     config.addinivalue_line('markers', NAMESPACE_INI)
+    config.addinivalue_line('markers', PERSISTENTVOLUME_INI)
 
 
 def apply_manifest_from_marker(item: pytest.Item, meta: manager.TestMeta) -> None:
@@ -336,3 +343,13 @@ def get_default_rbac_subjects(namespace: str) -> List[client.V1Subject]:
             kind='Group',
         ),
     ]
+
+
+def persistentvolumes_from_marker(item: pytest.Item) -> List[PersistentVolume]:
+    pvs = []
+    for mark in item.iter_markers(name='persistentvolume'):
+        import logging
+        logging.error(f'Hello, I have {mark}')
+        # name = mark.args[0]
+
+    return pvs

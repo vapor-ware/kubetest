@@ -182,7 +182,7 @@ def simple_persistentvolumeclaim():
             ],
             resources=client.V1ResourceRequirements(
                 requests={
-                  'storage': '16Mi'
+                    'storage': '16Mi'
                 }
             )
         )

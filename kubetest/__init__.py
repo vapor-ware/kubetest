@@ -1,7 +1,7 @@
 """kubetest -- a Kubernetes integration test framework in Python."""
 
 __title__ = 'kubetest'
-__version__ = '0.5.2'
+__version__ = '0.6.0'
 __description__ = 'A Kubernetes integration test framework in Python.'
 __author__ = 'Vapor IO'
 __author_email__ = 'vapor@vapor.io'

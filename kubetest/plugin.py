@@ -63,6 +63,13 @@ def pytest_addoption(parser):
         help='[DEPRECATED] disable automatic configuration with the kubeconfig file'
     )
 
+    group.addoption(
+        '--in-cluster',
+        action='store_true',
+        default=False,
+        help='use the kubernetes in-cluster config',
+    )
+
     # FIXME (etd) - this was an attempt to fix occasional permissions errors
     # (https://github.com/vapor-ware/kubetest/issues/11) but in doing so, it looks
     # like I hosed my permissions, so I'm just commenting all of this out for now...
@@ -107,6 +114,9 @@ def pytest_report_header(config):
     config_file = config.getoption('kube_config')
     if config_file is None:
         config_file = 'default'
+
+    if config.getoption('in_cluster'):
+        config_file = 'in-cluster'
 
     context = config.getoption('kube_context')
     if context is None:
@@ -271,7 +281,7 @@ def pytest_runtest_teardown(item):
     # to specify the --kube-config arg, this would prevent cleanup with the config was
     # specified via fixture.
     #
-    # Unfortunately, due to the way the fixture is defined, we cannot simple check for
+    # Unfortunately, due to the way the fixture is defined, we cannot simply check for
     # the presence/absence of the kubeconfig fixture in the test `item`, as it is always
     # present since there is a default kubeconfig fixture.
     #
@@ -283,7 +293,11 @@ def pytest_runtest_teardown(item):
     # and allow test cleanup to proceed.
     _, _, fixtures = item.session._fixturemanager.getfixtureclosure(['kubeconfig'], item)
 
-    if item.config.getoption('kube_config') or len(fixtures.get('kubeconfig', [])) > 1:
+    if (
+        item.config.getoption('kube_config') or
+        len(fixtures.get('kubeconfig', [])) > 1 or
+        item.config.getoption('in_cluster')
+    ):
         manager.teardown(item.nodeid)
 
 
@@ -419,12 +433,21 @@ def kubeconfig(request) -> str:
 def kube(kubeconfig, request) -> TestClient:
     """Return a client for managing a Kubernetes cluster for testing."""
 
-    if not kubeconfig:
-        log.error(
-            'kube fixture used when no --kube-config is set; unable to install test '
-            'resources onto a cluster.'
-        )
-        raise errors.SetupError('--kube-config option not set')
+    if request.session.config.getoption('in_cluster'):
+        kubernetes.config.load_incluster_config()
+    else:
+        if kubeconfig:
+            kubernetes.config.load_kube_config(
+                config_file=os.path.expandvars(os.path.expanduser(kubeconfig)),
+                context=request.session.config.getoption('kube_context'),
+            )
+        else:
+            log.error(
+                'unable to interact with cluster: kube fixture used without kube config '
+                'set. the config may be set with the --kube-config or --in-cluster flags '
+                'or by defining a custom kubeconfig fixture.'
+            )
+            raise errors.SetupError('no kube config defined for test run')
 
     test_case = manager.get_test(request.node.nodeid)
     if test_case is None:
@@ -435,10 +458,6 @@ def kube(kubeconfig, request) -> TestClient:
 
     # Setup the test case. This will create the namespace and any other
     # objects (e.g. role bindings) that the test case will need.
-    kubernetes.config.load_kube_config(
-        config_file=os.path.expandvars(os.path.expanduser(kubeconfig)),
-        context=request.session.config.getoption('kube_context'),
-    )
     test_case.setup()
 
     return test_case.client

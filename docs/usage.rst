@@ -10,10 +10,33 @@ Once installed (see :ref:`installation`), the following pytest command-line opti
 
     pytest \
         [--kube-error-log-lines <COUNT>] \
+        [--suppress-insecure-request] \
         [--kube-log-level <LEVEL>] \
         [--kube-context <CONTEXT>] \
         [--kube-config <PATH>] \
-        [--kube-disable]
+        [--kube-disable] \
+        [--in-cluster]
+
+
+
+kubernetes integration test support:
+  --kube-config=path    the kubernetes config for kubetest; this is required
+                        for resources to be installed on the cluster
+  --kube-context=context
+                        the name of the kubernetes config context to use
+  --kube-disable        [DEPRECATED] disable automatic configuration with the
+                        kubeconfig file
+  --in-cluster          use the kubernetes in-cluster config
+  --kube-log-level=KUBE_LOG_LEVEL
+                        log level for the kubetest logger
+  --kube-error-log-lines=KUBE_ERROR_LOG_LINES
+                        set the number of lines to tail from container logs on
+                        error. to show all lines, set this to -1.
+  --suppress-insecure-request=SUPPRESS_INSECURE_REQUEST
+                        suppress the urllib3 InsecureRequestWarning. This is
+                        useful if testing against a cluster without HTTPS set
+                        up.
+
 
 - ``--kube-config <PATH>``
 
@@ -47,3 +70,13 @@ Once installed (see :ref:`installation`), the following pytest command-line opti
     Sets the logging level for kubetest. The default log level is *warining*. Setting
     the log level to *info* will provide logging for kubetest actions. Setting the log
     level to *debug* will log out the Kubernetes object state for various actions as well.
+
+- ``--in-cluster``
+
+    Use the Kubernetes in cluster config. With this specified, you do not need to supply
+    a kube-config via the ``--kube-config`` option.
+
+- ``--suppress-insecure-request``
+
+    Suppress the urllib3 InsecureRequestWarning. This is useful if testing against a
+    cluster without HTTPS set up.

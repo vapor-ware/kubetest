@@ -271,3 +271,62 @@ output should contain some of the container logs. Below is a snippet of what tha
     10.60.58.1 - - [28/Sep/2018:22:20:09 +0000] "GET /foobar HTTP/1.1" 404 168 "-" "Swagger-Codegen/7.0.0/python" "68.162.240.6"
     2018/09/28 22:20:09 [error] 6#0: *1 open() "/usr/share/nginx/html/foobar" failed (2: No such file or directory), client: 10.60.58.1,
     server: localhost, request: "GET /foobar HTTP/1.1", host: "35.232.2.153"
+
+
+Using in-cluster config
+-----------------------
+
+If your test requirements limit you to only be able to run on a cluster where you may not have
+access to the kube config file, you can use in-cluster config instead by setting the ``--in-cluster``
+flag.
+
+As an extremely basic example, suppose you have a simple test case:
+
+.. code-block:: python
+
+   def test_configmap_count(kube):
+       cms = kube.get_configmaps()
+       assert len(cms) == 0
+
+The test could be encapsulated in a Docker container so it could be run on the cluster. Note that
+this could be done in a number of ways, the example below is not meant to exemplify best-practices,
+it is only a basic functioning example.
+
+.. code-block::
+
+   FROM python:3.6-alpine
+
+   RUN pip install pytest
+
+   WORKDIR testdata
+   COPY . .
+   RUN pip install .
+
+   CMD ["pytest", "--in-cluster", "test_something.py"]
+
+Finally, a Job manifest can be created for the test:
+
+.. code-block:: yaml
+
+   apiVersion: batch/v1
+   kind: Job
+   metadata:
+     name: kubetest-example
+     namespace: default
+     labels:
+       app: kubetest-example
+   spec:
+     backoffLimit: 0
+     template:
+       spec:
+         restartPolicy: Never
+         containers:
+         - name: tests
+           image: kubetest/example-test-image
+           imagePullPolicy: Always
+
+You can then apply the manifest and have it run on cluster
+
+.. code-block:: bash
+
+   kubectl apply -f kubetest-job.yaml

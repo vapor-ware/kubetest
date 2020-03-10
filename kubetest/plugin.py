@@ -92,6 +92,7 @@ def pytest_addoption(parser):
         '--kube-error-log-lines',
         action='store',
         default=50,
+        type=int,
         help='set the number of lines to tail from container logs on error. '
              'to show all lines, set this to -1.'
     )

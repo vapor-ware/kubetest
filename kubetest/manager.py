@@ -34,6 +34,7 @@ class ObjectManager:
         'service',
         'configmap',
         'persistentvolumeclaim',
+        'ingress',
         'daemonset',
         'statefulset',
         'deployment',
@@ -104,6 +105,7 @@ class ObjectManager:
           - Service
           - ConfigMap
           - PersistentVolumeClaim
+          - Ingress
           - DaemonSet
           - StatefulSet
           - Deployment

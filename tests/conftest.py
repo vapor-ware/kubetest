@@ -200,7 +200,6 @@ def simple_ingress():
             name='my-ingress'
         ),
         spec=client.ExtensionsV1beta1IngressSpec(
-            # backend=backend,
             rules=[client.ExtensionsV1beta1IngressRule(
                 http=client.ExtensionsV1beta1HTTPIngressRuleValue(
                     paths=[client.ExtensionsV1beta1HTTPIngressPath(

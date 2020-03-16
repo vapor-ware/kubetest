@@ -231,7 +231,7 @@ class TestClient:
             service.namespace = self.namespace
         return service
 
-    def load_persistentvolumeclaim(self, path, set_namespace=True) -> objects.persistentvolumeclaim:
+    def load_persistentvolumeclaim(self, path, set_namespace=True) -> objects.PersistentVolumeClaim:
         """Load a manifest YAML into a PersistentVolumeClaim object.
 
         By default, this will augment the PersistentVolumeClaim object with
@@ -253,7 +253,7 @@ class TestClient:
             persistentvolumeclaim.namespace = self.namespace
         return persistentvolumeclaim
 
-    def load_ingress(self, path, set_namespace=True) -> objects.ingress:
+    def load_ingress(self, path, set_namespace=True) -> objects.Ingress:
         """Load a manifest YAML into a Ingress object.
 
         By default, this will augment the Ingress object with
@@ -270,7 +270,7 @@ class TestClient:
             manifest.
         """
         log.info('loading ingress from path: %s', path)
-        ingress = objects.ingress.load(path)
+        ingress = objects.Ingress.load(path)
         if set_namespace:
             ingress.namespace = self.namespace
         return ingress

@@ -1,4 +1,4 @@
-"""Kubetest wrapper for the Kubernetes ``PersistentVolumeClaim`` API Object."""
+"""Kubetest wrapper for the Kubernetes ``Ingress`` API Object."""
 
 import logging
 
@@ -26,7 +26,7 @@ class Ingress(ApiObject):
 
     api_clients = {
         'preferred': client.ExtensionsV1beta1Api,
-        'v1': client.ExtensionsV1beta1Api,
+        'extensions/v1beta1': client.ExtensionsV1beta1Api,
     }
 
     def __str__(self):
@@ -94,11 +94,6 @@ class Ingress(ApiObject):
 
     def is_ready(self):
         """Check if the Ingress is in the ready state.
-
-        Ingresses have a "status" field to check. However, as this
-        field may change from "available" to "bound" quickly if another
-        object is using the Ingress, we will measure their
-        readiness status by whether or not they exist on the cluster.
 
         Returns:
             bool: True if in the ready state; False otherwise.

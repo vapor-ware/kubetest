@@ -2,8 +2,6 @@
 
 import os
 
-import time
-
 
 def test_deployment(kube):
 

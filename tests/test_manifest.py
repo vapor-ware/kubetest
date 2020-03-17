@@ -155,6 +155,24 @@ class TestLoadType:
                 os.path.join(manifest_dir, 'simple-service.yaml')
             )
 
+    def test_simple_ingress_ok(self, manifest_dir, simple_ingress):
+        """Test loading the simple service successfully."""
+        obj = manifest.load_type(
+            client.ExtensionsV1beta1Ingress,
+            os.path.join(manifest_dir, 'simple-ingress.yaml')
+        )
+        assert obj == simple_ingress
+
+    def test_simple_ingress_wrong_type(self, manifest_dir):
+        """Test loading the simple ingress to the wrong type."""
+        with pytest.raises(ValueError):
+            # The V1Container requires a name -- since the manifest has no name,
+            # it will cause V1Container construction to fail with ValueError.
+            manifest.load_type(
+                client.V1Container,
+                os.path.join(manifest_dir, 'simple-ingress.yaml')
+            )
+
     def test_simple_persistentvolumeclaim_ok(
         self,
         manifest_dir,

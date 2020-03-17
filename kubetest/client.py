@@ -231,7 +231,7 @@ class TestClient:
             service.namespace = self.namespace
         return service
 
-    def load_persistentvolumeclaim(self, path, set_namespace=True):
+    def load_persistentvolumeclaim(self, path, set_namespace=True) -> objects.PersistentVolumeClaim:
         """Load a manifest YAML into a PersistentVolumeClaim object.
 
         By default, this will augment the PersistentVolumeClaim object with
@@ -252,6 +252,28 @@ class TestClient:
         if set_namespace:
             persistentvolumeclaim.namespace = self.namespace
         return persistentvolumeclaim
+
+    def load_ingress(self, path, set_namespace=True) -> objects.Ingress:
+        """Load a manifest YAML into a Ingress object.
+
+        By default, this will augment the Ingress object with
+        the generated test case namespace. This behavior can be
+        disabled with the ``set_namespace`` flag.
+
+        Args:
+            path (str): The path to the Ingress manifest.
+            set_namespace (bool): Enable/disable the automatic
+                augmentation of the Ingress namespace.
+
+        Returns:
+            objects.Ingress: The ingress for the specified
+            manifest.
+        """
+        log.info('loading ingress from path: %s', path)
+        ingress = objects.Ingress.load(path)
+        if set_namespace:
+            ingress.namespace = self.namespace
+        return ingress
 
     def load_statefulset(self, path: str, set_namespace: bool = True) -> objects.StatefulSet:
         """Load a manifest YAML into a StatefulSet object.
@@ -689,6 +711,43 @@ class TestClient:
             persistentvolumeclaims[persistentvolumeclaim.name] = persistentvolumeclaim
 
         return persistentvolumeclaims
+
+    def get_ingresses(self, namespace=None, fields=None, labels=None):
+        """Get Ingresses from the cluster.
+
+        Args:
+            namespace (str): The namespace to get the Ingress from. If not
+                specified, it will use the auto-generated test case namespace
+                by default.
+            fields (dict[str, str]): A dictionary of fields used to restrict
+                the returned collection of Ingress to only those which match
+                these field selectors. By default, no restricting is done.
+            labels (dict[str, str]): A dictionary of labels used to restrict
+                the returned collection of Ingress to only those which match
+                these label selectors. By default, no restricting is done.
+
+        Returns:
+            dict[str, objects.Ingress]: A dictionary where the key is
+            the Ingress name and the value is the Ingress
+            itself.
+        """
+        if namespace is None:
+            namespace = self.namespace
+
+        selectors = utils.selector_kwargs(fields, labels)
+
+        ingress_list = client.CoreV1Api().\
+            list_namespaced_ingress(
+            namespace=namespace,
+            **selectors,
+        )
+
+        ingresses = {}
+        for obj in ingress_list.items:
+            ingress = objects.Ingress(obj)
+            ingresses[ingress.name] = ingress
+
+        return ingresses
 
     def get_statefulsets(
             self,

@@ -176,6 +176,7 @@ class Service(ApiObject):
         Args:
             method: The http request method e.g. 'GET', 'POST' etc.
             path: The URI path for the request.
+            kwargs: Keyword arguments for the proxy_http_get function.
 
         Returns:
             The response data
@@ -198,6 +199,7 @@ class Service(ApiObject):
         Args:
             path: The URI path for the request.
             kwargs: Keyword arguments for the proxy_http_get function.
+
         Returns:
             The response data
         """

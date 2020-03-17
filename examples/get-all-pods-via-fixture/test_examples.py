@@ -4,7 +4,8 @@ import time
 import os
 
 
-@pytest.mark.applymanifest(os.path.join(os.path.dirname(__file__), 'manifests/deployment-redis.yaml'))
+@pytest.mark.applymanifest(os.path.join(os.path.dirname(__file__),
+                           'manifests/deployment-redis.yaml'))
 def test_pods_from_deployment_loaded_from_marker(kube):
     """Get the Pods for a Deployment which is loaded via the kubetest
     'applymanifest' marker.

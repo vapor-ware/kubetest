@@ -170,17 +170,49 @@ class Service(ApiObject):
         log.debug(f'endpoints: {svc_endpoints}')
         return svc_endpoints
 
-    def proxy_http_get(self, path: str) -> str:
-        """Issue a GET request to proxy of a Service.
+    def _proxy_http_request(self, method, path, **kwargs) -> tuple:
+        """Template request to proxy of a Service.
 
         Args:
+            method: The http request method e.g. 'GET', 'POST' etc.
             path: The URI path for the request.
+            kwargs: Keyword arguments for the proxy_http_get function.
 
         Returns:
             The response data
         """
-        return client.CoreV1Api().connect_get_namespaced_service_proxy_with_path(
-            name=f'{self.name}:{self.obj.spec.ports[0].port}',
-            namespace=self.namespace,
-            path=path,
+        path_params = {
+            "name": f'{self.name}:{self.obj.spec.ports[0].port}',
+            "namespace": self.namespace,
+            "path": path
+        }
+        return client.CoreV1Api().api_client.call_api(
+            '/api/v1/namespaces/{namespace}/services/{name}/proxy/{path}',
+            method,
+            path_params=path_params,
+            **kwargs
         )
+
+    def proxy_http_get(self, path: str, **kwargs) -> tuple:
+        """Issue a GET request to proxy of a Service.
+
+        Args:
+            path: The URI path for the request.
+            kwargs: Keyword arguments for the proxy_http_get function.
+
+        Returns:
+            The response data
+        """
+        return self._proxy_http_request('GET', path, **kwargs)
+
+    def proxy_http_post(self, path: str, **kwargs) -> tuple:
+        """Issue a POST request to proxy of a Service.
+
+        Args:
+            path: The URI path for the request.
+            kwargs: Keyword arguments for the proxy_http_post function.
+
+        Returns:
+            The response data
+        """
+        return self._proxy_http_request('POST', path, **kwargs)

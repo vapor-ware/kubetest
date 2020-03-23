@@ -2,7 +2,7 @@
 
 import abc
 import logging
-from typing import Union
+from typing import Optional, Union
 
 from kubernetes import client
 from kubernetes.client.rest import ApiException
@@ -198,7 +198,7 @@ class ApiObject(abc.ABC):
         )
 
     @classmethod
-    def load(cls, path: str) -> 'ApiObject':
+    def load(cls, path: str, name: Optional[str] = None) -> 'ApiObject':
         """Load the Kubernetes resource from file.
 
         Generally, this is used to load the Kubernetes manifest files
@@ -207,18 +207,65 @@ class ApiObject(abc.ABC):
         Args:
             path: The path to the YAML config file (manifest)
                 containing the configuration for the resource.
+            name: The name of the resource to load. If the manifest file
+                contains a single object definition for the type being
+                loaded, it is not necessary to specify the name. If the
+                manifest has multiple definitions containing the same
+                type, a name is required to differentiate between them.
+                If no name is specified in such case, an error is raised.
 
         Returns:
             The API object wrapper corresponding to the configuration
             loaded from manifest YAML file.
+
+        Raises:
+            ValueError: Multiple objects of the desired type were found in
+            the manifest file and no name was specified to differentiate between
+            them.
         """
         objs = load_file(path)
-        if len(objs) != 1:
+
+        # There is only one object defined in the manifest, so load it.
+        # If the defined object does not match the type of the class being used
+        # to load the definition, this will fail.
+        if len(objs) == 1:
+            return cls(objs[0])
+
+        # Otherwise, there are multiple definitions in the manifest. Some of
+        # these definitions may not match with the type we are trying to load,
+        # so filter the loaded objects to only those which we care about.
+        filtered = []
+        for o in objs:
+            if isinstance(o, cls.obj_type):
+                filtered.append(o)
+
+        if len(filtered) == 0:
             raise ValueError(
-                'Unable to load resource from file - multiple resources found '
-                'in specified file.'
+                'Unable to load resource from file - no resource definitions found '
+                f'with type {cls.obj_type}.'
             )
-        return cls(objs[0])
+
+        if len(filtered) == 1:
+            return cls(filtered[0])
+
+        # If we get here, there are multiple objects of the same type defined. We
+        # need to check that a name is provided and return the object whose name
+        # matches.
+        if not name:
+            raise ValueError(
+                'Unable to load resource from file - multiple resource definitions '
+                f'found for {cls.obj_type}, but no name specified to select which one.'
+            )
+
+        for o in filtered:
+            api_obj = cls(o)
+            if api_obj.name == name:
+                return api_obj
+
+        raise ValueError(
+            'Unable to load resource from file - multiple resource definitions found '
+            f'for {cls.obj_type}, but none match specified name: {name}'
+        )
 
     @abc.abstractmethod
     def create(self, namespace: str = None) -> None:

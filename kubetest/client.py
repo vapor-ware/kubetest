@@ -6,7 +6,7 @@ fixture provides the ``TestClient`` instance to the test case.
 """
 
 import logging
-from typing import Dict, Union
+from typing import Dict, Optional, Union
 
 from kubernetes import client
 
@@ -74,19 +74,33 @@ class TestClient:
     # ****** Manifest Loaders ******
 
     @staticmethod
-    def load_clusterrolebinding(path: str) -> objects.ClusterRoleBinding:
+    def load_clusterrolebinding(
+            path: str,
+            name: Optional[str] = None,
+    ) -> objects.ClusterRoleBinding:
         """Load a manifest YAML into a ClusterRoleBinding object.
 
         Args:
             path: The path to the ClusterRoleBinding manifest.
+            name: The name of the resource to load. If the manifest file
+                contains a single object definition for the type being
+                loaded, it is not necessary to specify the name. If the
+                manifest has multiple definitions containing the same
+                type, a name is required to differentiate between them.
+                If no name is specified in such case, an error is raised.
 
         Returns:
             The ClusterRoleBinding for the specified manifest.
         """
         log.info(f'loading clusterrolebinding from path: {path}')
-        return objects.ClusterRoleBinding.load(path)
+        return objects.ClusterRoleBinding.load(path, name=name)
 
-    def load_configmap(self, path: str, set_namespace: bool = True) -> objects.ConfigMap:
+    def load_configmap(
+            self,
+            path: str,
+            set_namespace: bool = True,
+            name: Optional[str] = None,
+    ) -> objects.ConfigMap:
         """Load a manifest YAML into a ConfigMap object.
 
         By default, this will augment the ConfigMap object with the generated
@@ -97,17 +111,28 @@ class TestClient:
             path: The path to the ConfigMap manifest.
             set_namespace: Enable/disable the automatic augmentation of the
                 ConfigMap namespace.
+            name: The name of the resource to load. If the manifest file
+                contains a single object definition for the type being
+                loaded, it is not necessary to specify the name. If the
+                manifest has multiple definitions containing the same
+                type, a name is required to differentiate between them.
+                If no name is specified in such case, an error is raised.
 
         Returns:
             The ConfigMap for the specified manifest.
         """
         log.info(f'loading configmap from path: {path}')
-        configmap = objects.ConfigMap.load(path)
+        configmap = objects.ConfigMap.load(path, name=name)
         if set_namespace:
             configmap.namespace = self.namespace
         return configmap
 
-    def load_daemonset(self, path: str, set_namespace: bool = True) -> objects.DaemonSet:
+    def load_daemonset(
+            self,
+            path: str,
+            set_namespace: bool = True,
+            name: Optional[str] = None,
+    ) -> objects.DaemonSet:
         """Load a manifest YAML into a DaemonSet object.
 
         By default, this will augment the DaemonSet object with the generated test
@@ -117,17 +142,28 @@ class TestClient:
             path: The path to the DaemonSet manifest.
             set_namespace: Enable/disable the automatic augmentation of the
                 DaemonSet namespace.
+            name: The name of the resource to load. If the manifest file
+                contains a single object definition for the type being
+                loaded, it is not necessary to specify the name. If the
+                manifest has multiple definitions containing the same
+                type, a name is required to differentiate between them.
+                If no name is specified in such case, an error is raised.
 
         Returns:
             The DaemonSet for the specified manifest.
         """
         log.info(f'loading daemonset from path: {path}')
-        daemonset = objects.DaemonSet.load(path)
+        daemonset = objects.DaemonSet.load(path, name=name)
         if set_namespace:
             daemonset.namespace = self.namespace
         return daemonset
 
-    def load_deployment(self, path: str, set_namespace: bool = True) -> objects.Deployment:
+    def load_deployment(
+            self,
+            path: str,
+            set_namespace: bool = True,
+            name: Optional[str] = None,
+    ) -> objects.Deployment:
         """Load a manifest YAML into a Deployment object.
 
         By default, this will augment the Deployment object with the generated
@@ -138,17 +174,28 @@ class TestClient:
             path: The path to the Deployment manifest.
             set_namespace: Enable/disable the automatic augmentation of the
                 Deployment namespace.
+            name: The name of the resource to load. If the manifest file
+                contains a single object definition for the type being
+                loaded, it is not necessary to specify the name. If the
+                manifest has multiple definitions containing the same
+                type, a name is required to differentiate between them.
+                If no name is specified in such case, an error is raised.
 
         Returns:
             The Deployment for the specified manifest.
         """
         log.info(f'loading deployment from path: {path}')
-        deployment = objects.Deployment.load(path)
+        deployment = objects.Deployment.load(path, name=name)
         if set_namespace:
             deployment.namespace = self.namespace
         return deployment
 
-    def load_pod(self, path: str, set_namespace: bool = True) -> objects.Pod:
+    def load_pod(
+            self,
+            path: str,
+            set_namespace: bool = True,
+            name: Optional[str] = None,
+    ) -> objects.Pod:
         """Load a manifest YAML into a Pod object.
 
         By default, this will augment the Pod object with the generated test case
@@ -158,17 +205,28 @@ class TestClient:
             path: The path to the Pod manifest.
             set_namespace: Enable/disable the automatic augmentation of the
                 Pod namespace.
+            name: The name of the resource to load. If the manifest file
+                contains a single object definition for the type being
+                loaded, it is not necessary to specify the name. If the
+                manifest has multiple definitions containing the same
+                type, a name is required to differentiate between them.
+                If no name is specified in such case, an error is raised.
 
         Returns:
             The Pod for the specified manifest.
         """
         log.info(f'loading pod from path: {path}')
-        pod = objects.Pod.load(path)
+        pod = objects.Pod.load(path, name=name)
         if set_namespace:
             pod.namespace = self.namespace
         return pod
 
-    def load_rolebinding(self, path: str, set_namespace: bool = True) -> objects.RoleBinding:
+    def load_rolebinding(
+            self,
+            path: str,
+            set_namespace: bool = True,
+            name: Optional[str] = None,
+    ) -> objects.RoleBinding:
         """Load a manifest YAML into a RoleBinding object.
 
         By default, this will augment the RoleBinding object with the generated
@@ -179,17 +237,28 @@ class TestClient:
             path: The path to the RoleBinding manifest.
             set_namespace: Enable/disable the automatic augmentation of the
                 RoleBinding namespace.
+            name: The name of the resource to load. If the manifest file
+                contains a single object definition for the type being
+                loaded, it is not necessary to specify the name. If the
+                manifest has multiple definitions containing the same
+                type, a name is required to differentiate between them.
+                If no name is specified in such case, an error is raised.
 
         Returns:
             The RoleBinding for the specified manifest.
         """
         log.info(f'loading rolebinding from path: {path}')
-        rolebinding = objects.RoleBinding.load(path)
+        rolebinding = objects.RoleBinding.load(path, name=name)
         if set_namespace:
             rolebinding.namespace = self.namespace
         return rolebinding
 
-    def load_secret(self, path: str, set_namespace: bool = True) -> objects.Secret:
+    def load_secret(
+            self,
+            path: str,
+            set_namespace: bool = True,
+            name: Optional[str] = None,
+    ) -> objects.Secret:
         """Load a manifest YAML into a Secret object.
 
         By default, this will augment the Secret object with the generated
@@ -200,17 +269,28 @@ class TestClient:
             path: The path to the Secret manifest.
             set_namespace: Enable/disable the automatic augmentation of the
                 Secret namespace.
+            name: The name of the resource to load. If the manifest file
+                contains a single object definition for the type being
+                loaded, it is not necessary to specify the name. If the
+                manifest has multiple definitions containing the same
+                type, a name is required to differentiate between them.
+                If no name is specified in such case, an error is raised.
 
         Returns:
             The Secret for the specified manifest.
         """
         log.info(f'loading secret from path: {path}')
-        secret = objects.Secret.load(path)
+        secret = objects.Secret.load(path, name=name)
         if set_namespace:
             secret.namespace = self.namespace
         return secret
 
-    def load_service(self, path: str, set_namespace: bool = True) -> objects.Service:
+    def load_service(
+            self,
+            path: str,
+            set_namespace: bool = True,
+            name: Optional[str] = None,
+    ) -> objects.Service:
         """Load a manifest YAML into a Service object.
 
         By default, this will augment the Service object with the generated
@@ -221,17 +301,28 @@ class TestClient:
             path: The path to the Service manifest.
             set_namespace: Enable/disable the automatic augmentation of the
                 Service namespace.
+            name: The name of the resource to load. If the manifest file
+                contains a single object definition for the type being
+                loaded, it is not necessary to specify the name. If the
+                manifest has multiple definitions containing the same
+                type, a name is required to differentiate between them.
+                If no name is specified in such case, an error is raised.
 
         Returns:
             The Service for the specified manifest.
         """
         log.info(f'loading service from path: {path}')
-        service = objects.Service.load(path)
+        service = objects.Service.load(path, name=name)
         if set_namespace:
             service.namespace = self.namespace
         return service
 
-    def load_persistentvolumeclaim(self, path, set_namespace=True) -> objects.PersistentVolumeClaim:
+    def load_persistentvolumeclaim(
+            self,
+            path: str,
+            set_namespace: bool = True,
+            name: Optional[str] = None,
+    ) -> objects.PersistentVolumeClaim:
         """Load a manifest YAML into a PersistentVolumeClaim object.
 
         By default, this will augment the PersistentVolumeClaim object with
@@ -242,18 +333,29 @@ class TestClient:
             path (str): The path to the PersistentVolumeClaim manifest.
             set_namespace (bool): Enable/disable the automatic
                 augmentation of the PersistentVolumeClaim namespace.
+            name: The name of the resource to load. If the manifest file
+                contains a single object definition for the type being
+                loaded, it is not necessary to specify the name. If the
+                manifest has multiple definitions containing the same
+                type, a name is required to differentiate between them.
+                If no name is specified in such case, an error is raised.
 
         Returns:
             objects.PersistentVolumeClaim: The PersistentVolumeClaim for the specified
             manifest.
         """
         log.info('loading persistentvolumeclaim from path: %s', path)
-        persistentvolumeclaim = objects.PersistentVolumeClaim.load(path)
+        persistentvolumeclaim = objects.PersistentVolumeClaim.load(path, name=name)
         if set_namespace:
             persistentvolumeclaim.namespace = self.namespace
         return persistentvolumeclaim
 
-    def load_ingress(self, path, set_namespace=True) -> objects.Ingress:
+    def load_ingress(
+            self,
+            path: str,
+            set_namespace: bool = True,
+            name: Optional[str] = None,
+    ) -> objects.Ingress:
         """Load a manifest YAML into a Ingress object.
 
         By default, this will augment the Ingress object with
@@ -264,18 +366,28 @@ class TestClient:
             path (str): The path to the Ingress manifest.
             set_namespace (bool): Enable/disable the automatic
                 augmentation of the Ingress namespace.
+            name: The name of the resource to load. If the manifest file
+                contains a single object definition for the type being
+                loaded, it is not necessary to specify the name. If the
+                manifest has multiple definitions containing the same
+                type, a name is required to differentiate between them.
+                If no name is specified in such case, an error is raised.
 
         Returns:
             objects.Ingress: The ingress for the specified
             manifest.
         """
         log.info('loading ingress from path: %s', path)
-        ingress = objects.Ingress.load(path)
+        ingress = objects.Ingress.load(path, name=name)
         if set_namespace:
             ingress.namespace = self.namespace
         return ingress
 
-    def load_statefulset(self, path: str, set_namespace: bool = True) -> objects.StatefulSet:
+    def load_statefulset(
+            self, path: str,
+            set_namespace: bool = True,
+            name: Optional[str] = None,
+    ) -> objects.StatefulSet:
         """Load a manifest YAML into a StatefulSet object.
 
         By default, this will augment the StatefulSet object with the generated
@@ -286,12 +398,18 @@ class TestClient:
             path: The path to the StatefulSet manifest.
             set_namespace: Enable/disable the automatic augmentation of the
                 StatefulSet namespace.
+            name: The name of the resource to load. If the manifest file
+                contains a single object definition for the type being
+                loaded, it is not necessary to specify the name. If the
+                manifest has multiple definitions containing the same
+                type, a name is required to differentiate between them.
+                If no name is specified in such case, an error is raised.
 
         Returns:
             The StatefulSet for the specified manifest.
         """
         log.info(f'loading statefulset from path: {path}')
-        statefulset = objects.StatefulSet.load(path)
+        statefulset = objects.StatefulSet.load(path, name=name)
         if set_namespace:
             statefulset.namespace = self.namespace
         return statefulset

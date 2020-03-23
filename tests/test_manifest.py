@@ -315,3 +315,41 @@ class TestLoadPath:
 
         with pytest.raises(yaml.YAMLError):
             manifest.load_path(manifest_dir)
+
+
+class TestLoadFile:
+    """Tests for kubetest.manifest.load_file."""
+
+    def test_ok_single(self, manifest_dir):
+        """Load manifest file with single object definition."""
+
+        objs = manifest.load_file(
+            os.path.join(manifest_dir, 'simple-deployment.yaml')
+        )
+
+        assert len(objs) == 1
+        assert isinstance(objs[0], client.models.v1_deployment.V1Deployment)
+
+    def test_ok_multi(self, manifest_dir):
+        """Load manifest file with multiple object definitions."""
+
+        objs = manifest.load_file(
+            os.path.join(manifest_dir, 'multi-obj-manifest.yaml')
+        )
+
+        assert len(objs) == 3
+        assert isinstance(objs[0], client.models.v1_service.V1Service)
+        assert isinstance(objs[1], client.models.v1_service.V1Service)
+        assert isinstance(objs[2], client.models.v1_deployment.V1Deployment)
+
+    def test_no_file(self, manifest_dir):
+        """Load manifest file which does not exist."""
+
+        with pytest.raises(FileNotFoundError):
+            manifest.load_file(os.path.join(manifest_dir, 'file-does-not-exist.yaml'))
+
+    def test_invalid_yaml(self, manifest_dir):
+        """Load manifest file with invalid YAML."""
+
+        with pytest.raises(yaml.YAMLError):
+            manifest.load_file(os.path.join(manifest_dir, 'invalid.yaml'))

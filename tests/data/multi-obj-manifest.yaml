@@ -1,0 +1,53 @@
+# Manifest file used for unit tests which includes one Deployment
+# definition and two Service definitions.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-a
+spec:
+  ports:
+  - name: http
+    port: 80
+  selector:
+    deployment: kubetest-test-app
+  type: ClusterIP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: service-b
+spec:
+  ports:
+  - name: http
+    port: 8080
+  selector:
+    deployment: kubetest-test-app
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kubetest-test-app
+  labels:
+    deployment: kubetest-test-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      deployment: kubetest-test-app
+  template:
+    metadata:
+      labels:
+        deployment: kubetest-test-app
+    spec:
+      containers:
+        - name: busybox
+          image: busybox
+          imagePullPolicy: Always
+          ports:
+          - name: http
+            containerPort: 5000
+          command:
+            - 'sleep'
+            - '3600'

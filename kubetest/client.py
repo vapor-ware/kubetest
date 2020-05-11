@@ -383,6 +383,37 @@ class TestClient:
             ingress.namespace = self.namespace
         return ingress
 
+    def load_replicaset(
+            self, path: str,
+            set_namespace: bool = True,
+            name: Optional[str] = None,
+    ) -> objects.ReplicaSet:
+        """Load a manifest YAML into a ReplicaSet object.
+
+        By default, this will augment the ReplicaSet object with the generated
+        test case namespace. This behavior can be disabled with the
+        ``set_namespace`` flag.
+
+        Args:
+            path: The path to the ReplicaSet manifest.
+            set_namespace: Enable/disable the automatic augmentation of the
+                ReplicaSet namespace.
+            name: The name of the resource to load. If the manifest file
+                contains a single object definition for the type being
+                loaded, it is not necessary to specify the name. If the
+                manifest has multiple definitions containing the same
+                type, a name is required to differentiate between them.
+                If no name is specified in such case, an error is raised.
+
+        Returns:
+            The ReplicaSet for the specified manifest.
+        """
+        log.info(f'loading replicaset from path: {path}')
+        replicaset = objects.ReplicaSet.load(path, name=name)
+        if set_namespace:
+            replicaset.namespace = self.namespace
+        return replicaset
+
     def load_statefulset(
             self, path: str,
             set_namespace: bool = True,
@@ -866,6 +897,45 @@ class TestClient:
             ingresses[ingress.name] = ingress
 
         return ingresses
+
+    def get_replicasets(
+            self,
+            namespace: str = None,
+            fields: Dict[str, str] = None,
+            labels: Dict[str, str] = None,
+    ) -> Dict[str, objects.ReplicaSet]:
+        """Get ReplicaSets from the cluster.
+
+        Args:
+            namespace: The namespace to get the ReplicaSets from. If not specified,
+                it will use the auto-generated test case namespace by default.
+            fields: A dictionary of fields used to restrict the returned collection
+                of ReplicaSets to only those which match these field selectors. By
+                default, no restricting is done.
+            labels: A dictionary of labels used to restrict the returned collection
+                of ReplicaSets to only those which match these label selectors. By
+                default, no restricting is done.
+
+        Returns:
+            A dictionary where the key is the ReplicaSet name and the value is the
+            ReplicaSet itself.
+        """
+        if namespace is None:
+            namespace = self.namespace
+
+        selectors = utils.selector_kwargs(fields, labels)
+
+        results = client.AppsV1Api().list_namespaced_replica_set(
+            namespace=namespace,
+            **selectors,
+        )
+
+        replicasets = {}
+        for obj in results.items:
+            replicasets = objects.ReplicaSet(obj)
+            replicasets[replicasets.name] = replicasets
+
+        return replicasets
 
     def get_statefulsets(
             self,

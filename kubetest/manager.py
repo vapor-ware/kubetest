@@ -37,6 +37,7 @@ class ObjectManager:
         'ingress',
         'daemonset',
         'statefulset',
+        'replicaset',
         'deployment',
         'pod',
     ]
@@ -108,6 +109,7 @@ class ObjectManager:
           - Ingress
           - DaemonSet
           - StatefulSet
+          - ReplicaSet
           - Deployment
           - Pod
 

@@ -173,6 +173,24 @@ class TestLoadType:
                 os.path.join(manifest_dir, 'simple-ingress.yaml')
             )
 
+    def test_simple_replicaset_ok(self, manifest_dir, simple_replicaset):
+        """Test loading the simple ReplicaSet successfully."""
+        obj = manifest.load_type(
+            client.V1ReplicaSet,
+            os.path.join(manifest_dir, 'simple-replicaset.yaml')
+        )
+        assert obj == simple_replicaset
+
+    def test_simple_replicaset_wrong_type(self, manifest_dir):
+        """Test loading the simple ReplicaSet to the wrong type."""
+        with pytest.raises(ValueError):
+            # The V1Container requires a name -- since the manifest has no name,
+            # it will cause V1Container construction to fail with ValueError.
+            manifest.load_type(
+                client.V1Container,
+                os.path.join(manifest_dir, 'simple-replicaset.yaml')
+            )
+
     def test_simple_persistentvolumeclaim_ok(
         self,
         manifest_dir,

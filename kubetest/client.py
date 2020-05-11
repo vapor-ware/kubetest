@@ -854,7 +854,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        ingress_list = client.CoreV1Api().\
+        ingress_list = client.ExtensionsV1beta1Api().\
             list_namespaced_ingress(
             namespace=namespace,
             **selectors,

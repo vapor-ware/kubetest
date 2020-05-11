@@ -213,3 +213,42 @@ def simple_ingress():
             )],
         )
     )
+
+
+@pytest.fixture()
+def simple_replicaset():
+    """Return the Kubernetes config matching the simple-replicaset.yaml manifest."""
+    return client.V1ReplicaSet(
+        api_version='apps/v1',
+        kind='ReplicaSet',
+        metadata=client.V1ObjectMeta(
+            name='frontend',
+            labels={
+                'app': 'guestbook',
+                'tier': 'frontend',
+            },
+        ),
+        spec=client.V1ReplicaSetSpec(
+            replicas=3,
+            selector=client.V1LabelSelector(
+                match_labels={
+                    'tier': 'frontend',
+                },
+            ),
+            template=client.V1PodTemplateSpec(
+                metadata=client.V1ObjectMeta(
+                    labels={
+                        'tier': 'frontend',
+                    },
+                ),
+                spec=client.V1PodSpec(
+                    containers=[
+                        client.V1Container(
+                            name='php-redis',
+                            image='gcr.io/google_samples/gb-frontend:v3',
+                        ),
+                    ],
+                ),
+            ),
+        ),
+    )

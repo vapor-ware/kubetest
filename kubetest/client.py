@@ -474,7 +474,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = client.CoreV1Api().list_namespaced_config_map(
+        results = objects.ConfigMap.preferred_client().list_namespaced_config_map(
             namespace=namespace,
             **selectors,
         )
@@ -513,7 +513,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = client.AppsV1Api().list_namespaced_daemon_set(
+        results = objects.DaemonSet.preferred_client().list_namespaced_daemon_set(
             namespace=namespace,
             **selectors,
         )
@@ -552,7 +552,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = client.AppsV1Api().list_namespaced_deployment(
+        results = objects.Deployment.preferred_client().list_namespaced_deployment(
             namespace=namespace,
             **selectors,
         )
@@ -591,7 +591,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = client.CoreV1Api().list_namespaced_endpoints(
+        results = objects.Endpoints.preferred_client().list_namespaced_endpoints(
             namespace=namespace,
             **selectors,
         )
@@ -664,7 +664,7 @@ class TestClient:
         """
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = client.CoreV1Api().list_namespace(
+        results = objects.Namespace.preferred_client().list_namespace(
             **selectors,
         )
 
@@ -734,7 +734,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = client.CoreV1Api().list_namespaced_pod(
+        results = objects.Pod.preferred_client().list_namespaced_pod(
             namespace=namespace,
             **selectors,
         )
@@ -773,7 +773,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = client.CoreV1Api().list_namespaced_secret(
+        results = objects.Secret.preferred_client().list_namespaced_secret(
             namespace=namespace,
             **selectors,
         )
@@ -812,7 +812,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = client.CoreV1Api().list_namespaced_service(
+        results = objects.Service.preferred_client().list_namespaced_service(
             namespace=namespace,
             **selectors,
         )
@@ -848,14 +848,14 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        persistentvolumeclaim_list = client.CoreV1Api().\
-            list_namespaced_persistent_volume_claim(
+        c = objects.PersistentVolumeClaim.preferred_client()
+        results = c.list_namespaced_persistent_volume_claim(
             namespace=namespace,
             **selectors,
         )
 
         persistentvolumeclaims = {}
-        for obj in persistentvolumeclaim_list.items:
+        for obj in results.items:
             persistentvolumeclaim = objects.PersistentVolumeClaim(obj)
             persistentvolumeclaims[persistentvolumeclaim.name] = persistentvolumeclaim
 
@@ -885,14 +885,13 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        ingress_list = client.ExtensionsV1beta1Api().\
-            list_namespaced_ingress(
+        results = objects.Ingress.preferred_client().list_namespaced_ingress(
             namespace=namespace,
             **selectors,
         )
 
         ingresses = {}
-        for obj in ingress_list.items:
+        for obj in results.items:
             ingress = objects.Ingress(obj)
             ingresses[ingress.name] = ingress
 
@@ -925,15 +924,15 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = client.AppsV1Api().list_namespaced_replica_set(
+        results = objects.ReplicaSet.preferred_client().list_namespaced_replica_set(
             namespace=namespace,
             **selectors,
         )
 
         replicasets = {}
         for obj in results.items:
-            replicasets = objects.ReplicaSet(obj)
-            replicasets[replicasets.name] = replicasets
+            rs = objects.ReplicaSet(obj)
+            replicasets[replicasets.name] = rs
 
         return replicasets
 
@@ -964,7 +963,7 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = client.AppsV1Api().list_namespaced_stateful_set(
+        results = objects.StatefulSet.preferred_client().list_namespaced_stateful_set(
             namespace=namespace,
             **selectors,
         )

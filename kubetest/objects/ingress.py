@@ -35,11 +35,11 @@ class Ingress(ApiObject):
     def __repr__(self):
         return self.__str__()
 
-    def create(self, namespace=None):
+    def create(self, namespace: str = None) -> None:
         """Create the Ingress under the given namespace.
 
         Args:
-            namespace (str): The namespace to create the Ingress under.
+            namespace: The namespace to create the Ingress under.
                 If the Ingress was loaded via the kubetest client, the
                 namespace will already be set, so it is not needed here.
                 Otherwise, the namespace will need to be provided.
@@ -59,7 +59,7 @@ class Ingress(ApiObject):
             body=self.obj,
         )
 
-    def delete(self, options):
+    def delete(self, options: client.V1DeleteOptions = None) -> client.V1Status:
         """Delete the Ingress.
 
         This method expects the Ingress to have been loaded or otherwise
@@ -67,10 +67,10 @@ class Ingress(ApiObject):
         to be set manually.
 
         Args:
-             options (client.V1DeleteOptions): Options for Ingress deletion.
+             options: Options for Ingress deletion.
 
         Returns:
-            client.V1Status: The status of the delete operation.
+            The status of the delete operation.
         """
         if options is None:
             options = client.V1DeleteOptions()
@@ -85,18 +85,18 @@ class Ingress(ApiObject):
             body=options,
         )
 
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh the underlying Kubernetes Ingress resource."""
         self.obj = self.api_client.read_namespaced_ingress(
             name=self.name,
             namespace=self.namespace,
         )
 
-    def is_ready(self):
+    def is_ready(self) -> bool:
         """Check if the Ingress is in the ready state.
 
         Returns:
-            bool: True if in the ready state; False otherwise.
+            True if in the ready state; False otherwise.
         """
         try:
             self.refresh()

@@ -19,7 +19,8 @@ def test_manager_new_test():
 
 def test_manager_new_test_with_ns_name():
     """Test creating a new TestMeta with a given namespace name
-       from the manager."""
+    from the manager.
+    """
 
     m = manager.KubetestManager()
     c = m.new_test('node-id', 'test-name', True, 'my-test')
@@ -30,7 +31,8 @@ def test_manager_new_test_with_ns_name():
 
 def test_manager_new_test_without_ns():
     """Test creating a new TestMeta without namespace creation
-       from the manager."""
+    from the manager.
+    """
 
     m = manager.KubetestManager()
     c = m.new_test('node-id', 'test-name', False, None)

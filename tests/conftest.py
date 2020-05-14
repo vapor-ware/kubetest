@@ -1,5 +1,4 @@
-"""
-"""
+"""Test fixtures for kubetest unit tests."""
 
 import os
 
@@ -168,8 +167,7 @@ def simple_service():
 
 @pytest.fixture()
 def simple_persistentvolumeclaim():
-    """Return the Kubernetes config matching the simple-persistentvolumeclaim.yaml
-    manifest."""
+    """Return the Kubernetes config matching the simple-persistentvolumeclaim.yaml manifest."""
     return client.V1PersistentVolumeClaim(
         api_version='v1',
         kind='PersistentVolumeClaim',
@@ -191,8 +189,7 @@ def simple_persistentvolumeclaim():
 
 @pytest.fixture()
 def simple_ingress():
-    """Return the Kubernetes config matching the simple-ingress.yaml
-    manifest."""
+    """Return the Kubernetes config matching the simple-ingress.yaml manifest."""
     return client.ExtensionsV1beta1Ingress(
         api_version='extensions/v1beta1',
         kind='Ingress',

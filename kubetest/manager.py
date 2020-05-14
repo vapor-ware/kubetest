@@ -285,7 +285,7 @@ class TestMeta:
         """Register a RoleBinding requirement with the test case.
 
         Args:
-            *rolebindings: The RoleBindings that are needed for the test case.
+            rolebindings: The RoleBindings that are needed for the test case.
         """
         self.rolebindings.extend(rolebindings)
 

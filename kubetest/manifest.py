@@ -118,7 +118,7 @@ def get_type(manifest: Dict[str, Any]) -> Union[object, None]:
     return None
 
 
-def load_type(obj_type, path):
+def load_type(obj_type, path: str):
     """Load a Kubernetes YAML manifest file for the specified type.
 
     While Kubernetes manifests can contain multiple object definitions
@@ -127,7 +127,7 @@ def load_type(obj_type, path):
     single object definition in the specified manifest file.
 
     Args:
-        path (str): The path the manifest YAML to load.
+        path: The path the manifest YAML to load.
         obj_type: The Kubernetes API object type that the YAML
             contents should be loaded into.
 

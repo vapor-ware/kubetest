@@ -121,6 +121,21 @@ class ApiObject(abc.ABC):
             self._api_client = c()
         return self._api_client
 
+    @classmethod
+    def preferred_client(cls):
+        """The preferred  API client for the Kubernetes object. This is defined in the
+        ``api_clients`` class member dict for each object.
+
+        Raises:
+             ValueError: No preferred client is defined for the object.
+        """
+        c = cls.api_clients.get('preferred')
+        if c is None:
+            raise ValueError(
+                f'no preferred api client defined for object {cls.__name__}',
+            )
+        return c()
+
     def wait_until_ready(
             self,
             timeout: int = None,

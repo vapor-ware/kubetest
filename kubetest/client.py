@@ -374,8 +374,7 @@ class TestClient:
                 If no name is specified in such case, an error is raised.
 
         Returns:
-            objects.Ingress: The ingress for the specified
-            manifest.
+            objects.Ingress: The ingress for the specified manifest.
         """
         log.info('loading ingress from path: %s', path)
         ingress = objects.Ingress.load(path, name=name)
@@ -824,24 +823,28 @@ class TestClient:
 
         return services
 
-    def get_persistentvolumeclaims(self, namespace=None, fields=None, labels=None):
+    def get_persistentvolumeclaims(
+            self,
+            namespace: str = None,
+            fields: Dict[str, str] = None,
+            labels: Dict[str, str] = None,
+    ) -> Dict[str, objects.PersistentVolumeClaim]:
         """Get PersistentVolumeClaims from the cluster.
 
         Args:
-            namespace (str): The namespace to get the PersistentVolumeClaim from. If not
+            namespace: The namespace to get the PersistentVolumeClaim from. If not
                 specified, it will use the auto-generated test case namespace
                 by default.
-            fields (dict[str, str]): A dictionary of fields used to restrict
-                the returned collection of PersistentVolumeClaim to only those which match
-                these field selectors. By default, no restricting is done.
-            labels (dict[str, str]): A dictionary of labels used to restrict
-                the returned collection of PersistentVolumeClaim to only those which match
-                these label selectors. By default, no restricting is done.
+            fields: A dictionary of fields used to restrict the returned collection
+                of PersistentVolumeClaim to only those which match these field
+                selectors. By default, no restricting is done.
+            labels: A dictionary of labels used to restrict the returned collection
+                of PersistentVolumeClaim to only those which match these label
+                selectors. By default, no restricting is done.
 
         Returns:
-            dict[str, objects.PersistentVolumeClaim]: A dictionary where the key is
-            the PersistentVolumeClaim name and the value is the PersistentVolumeClaim
-            itself.
+            A dictionary where the key is the PersistentVolumeClaim name and the
+            value is the PersistentVolumeClaim itself.
         """
         if namespace is None:
             namespace = self.namespace
@@ -861,24 +864,28 @@ class TestClient:
 
         return persistentvolumeclaims
 
-    def get_ingresses(self, namespace=None, fields=None, labels=None):
+    def get_ingresses(
+            self,
+            namespace: str = None,
+            fields: Dict[str, str] = None,
+            labels: Dict[str, str] = None,
+    ) -> Dict[str, objects.Ingress]:
         """Get Ingresses from the cluster.
 
         Args:
-            namespace (str): The namespace to get the Ingress from. If not
+            namespace: The namespace to get the Ingress from. If not
                 specified, it will use the auto-generated test case namespace
                 by default.
-            fields (dict[str, str]): A dictionary of fields used to restrict
-                the returned collection of Ingress to only those which match
-                these field selectors. By default, no restricting is done.
-            labels (dict[str, str]): A dictionary of labels used to restrict
-                the returned collection of Ingress to only those which match
-                these label selectors. By default, no restricting is done.
+            fields: A dictionary of fields used to restrict the returned collection
+                of Ingress to only those which match these field selectors. By
+                default, no restricting is done.
+            labels: A dictionary of labels used to restrict the returned collection
+                of Ingress to only those which match these label selectors. By
+                default, no restricting is done.
 
         Returns:
-            dict[str, objects.Ingress]: A dictionary where the key is
-            the Ingress name and the value is the Ingress
-            itself.
+            A dictionary where the key is the Ingress name and the value
+            is the Ingress itself.
         """
         if namespace is None:
             namespace = self.namespace

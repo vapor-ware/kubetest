@@ -35,11 +35,11 @@ class PersistentVolumeClaim(ApiObject):
     def __repr__(self):
         return self.__str__()
 
-    def create(self, namespace=None):
+    def create(self, namespace: str = None) -> None:
         """Create the PersistentVolumeClaim under the given namespace.
 
         Args:
-            namespace (str): The namespace to create the PersistentVolumeClaim under.
+            namespace: The namespace to create the PersistentVolumeClaim under.
                 If the PersistentVolumeClaim was loaded via the kubetest client, the
                 namespace will already be set, so it is not needed here.
                 Otherwise, the namespace will need to be provided.
@@ -59,7 +59,7 @@ class PersistentVolumeClaim(ApiObject):
             body=self.obj,
         )
 
-    def delete(self, options):
+    def delete(self, options: client.V1DeleteOptions = None) -> client.V1Status:
         """Delete the PersistentVolumeClaim.
 
         This method expects the PersistentVolumeClaim to have been loaded or otherwise
@@ -67,10 +67,10 @@ class PersistentVolumeClaim(ApiObject):
         to be set manually.
 
         Args:
-             options (client.V1DeleteOptions): Options for PersistentVolumeClaim deletion.
+             options: Options for PersistentVolumeClaim deletion.
 
         Returns:
-            client.V1Status: The status of the delete operation.
+            The status of the delete operation.
         """
         if options is None:
             options = client.V1DeleteOptions()
@@ -85,14 +85,14 @@ class PersistentVolumeClaim(ApiObject):
             body=options,
         )
 
-    def refresh(self):
+    def refresh(self) -> None:
         """Refresh the underlying Kubernetes PersistentVolumeClaim resource."""
         self.obj = self.api_client.read_namespaced_persistent_volume_claim(
             name=self.name,
             namespace=self.namespace,
         )
 
-    def is_ready(self):
+    def is_ready(self) -> bool:
         """Check if the PersistentVolumeClaim is in the ready state.
 
         PersistentVolumeClaims have a "status" field to check. However, as this
@@ -101,7 +101,7 @@ class PersistentVolumeClaim(ApiObject):
         readiness status by whether or not they exist on the cluster.
 
         Returns:
-            bool: True if in the ready state; False otherwise.
+            True if in the ready state; False otherwise.
         """
         try:
             self.refresh()

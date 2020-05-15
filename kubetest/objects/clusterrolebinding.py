@@ -19,7 +19,7 @@ class ClusterRoleBinding(ApiObject):
     API Object and provides some state management for the `ClusterRoleBinding`_.
 
     .. _ClusterRoleBinding:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#clusterrolebinding-v1-rbac-authorization-k8s-io
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#clusterrolebinding-v1-rbac-authorization-k8s-io
     """
 
     obj_type = client.V1ClusterRoleBinding

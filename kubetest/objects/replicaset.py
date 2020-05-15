@@ -24,7 +24,7 @@ class ReplicaSet(ApiObject):
     API Object and provides some state management for the `ReplicaSet`_.
 
     .. ReplicaSet:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.17/#replicaset-v1-apps
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#replicaset-v1-apps
     """
 
     obj_type = client.V1ReplicaSet

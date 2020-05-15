@@ -19,7 +19,7 @@ class Ingress(ApiObject):
     API Object and provides some state management for the `Ingress`_.
 
     .. _Ingress:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.10/#ingress-v1beta1-extensions
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#ingress-v1beta1-extensions
     """
 
     obj_type = client.ExtensionsV1beta1Api

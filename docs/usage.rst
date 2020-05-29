@@ -41,6 +41,7 @@ kubernetes integration test support:
 - ``--kube-config <PATH>``
 
     Specifies the path to the config file to use for connecting to your cluster.
+    Alternatively, you can set the KUBECONFIG env var, and then you will not need to specify.
     If this option is not specified, ``kubetest`` will not install resources onto
     the cluster, which may cause test failure.
 

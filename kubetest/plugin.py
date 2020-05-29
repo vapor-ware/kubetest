@@ -437,6 +437,7 @@ def kube(kubeconfig, request) -> TestClient:
     if request.session.config.getoption('in_cluster'):
         kubernetes.config.load_incluster_config()
     else:
+        kubeconfig = kubeconfig or os.getenv("KUBECONFIG")
         if kubeconfig:
             kubernetes.config.load_kube_config(
                 config_file=os.path.expandvars(os.path.expanduser(kubeconfig)),
@@ -445,8 +446,8 @@ def kube(kubeconfig, request) -> TestClient:
         else:
             log.error(
                 'unable to interact with cluster: kube fixture used without kube config '
-                'set. the config may be set with the --kube-config or --in-cluster flags '
-                'or by defining a custom kubeconfig fixture.'
+                'set. the config may be set with the flags --kube-config or --in-cluster or by'
+                'an env var KUBECONFIG or custom kubeconfig fixture definition.'
             )
             raise errors.SetupError('no kube config defined for test run')
 

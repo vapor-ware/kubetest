@@ -213,6 +213,18 @@ class TestLoadType:
                 os.path.join(manifest_dir, 'simple-persistentvolumeclaim.yaml')
             )
 
+    def test_simple_serviceaccount_ok(
+        self,
+        manifest_dir,
+        simple_serviceaccount
+    ):
+        """Test loading the simple serviceaccount successfully."""
+        obj = manifest.load_type(
+            client.V1ServiceAccount,
+            os.path.join(manifest_dir, 'simple-serviceaccount.yaml')
+        )
+        assert obj == simple_serviceaccount
+
     def test_bad_path(self, manifest_dir):
         """Test specifying an invalid manifest path."""
         with pytest.raises(FileNotFoundError):

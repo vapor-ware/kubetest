@@ -444,6 +444,38 @@ class TestClient:
             statefulset.namespace = self.namespace
         return statefulset
 
+    def load_serviceaccount(
+            self,
+            path: str,
+            set_namespace: bool = True,
+            name: Optional[str] = None,
+    ) -> objects.ServiceAccount:
+        """Load a manifest YAML into a ServiceAccount object.
+
+        By default, this will augment the ServiceAccount object with the generated
+        test case namespace. This behavior can be disabled with the
+        ``set_namespace`` flag.
+
+        Args:
+            path: The path to the ServiceAccount manifest.
+            set_namespace: Enable/disable the automatic augmentation of the
+                ServiceAccount namespace.
+            name: The name of the resource to load. If the manifest file
+                contains a single object definition for the type being
+                loaded, it is not necessary to specify the name. If the
+                manifest has multiple definitions containing the same
+                type, a name is required to differentiate between them.
+                If no name is specified in such case, an error is raised.
+
+        Returns:
+            The ServiceAccount for the specified manifest.
+        """
+        log.info(f'loading serviceaccount from path: {path}')
+        serviceaccount = objects.ServiceAccount.load(path, name=name)
+        if set_namespace:
+            serviceaccount.namespace = self.namespace
+        return serviceaccount
+
     # ****** General Helpers ******
 
     def get_configmaps(
@@ -981,6 +1013,45 @@ class TestClient:
             statefulsets[statefulset.name] = statefulset
 
         return statefulsets
+
+    def get_serviceaccounts(
+            self,
+            namespace: str = None,
+            fields: Dict[str, str] = None,
+            labels: Dict[str, str] = None,
+    ) -> Dict[str, objects.ServiceAccount]:
+        """Get ServiceAccounts from the cluster.
+
+        Args:
+            namespace: The namespace to get the ServiceAccount from. If not specified,
+                it will use the auto-generated test case namespace by default.
+            fields: A dictionary of fields used to restrict the returned collection
+                of ServiceAccount to only those which match these field selectors. By
+                default, no restricting is done.
+            labels: A dictionary of labels used to restrict the returned collection
+                of ServiceAccount to only those which match these label selectors. By
+                default, no restricting is done.
+
+        Returns:
+            A dictionary where the key is the ServiceAccount name and the value is the
+            ServiceAccount itself.
+        """
+        if namespace is None:
+            namespace = self.namespace
+
+        selectors = utils.selector_kwargs(fields, labels)
+
+        results = objects.ServiceAccount.preferred_client().list_namespaced_service_account(
+            namespace=namespace,
+            **selectors,
+        )
+
+        serviceaccount = {}
+        for obj in results.items:
+            cm = objects.ServiceAccount(obj)
+            serviceaccount[cm.name] = cm
+
+        return serviceaccount
 
     # ****** Test Helpers ******
 

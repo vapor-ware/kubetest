@@ -249,3 +249,15 @@ def simple_replicaset():
             ),
         ),
     )
+
+
+@pytest.fixture()
+def simple_serviceaccount():
+    """Return the Kubernetes config matching the simple-serviceaccount.yaml manifest."""
+    return client.V1ServiceAccount(
+        api_version='v1',
+        kind='ServiceAccount',
+        metadata=client.V1ObjectMeta(
+            name='build-robot'
+        )
+    )

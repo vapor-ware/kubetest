@@ -19,7 +19,7 @@ class ServiceAccount(ApiObject):
         https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#serviceaccount-v1-core
     """
 
-    obj_type = client.V1Namespace
+    obj_type = client.V1ServiceAccount
 
     api_clients = {
         'preferred': client.CoreV1Api,

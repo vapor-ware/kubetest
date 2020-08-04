@@ -1,0 +1,21 @@
+name: lint
+on:
+  push: {}
+  pull_request: {}
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    name: Python 3.8 Lint
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+    - name: Install dependencies
+      run: |
+        python -m pip install -U pip setuptools wheel
+        python -m pip install -U tox tox-gh-actions
+    - name: Lint
+      run: tox -e lint

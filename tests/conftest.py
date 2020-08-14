@@ -261,3 +261,20 @@ def simple_serviceaccount():
             name='build-robot'
         )
     )
+
+
+@pytest.fixture()
+def simple_networkpolicy():
+    """Return the Kubernetes config matching the simple-networkpolicy.yaml manifest."""
+    return client.V1NetworkPolicy(
+        api_version='networking.k8s.io/v1',
+        kind='NetworkPolicy',
+        metadata=client.V1ObjectMeta(
+            name='default-deny'
+        ),
+        spec=client.V1NetworkPolicySpec(
+            pod_selector=client.V1LabelSelector(),
+            policy_types=["Egress", "Ingress"],
+            )
+    )
+

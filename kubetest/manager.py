@@ -31,6 +31,7 @@ class ObjectManager:
         'rolebinding',
         'clusterrolebinding',
         'secret',
+        'networkpolicy',
         'service',
         'configmap',
         'persistentvolumeclaim',
@@ -103,6 +104,7 @@ class ObjectManager:
           - RoleBinding
           - ClusterRoleBinding
           - Secret
+          - NetworkPolicy
           - Service
           - ConfigMap
           - PersistentVolumeClaim

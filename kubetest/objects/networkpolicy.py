@@ -8,6 +8,7 @@ from .api_object import ApiObject
 
 log = logging.getLogger('kubetest')
 
+
 class NetworkPolicy(ApiObject):
     """Kubetest wrapper around a Kubernetes `NetworkPolicy`_ API Object.
 
@@ -99,7 +100,7 @@ class NetworkPolicy(ApiObject):
         """
         try:
             self.refresh()
-        except: #noqa
+        except:  # noqa
             return False
         else:
             return True

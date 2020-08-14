@@ -277,4 +277,3 @@ def simple_networkpolicy():
             policy_types=["Egress", "Ingress"],
             )
     )
-

@@ -12,7 +12,7 @@ log = logging.getLogger('kubetest')
 class NetworkPolicy(ApiObject):
     """Kubetest wrapper around a Kubernetes `NetworkPolicy`_ API Object.
 
-    The actual ``kubernetes.client.ExtensionsV1beta1Api`` instance that this
+    The actual ``kubernetes.client.NetworkingV1Api`` instance that this
     wraps can be accessed via the ``obj`` instance member.
 
     This wrapper provides some convenient functionality around the
@@ -22,7 +22,7 @@ class NetworkPolicy(ApiObject):
         https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#networkpolicy-v1-networking-k8s-io
     """
 
-    obj_type = client.NetworkingV1Api
+    obj_type = client.V1NetworkPolicy
 
     api_clients = {
             'preffered': client.NetworkingV1Api,

@@ -4,6 +4,8 @@ import logging
 
 from kubernetes import client
 
+from kubetest import condition, utils
+
 from .api_object import ApiObject
 
 log = logging.getLogger('kubetest')
@@ -104,3 +106,33 @@ class Ingress(ApiObject):
             return False
         else:
             return True
+
+    def has_load_balancer_ingress(self) -> bool:
+        """Check if the ingress has been assigned an ingress.
+
+        Returns:
+            True if an ingress has been assigned; False otherwise.
+        """
+        self.refresh()
+        return self.obj.status.load_balancer.ingress is not None
+
+    def wait_for_load_balancer_ingress(self, timeout: int = None) -> None:
+        """Wait until the ingress has been assigned an ingress.
+
+        Args:
+            timeout: The maximum time to wait in seconds, for the
+            Ingress to be assigned an ingress. If unspecified,
+            this will wait indefinitely. If specified and the timeout
+            is met or exceeded, a TimeoutError will be raised.
+
+        Raises:
+            TimeoutError: The specified timeout was exceeded.
+        """
+        wait_condition = condition.Condition(
+            'Ingress has been assigned an ingress',
+            self.has_load_balancer_ingress)
+
+        utils.wait_for_condition(
+            condition=wait_condition,
+            timeout=timeout,
+            interval=1)

@@ -130,7 +130,7 @@ class Ingress(ApiObject):
         """
         wait_condition = condition.Condition(
             'Ingress has been assigned an ingress',
-            self.has_load_balancer_endpoint)
+            self.has_load_balancer_ingress)
 
         utils.wait_for_condition(
             condition=wait_condition,

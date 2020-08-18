@@ -1,72 +1,17 @@
 #!/usr/bin/env groovy
 
-pipeline {
+// Include this shared CI repository to load script helpers and libraries.
+library identifier: 'vapor@1.0.0-RC4', retriever: modernSCM([
+  $class: 'GitSCMSource',
+  remote: 'https://github.com/vapor-ware/ci-shared.git',
+  credentialsId: 'vio-bot-gh',
+])
 
-  agent any
-
-  stages {
-    stage('Checkout') {
-      steps {
-        checkout scm
-      }
-    }
-
-    // Clean up the workspace
-    stage('Clean') {
-      steps {
-        sh 'make clean'
-      }
-    }
-
-    // Lint the source code.
-    stage('Lint') {
-      steps {
-        sh 'make lint'
-      }
-    }
-
-    // Run project unit tests.
-    stage('Test') {
-      steps {
-        sh 'make test'
-      }
-    }
-
-    // Build and distribute a new package version to PyPi.
-    stage('Publish to PyPi') {
-      when {
-        buildingTag()
-      }
-      environment {
-        TWINE_USERNAME = 'vaporio'
-        TWINE_PASSWORD = credentials('twine-password')
-      }
-      steps {
-        // publish to pypi
-        sh 'tox -e publish'
-      }
-    }
-
-    // Generate a new release draft on GitHub for a tag matching a version string
-    // pattern. The release will include an auto-generated changelog and build
-    // artifacts.
-    stage('Draft GitHub Release') {
-      when {
-        buildingTag()
-      }
-      environment {
-        GITHUB_USER = 'vapor-ware'
-        GITHUB_TOKEN = credentials('vio-bot-gh-token')
-        GITHUB_REPONAME = 'kubetest'
-      }
-      steps {
-        // Auto-generate a changelog for the release
-        sh './bin/ci/generate_changelog.sh'
-
-        // Create the release
-        sh 'docker pull edaniszewski/ghr'
-        sh 'docker run --rm -v ${WORKSPACE}:/repo edaniszewski/ghr -u ${GITHUB_USER} -r ${GITHUB_REPONAME} -t ${GITHUB_TOKEN} -b "$(cat ./CHANGELOG.md)" -replace ${TAG_NAME} dist/'
-      }
-    }
-  }
-}
+pythonPipeline([
+  'pythonVersion': '3.8',
+  'twineCredential': 'pypi-token-kubetest-upload',
+  'skipIntegrationTest': true,
+  'skipDocker': true,
+  'releaseToPypi': true,
+  'publishToGitHub': true,
+])

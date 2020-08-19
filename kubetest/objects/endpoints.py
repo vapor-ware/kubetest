@@ -93,6 +93,6 @@ class Endpoints(ApiObject):
         # check if any of the endpoint subsets has and addresses
         # in the not ready state.
         for subset in self.obj.subsets:
-            if subset.not_ready_addresses > 0:
+            if subset.not_ready_addresses is not None and subset.not_ready_addresses > 0:
                 return False
         return True

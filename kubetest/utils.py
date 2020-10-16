@@ -17,8 +17,8 @@ def new_namespace(test_name: str) -> str:
     Kubernetes namespace names follow a DNS-1123 label that consists of lower case
     alphanumeric characters or '-' and must start with an alphanumeric.
 
-    The test name and current timestamp are formatted to comply to this spec and
-    appended to the 'kubetest' prefix.
+    The test name and current reversed timestamp are formatted to comply to this
+    spec and appended to the 'kubetest' prefix.
 
     Args:
         test_name: The name of the test case for the namespace.
@@ -27,7 +27,7 @@ def new_namespace(test_name: str) -> str:
         The namespace name.
     """
     prefix = "kubetest"
-    timestamp = str(int(time.time()))
+    reversed_timestamp = str(int(time.time()))[::-1]
     test_name = test_name.replace("_", "-").lower()
     test_name = test_name.replace("[", "-")
     test_name = test_name.replace("]", "-")
@@ -36,12 +36,12 @@ def new_namespace(test_name: str) -> str:
     # characters. Check the length of all components (+2 for the dashes
     # joining the components). If the total length exceeds 63, truncate
     # the test name.
-    name_len = len(prefix) + len(timestamp) + len(test_name) + 2
+    name_len = len(prefix) + len(reversed_timestamp) + len(test_name) + 2
 
     if name_len > 63:
         test_name = test_name[: -(name_len - 63)]
 
-    return "-".join((prefix, test_name, timestamp))
+    return "-".join((prefix, test_name, reversed_timestamp))
 
 
 def selector_string(selectors: Mapping[str, str]) -> str:

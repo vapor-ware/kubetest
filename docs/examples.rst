@@ -76,7 +76,7 @@ Where the files listed above have the following contents:
             assert len(containers) == 1, 'nginx pod should have one container'
 
             resp = pod.http_proxy_get('/')
-            assert '<h1>Welcome to nginx!</h1>' in resp
+            assert '<h1>Welcome to nginx!</h1>' in resp.data
 
 
 With ``kubetest`` installed and a cluster available and configurations at ``~/.kube/config``,
@@ -136,7 +136,7 @@ it will actually have three.
             assert len(containers) == 1, 'nginx pod should have one container'
 
             resp = pod.http_proxy_get('/')
-            assert '<h1>Welcome to nginx!</h1>' in resp
+            assert '<h1>Welcome to nginx!</h1>' in resp.data
 
 
 Now, when we run the tests, we should expect to see an error.

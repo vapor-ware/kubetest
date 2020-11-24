@@ -349,7 +349,7 @@ Examples
 
   .. code-block:: python
 
-      @pytest.namespace(create=True, name='specific-name')
+      @pytest.mark.namespace(create=True, name='specific-name')
       def test_something(kube):
           ...
 

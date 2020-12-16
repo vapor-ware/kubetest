@@ -13,6 +13,8 @@ import kubernetes
 import pytest
 import urllib3
 
+from typing import Optional
+
 from kubetest import errors, markers
 from kubetest.client import TestClient
 from kubetest.manager import KubetestManager
@@ -423,15 +425,25 @@ def clusterinfo(kubeconfig) -> ClusterInfo:
 
 
 @pytest.fixture
-def kubeconfig(request) -> str:
+def kubeconfig(request) -> Optional[str]:
     """Return the name of the configured kube config file loaded for the tests."""
 
     config_file = request.session.config.getoption('kube_config')
     return config_file
 
 
+@pytest.fixture
+def kubecontext(request) -> Optional[str]:
+    """Return the context in the kubeconfig to use for the tests. 
+    
+    When None, use the current context as set in the kubeconfig.
+    """
+
+    context = request.session.config.getoption('kube_context')
+    return context
+
 @pytest.fixture()
-def kube(kubeconfig, request) -> TestClient:
+def kube(kubeconfig, kubecontext, request) -> TestClient:
     """Return a client for managing a Kubernetes cluster for testing."""
 
     if request.session.config.getoption('in_cluster'):
@@ -441,7 +453,7 @@ def kube(kubeconfig, request) -> TestClient:
         if kubeconfig:
             kubernetes.config.load_kube_config(
                 config_file=os.path.expandvars(os.path.expanduser(kubeconfig)),
-                context=request.session.config.getoption('kube_context'),
+                context=kubecontext,
             )
         else:
             log.error(

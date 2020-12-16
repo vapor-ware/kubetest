@@ -8,12 +8,11 @@ the state of the cluster.
 import logging
 import os
 import warnings
+from typing import Optional
 
 import kubernetes
 import pytest
 import urllib3
-
-from typing import Optional
 
 from kubetest import errors, markers
 from kubetest.client import TestClient
@@ -434,13 +433,14 @@ def kubeconfig(request) -> Optional[str]:
 
 @pytest.fixture
 def kubecontext(request) -> Optional[str]:
-    """Return the context in the kubeconfig to use for the tests. 
-    
+    """Return the context in the kubeconfig to use for the tests.
+
     When None, use the current context as set in the kubeconfig.
     """
 
     context = request.session.config.getoption('kube_context')
     return context
+
 
 @pytest.fixture()
 def kube(kubeconfig, kubecontext, request) -> TestClient:

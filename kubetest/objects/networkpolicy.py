@@ -25,9 +25,9 @@ class NetworkPolicy(ApiObject):
     obj_type = client.V1NetworkPolicy
 
     api_clients = {
-            'preffered': client.NetworkingV1Api,
-            'networking.k8s.io/v1': client.NetworkingV1Api,
-            }
+        'preffered': client.NetworkingV1Api,
+        'networking.k8s.io/v1': client.NetworkingV1Api,
+    }
 
     def __str__(self):
         return str(self.obj)
@@ -48,16 +48,16 @@ class NetworkPolicy(ApiObject):
             namespace = self.namespace
 
         log.info(
-                'creating networkpolicy "%s" in namespace "%s"',
-                self.name,
-                self.namespace
-                )
+            'creating networkpolicy "%s" in namespace "%s"',
+            self.name,
+            self.namespace
+        )
         log.debug('network_policy: %s', self.obj)
 
         self.obj = self.api_client.create_namespaced_network_policy(
-                namespace=namespace,
-                body=self.obj,
-                )
+            namespace=namespace,
+            body=self.obj,
+        )
 
     def delete(self, options: client.V1DeleteOptions = None) -> client.V1Status:
         """Delete the NetworkPolicy.
@@ -80,17 +80,17 @@ class NetworkPolicy(ApiObject):
         log.debug('network_policy: %s', self.obj)
 
         return self.api_client.delete_namespaced_network_policy(
-                name=self.name,
-                namespace=self.namespace,
-                body=options,
-                )
+            name=self.name,
+            namespace=self.namespace,
+            body=options,
+        )
 
     def refresh(self) -> None:
         """Refresh the underlying Kubernetes NetworkPolicy resource."""
         self.obj = self.api_client.read_namespaced_network_policy(
-                name=self.name,
-                namespace=self.namespace,
-                )
+            name=self.name,
+            namespace=self.namespace,
+        )
 
     def is_ready(self) -> None:
         """Check if the NetworkPolicy is in the ready state.

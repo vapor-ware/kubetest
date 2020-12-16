@@ -275,5 +275,5 @@ def simple_networkpolicy():
         spec=client.V1NetworkPolicySpec(
             pod_selector=client.V1LabelSelector(),
             policy_types=["Egress", "Ingress"],
-            )
+        )
     )

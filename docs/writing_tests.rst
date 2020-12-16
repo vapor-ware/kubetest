@@ -11,30 +11,41 @@ you can access it from wherever the tests are being run.
 Cluster Configuration
 ---------------------
 
-By default, kubetest will look for a config file at ``~/.kube/config`` -- this
-is the same place that ``kubectl`` looks for the cluster config. Generally, if
-you can reach your cluster via. ``kubectl``, you should be able to use it with
-kubetest.
+By default, kubetest will look for a config file at ``~/.kube/config`` and the 
+current context -- this is the same behavior that ``kubectl`` utilizes for the 
+resolving cluster config. Generally, if you can reach your cluster via. 
+``kubectl``, you should be able to use it with kubetest.
 
-If you wish to specify a different config file, you can pass it in via the
-``--kube-config`` flag. See :ref:`command_line_usage` for more details.
+If you wish to specify a different config file and/or context, you can pass it 
+in via the ``--kube-config`` and ``--kube-context`` flags.
+See :ref:`command_line_usage` for more details.
 
 You can also write a ``kubeconfig`` fixture which provides the path to the
-config path.  This may be useful in case your cluster is generated as part
-of the tests.
+config file and/or a ``kubecontext`` fixture which provides the name of the 
+context to be used.  This may be useful in case your cluster is generated as 
+part of the tests or you wish to use specific contexts in different parts of
+the suite.
 
 .. code-block:: python
 
     import pytest
     import subprocess
+    from typing import Optional
 
 
     @pytest.fixture
-    def kubeconfig():
+    def kubeconfig() -> str:
         # Here, Terraform creates a cluster and outputs a kubeconfig
         # at somepath
         subprocess.check_call(['terraform', 'apply'])
         return 'somepath/kubeconfig'
+    
+
+    @pytest.fixture
+    def kubecontext() -> Optional[str]:
+        # Return None to use the current context as set in the kubeconfig
+        # Or return the name of a specific context in the kubeconfig
+        return 'kubetest-cluster'
 
 
      def test_my_terraformed_cluster(kube):

@@ -36,7 +36,7 @@ APPLYMANIFESTS_INI = (
 )
 
 RENDER_MANIFESTS_INI = (
-    'render_manifests.with_args(render, context={}): '
+    'render_manifests(render, context={}): '
     'set a callable for rendering manifest templates. '
     'The render argument must be a callable that accepts a template file or string'
     'value and returns a rendered YAML document that can be applied to Kubernetes.'

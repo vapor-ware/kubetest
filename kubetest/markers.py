@@ -7,7 +7,7 @@ import pytest
 from kubernetes import client
 
 from kubetest import manager
-from kubetest.manifest import RenderCallable, Renderer, default_render, load_file, load_path
+from kubetest.manifest import Renderer, ContextRenderer, render, load_file, load_path
 from kubetest.objects import ApiObject, ClusterRoleBinding, RoleBinding
 
 
@@ -98,12 +98,12 @@ def register(config) -> None:
     config.addinivalue_line('markers', ROLEBINDING_INI)
     config.addinivalue_line('markers', NAMESPACE_INI)
 
-def get_manifest_render_for_item(item: pytest.Item) -> RenderCallable:
+def get_manifest_renderer_for_item(item: pytest.Item) -> Renderer:
     """Return the callable for rendering a manifest template.
     
-    Returns a custom render implementation set via the closest
-    `pytest.mark.render_manifests` marker or the `kubetest.manifest.default_render`
-    default implementation if no marker is found.
+    Returns the renderer set via the closest
+    `pytest.mark.render_manifests` marker or `kubetest.manifest.render`
+    if no marker is found.
     
     Args:
         item: The pytest test item.
@@ -112,7 +112,7 @@ def get_manifest_render_for_item(item: pytest.Item) -> RenderCallable:
         A callable for rendering manifest templates into YAML documents.
     """
     mark = item.get_closest_marker("render_manifests")
-    return mark.args[0] if mark else default_render
+    return mark.args[0] if mark else render
 
 def apply_manifest_from_marker(item: pytest.Item, meta: manager.TestMeta) -> None:
     """Load a manifest and create the API objects for the specified file.
@@ -128,11 +128,11 @@ def apply_manifest_from_marker(item: pytest.Item, meta: manager.TestMeta) -> Non
         item: The pytest test item.
         meta: The metainfo object for the marked test case.
     """    
-    item_render = get_manifest_render_for_item(item)
+    item_renderer = get_manifest_renderer_for_item(item)
     for mark in item.iter_markers(name='applymanifest'):
         path = mark.args[0]
-        render = mark.kwargs.get('render', item_render)
-        if not callable(render):
+        renderer = mark.kwargs.get('renderer', item_renderer)
+        if not callable(renderer):
             raise TypeError(f"renderer given is not callable")        
 
         # Normalize the path to be absolute.
@@ -141,8 +141,8 @@ def apply_manifest_from_marker(item: pytest.Item, meta: manager.TestMeta) -> Non
 
         # Load the manifest
         context = dict(namespace=meta.ns, test_node_id=meta.node_id, test_name=meta.name)
-        renderer = Renderer(render, context)
-        objs = load_file(path, renderer=renderer)
+        context_renderer = ContextRenderer(renderer, context)
+        objs = load_file(path, renderer=context_renderer)
 
         # For each of the loaded Kubernetes resources, wrap it in the
         # equivalent kubetest wrapper. If the object does not yet have a
@@ -177,13 +177,13 @@ def apply_manifests_from_marker(item: pytest.Item, meta: manager.TestMeta) -> No
         item: The pytest test item.
         meta: The metainfo object for the marked test case.
     """
-    item_render = get_manifest_render_for_item(item)
+    item_renderer = get_manifest_renderer_for_item(item)
     for mark in item.iter_markers(name='applymanifests'):
         dir_path = mark.args[0]
         files = mark.kwargs.get('files')
-        render = mark.kwargs.get('render', item_render)
+        renderer = mark.kwargs.get('renderer', item_renderer)
         
-        if not callable(render):
+        if not callable(renderer):
             raise TypeError(f"renderer given is not callable")        
 
         # We expect the path specified to either be absolute or relative
@@ -196,17 +196,17 @@ def apply_manifests_from_marker(item: pytest.Item, meta: manager.TestMeta) -> No
         
         # Setup template rendering context
         context = dict(dir_path=dir_path, namespace=meta.ns, test_node_id=meta.node_id, test_name=meta.name)
-        renderer = Renderer(render, context)
+        context_renderer = ContextRenderer(renderer, context)
 
         # If there are any files specified, we will only load those files.
         # Otherwise, we'll load everything in the directory.
         if files is None:
-            objs = load_path(dir_path, renderer=renderer)
+            objs = load_path(dir_path, renderer=context_renderer)
         else:
             objs = []
-            renderer.context["objs"] = objs
+            context_renderer.context["objs"] = objs
             for f in files:
-                objs.extend(load_file(os.path.join(dir_path, f), renderer=renderer))
+                objs.extend(load_file(os.path.join(dir_path, f), renderer=context_renderer))
 
         # For each of the loaded Kubernetes resources, we'll want to wrap it
         # in the equivalent kubetest wrapper. If the resource does not have

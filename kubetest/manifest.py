@@ -5,14 +5,63 @@ the corresponding Kubernetes API models.
 import builtins
 import os
 import re
-from typing import Any, Dict, List, Union
+from typing import Any, Callable, Dict, List, Optional, TextIO, Union
 
 import kubernetes
 import yaml
 from kubernetes.client import models
 
 
-def load_file(path: str) -> List[object]:
+# Callable type describing the signature of render() implementations
+RenderCallable = Callable[[Union[str, TextIO], Dict[str, Any]], Union[str, TextIO]]
+
+class Renderer:
+    """Render the contents of a manifest file as a template.
+
+    Renderers enable Kuberenetes manifest files to be trated as templates that
+    incorporate dynamic values that are computed at runtime. The renderer must
+    apply any necessary transformations to the input content and return a new
+    string containing a valid YAML document that can be applied to Kubernetes.
+    
+    The rendering interface is agnostic about how templating is implemented and
+    only cares that the returned value is a valid YAML manifest document. The 
+    context dictionary includes as much information as possible about the
+    kubetest environment. Manifests are rendered in input order and templates
+    that are rendered later have access to the object representations of
+    manifests that were renderer earlier.
+    
+    Args:
+        render_callable: A callable that renders a templated manifest.
+        context: A dictionary of runtime values available to the template during
+            rendering.
+    """
+    
+    def __init__(self, render_callable: RenderCallable, context: Dict[str, Any]) -> None:
+        self._render_callable = render_callable
+        self._context = context
+    
+    @property
+    def context(self) -> Dict[str, Any]:
+        """The context variables set on the renderer."""
+        return self._context
+    
+    def __call__(self, template: Union[str, TextIO], **context: Dict[str, Any]) -> Union[str, TextIO]:
+        """
+        Render a templatized manifest file to a YAML docoment.
+        
+        Args:
+            template: Then template to render.
+            context: A dictionary of template variables available for use during
+                rendering.
+        
+        Returns:
+            The rendered content of the manifest template.
+        """
+        merged_context = { **self.context, **context }
+        return self._render_callable(template, merged_context)
+
+
+def load_file(path: str, *, renderer: Optional[Renderer] = None) -> List[object]:
     """Load an individual Kubernetes manifest YAML file.
 
     This file may contain multiple YAML documents. It will attempt to auto-detect
@@ -20,12 +69,15 @@ def load_file(path: str) -> List[object]:
 
     Args:
         path: The fully qualified path to the file.
+        renderer: An optional callable for rendering the contents of the
+            manifest as a template.
 
     Returns:
         A list of the Kubernetes API objects for this manifest file.
     """
     with open(path, 'r') as f:
-        manifests = yaml.load_all(f, Loader=yaml.SafeLoader)
+        content = renderer(f, path=path) if renderer else f
+        manifests = yaml.load_all(content, Loader=yaml.SafeLoader)
 
         objs = []
         for manifest in manifests:
@@ -39,12 +91,14 @@ def load_file(path: str) -> List[object]:
     return objs
 
 
-def load_path(path: str) -> List[object]:
+def load_path(path: str, *, renderer: Optional[Renderer] = None) -> List[object]:
     """Load all of the Kubernetes YAML manifest files found in the
     specified directory path.
 
     Args:
         path: The path to the directory of manifest files.
+        renderer: An optional callable for rendering the contents of the
+            manifest as a template.
 
     Returns:
         A list of all the Kubernetes objects loaded from manifest file.
@@ -56,9 +110,10 @@ def load_path(path: str) -> List[object]:
         raise ValueError(f'{path} is not a directory')
 
     objs = []
+    if renderer: renderer.context["objs"] = objs
     for f in os.listdir(path):
         if os.path.splitext(f)[1].lower() in ['.yaml', '.yml']:
-            objs = objs + load_file(os.path.join(path, f))
+            objs = objs + load_file(os.path.join(path, f), renderer=renderer)
     return objs
 
 
@@ -118,7 +173,7 @@ def get_type(manifest: Dict[str, Any]) -> Union[object, None]:
     return None
 
 
-def load_type(obj_type, path: str):
+def load_type(obj_type, path: str, *, renderer: Optional[Renderer] = None):
     """Load a Kubernetes YAML manifest file for the specified type.
 
     While Kubernetes manifests can contain multiple object definitions
@@ -130,6 +185,8 @@ def load_type(obj_type, path: str):
         path: The path the manifest YAML to load.
         obj_type: The Kubernetes API object type that the YAML
             contents should be loaded into.
+        renderer: An optional callable for rendering the contents of the
+            manifest as a template.
 
     Returns:
         A Kubernetes API object populated with the YAML contents.
@@ -138,7 +195,11 @@ def load_type(obj_type, path: str):
         FileNotFoundError: The specified file was not found.
     """
     with open(path, 'r') as f:
-        manifest = yaml.full_load(f)
+        content = (
+            renderer(f, path=path, obj_type=obj_type) 
+            if renderer else f
+        )
+        manifest = yaml.full_load(content)
 
     return new_object(obj_type, manifest)
 
@@ -262,3 +323,20 @@ def cast_value(value: Any, t: str) -> Any:
         return new_object(k_type, value)
 
     raise ValueError(f'Unable to determine cast type behavior: {t}')
+
+def default_render(template: Union[str, TextIO], context: Dict[str, Any]) -> Union[str, TextIO]:
+    """Render a manifest template into a YAML document.
+    
+    This default implementation returns the input template unmodified.
+    Developers must provide an alternate render implementation to templatize
+    manifests.
+    
+    Args:
+        template: Then template to render.
+        context: A dictionary of variables available to the template.
+    
+    Returns:
+        The rendered content of the manifest template.
+    """
+    # Return the template unmodified.
+    return template

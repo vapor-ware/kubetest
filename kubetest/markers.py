@@ -36,7 +36,7 @@ APPLYMANIFESTS_INI = (
 )
 
 RENDER_MANIFESTS_INI = (
-    'render_manifests_with(render, context={}): '
+    'render_manifests.with_args(render, context={}): '
     'set a callable for rendering manifest templates. '
     'The render argument must be a callable that accepts a template file or string'
     'value and returns a rendered YAML document that can be applied to Kubernetes.'
@@ -102,7 +102,7 @@ def get_manifest_render_for_item(item: pytest.Item) -> RenderCallable:
     """Return the callable for rendering a manifest template.
     
     Returns a custom render implementation set via the closest
-    `pytest.mark.render_manifests_with` marker or the `kubetest.manifest.default_render`
+    `pytest.mark.render_manifests` marker or the `kubetest.manifest.default_render`
     default implementation if no marker is found.
     
     Args:
@@ -111,7 +111,7 @@ def get_manifest_render_for_item(item: pytest.Item) -> RenderCallable:
     Returns:
         A callable for rendering manifest templates into YAML documents.
     """
-    mark = item.get_closest_marker("render_manifests_with")
+    mark = item.get_closest_marker("render_manifests")
     return mark.args[0] if mark else default_render
 
 def apply_manifest_from_marker(item: pytest.Item, meta: manager.TestMeta) -> None:

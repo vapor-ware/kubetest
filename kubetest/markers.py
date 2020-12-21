@@ -7,9 +7,9 @@ import pytest
 from kubernetes import client
 
 from kubetest import manager
-from kubetest.manifest import Renderer, ContextRenderer, render, load_file, load_path
+from kubetest.manifest import (ContextRenderer, Renderer, load_file, load_path,
+                               render)
 from kubetest.objects import ApiObject, ClusterRoleBinding, RoleBinding
-
 
 APPLYMANIFEST_INI = (
     'applymanifest(path, render=None): '
@@ -98,21 +98,23 @@ def register(config) -> None:
     config.addinivalue_line('markers', ROLEBINDING_INI)
     config.addinivalue_line('markers', NAMESPACE_INI)
 
+
 def get_manifest_renderer_for_item(item: pytest.Item) -> Renderer:
     """Return the callable for rendering a manifest template.
-    
+
     Returns the renderer set via the closest
     `pytest.mark.render_manifests` marker or `kubetest.manifest.render`
     if no marker is found.
-    
+
     Args:
         item: The pytest test item.
-    
+
     Returns:
         A callable for rendering manifest templates into YAML documents.
     """
     mark = item.get_closest_marker("render_manifests")
     return mark.args[0] if mark else render
+
 
 def apply_manifest_from_marker(item: pytest.Item, meta: manager.TestMeta) -> None:
     """Load a manifest and create the API objects for the specified file.
@@ -127,13 +129,13 @@ def apply_manifest_from_marker(item: pytest.Item, meta: manager.TestMeta) -> Non
     Args:
         item: The pytest test item.
         meta: The metainfo object for the marked test case.
-    """    
+    """
     item_renderer = get_manifest_renderer_for_item(item)
     for mark in item.iter_markers(name='applymanifest'):
         path = mark.args[0]
         renderer = mark.kwargs.get('renderer', item_renderer)
         if not callable(renderer):
-            raise TypeError(f"renderer given is not callable")        
+            raise TypeError(f"renderer given is not callable")
 
         # Normalize the path to be absolute.
         if not os.path.isabs(path):
@@ -182,9 +184,9 @@ def apply_manifests_from_marker(item: pytest.Item, meta: manager.TestMeta) -> No
         dir_path = mark.args[0]
         files = mark.kwargs.get('files')
         renderer = mark.kwargs.get('renderer', item_renderer)
-        
+
         if not callable(renderer):
-            raise TypeError(f"renderer given is not callable")        
+            raise TypeError(f"renderer given is not callable")
 
         # We expect the path specified to either be absolute or relative
         # from the test file. If the path is relative, add the directory
@@ -193,9 +195,10 @@ def apply_manifests_from_marker(item: pytest.Item, meta: manager.TestMeta) -> No
             dir_path = os.path.abspath(
                 os.path.join(os.path.dirname(item.fspath), dir_path)
             )
-        
+
         # Setup template rendering context
-        context = dict(dir_path=dir_path, namespace=meta.ns, test_node_id=meta.node_id, test_name=meta.name)
+        context = dict(dir_path=dir_path, namespace=meta.ns,
+                       test_node_id=meta.node_id, test_name=meta.name)
         context_renderer = ContextRenderer(renderer, context)
 
         # If there are any files specified, we will only load those files.

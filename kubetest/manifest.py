@@ -11,7 +11,6 @@ import kubernetes
 import yaml
 from kubernetes.client import models
 
-
 # Callable type describing the signature of render() implementations
 Renderer = Callable[[Union[str, TextIO], Dict[str, Any]], Union[str, TextIO]]
 __render__: Optional[Renderer] = None
@@ -19,16 +18,16 @@ __render__: Optional[Renderer] = None
 
 def render(template: Union[str, TextIO], context: Dict[str, Any]) -> Union[str, TextIO]:
     """Render a manifest template into a YAML document using the module render callable.
-    
+
     Rendering is performed by the module global `__render__` callable.
     The default implementation returns the input template unmodified.
     To implement a different default rendering behavior, set the `__render__`
     attribute to a `RenderCallable` object.
-    
+
     Args:
         template: Then template to render.
         context: A dictionary of variables available to the template.
-    
+
     Returns:
         The rendered content of the manifest template.
     """
@@ -46,7 +45,7 @@ class ContextRenderer:
     arbitrary number of rendering operations. They are useful in accumulating
     context state during test setup when manifest templates need access to state
     that was established earlier.
-    
+
     Args:
         renderer: A callable that renders a templated manifest. Defaults to the
             module local `render` function which renders using the `__render__`
@@ -54,28 +53,28 @@ class ContextRenderer:
         context: A dictionary of runtime values available to the template during
             rendering. Defaults to an empty dictionary.
     """
-    
+
     def __init__(self, renderer: Renderer = render, context: Dict[str, Any] = {}) -> None:
         self._renderer = renderer
         self._context = context
-    
+
     @property
     def context(self) -> Dict[str, Any]:
         """The context variables set on the renderer."""
         return self._context
-    
+
     def __call__(self, template: Union[str, TextIO], context: Dict[str, Any]) -> Union[str, TextIO]:
         """Render a manifest template file to a YAML docoment.
-        
+
         Args:
             template: The template to render.
             context: A dictionary of template variables available for use during
                 rendering.
-        
+
         Returns:
             The rendered content of the manifest template.
         """
-        merged_context = { **self.context, **context }
+        merged_context = {**self.context, **context}
         return self._renderer(template, merged_context)
 
 
@@ -128,7 +127,8 @@ def load_path(path: str, *, renderer: Renderer = render) -> List[object]:
         raise ValueError(f'{path} is not a directory')
 
     objs = []
-    if isinstance(renderer, ContextRenderer): renderer.context["objs"] = objs
+    if isinstance(renderer, ContextRenderer):
+        renderer.context["objs"] = objs
     for f in os.listdir(path):
         if os.path.splitext(f)[1].lower() in ['.yaml', '.yml']:
             objs = objs + load_file(os.path.join(path, f), renderer=renderer)

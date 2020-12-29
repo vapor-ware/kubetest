@@ -427,7 +427,7 @@ def clusterinfo(kubeconfig) -> ClusterInfo:
 def kubeconfig(request) -> Optional[str]:
     """Return the name of the configured kube config file loaded for the tests."""
 
-    config_file = request.session.config.getoption('kube_config')
+    config_file = request.session.config.getoption('kube_config') or os.getenv("KUBECONFIG")
     return config_file
 
 
@@ -449,7 +449,6 @@ def kube(kubeconfig, kubecontext, request) -> TestClient:
     if request.session.config.getoption('in_cluster'):
         kubernetes.config.load_incluster_config()
     else:
-        kubeconfig = kubeconfig or os.getenv("KUBECONFIG")
         if kubeconfig:
             kubernetes.config.load_kube_config(
                 config_file=os.path.expandvars(os.path.expanduser(kubeconfig)),

@@ -44,7 +44,7 @@ def pytest_addoption(parser):
         '--kube-config',
         action='store',
         metavar='path',
-        default=None,
+        default=os.getenv("KUBECONFIG"),
         help=(
             'the kubernetes config for kubetest; this is required for '
             'resources to be installed on the cluster'
@@ -427,7 +427,7 @@ def clusterinfo(kubeconfig) -> ClusterInfo:
 def kubeconfig(request) -> Optional[str]:
     """Return the name of the configured kube config file loaded for the tests."""
 
-    config_file = request.session.config.getoption('kube_config') or os.getenv("KUBECONFIG")
+    config_file = request.session.config.getoption('kube_config')
     return config_file
 
 

@@ -44,7 +44,7 @@ def pytest_addoption(parser):
         '--kube-config',
         action='store',
         metavar='path',
-        default=None,
+        default=os.getenv("KUBECONFIG"),
         help=(
             'the kubernetes config for kubetest; this is required for '
             'resources to be installed on the cluster'
@@ -449,7 +449,6 @@ def kube(kubeconfig, kubecontext, request) -> TestClient:
     if request.session.config.getoption('in_cluster'):
         kubernetes.config.load_incluster_config()
     else:
-        kubeconfig = kubeconfig or os.getenv("KUBECONFIG")
         if kubeconfig:
             kubernetes.config.load_kube_config(
                 config_file=os.path.expandvars(os.path.expanduser(kubeconfig)),

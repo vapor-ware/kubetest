@@ -5,14 +5,80 @@ the corresponding Kubernetes API models.
 import builtins
 import os
 import re
-from typing import Any, Dict, List, Union
+from typing import Any, Callable, Dict, List, Optional, TextIO, Union
 
 import kubernetes
 import yaml
 from kubernetes.client import models
 
+# Callable type describing the signature of render() implementations
+Renderer = Callable[[Union[str, TextIO], Dict[str, Any]], Union[str, TextIO]]
+__render__: Optional[Renderer] = None
 
-def load_file(path: str) -> List[object]:
+
+def render(template: Union[str, TextIO], context: Dict[str, Any]) -> Union[str, TextIO]:
+    """Render a manifest template into a YAML document using the module render callable.
+
+    Rendering is performed by the module global `__render__` callable.
+    The default implementation returns the input template unmodified.
+    To implement a different default rendering behavior, set the `__render__`
+    attribute to a `RenderCallable` object.
+
+    Args:
+        template: Then template to render.
+        context: A dictionary of variables available to the template.
+
+    Returns:
+        The rendered content of the manifest template.
+    """
+    if __render__:
+        return __render__(template, context)
+    else:
+        # Return the template unmodified.
+        return template
+
+
+class ContextRenderer:
+    """ContextRenderer objects manage context state and render manifest templates.
+
+    ContextRenderer objects maintain a persistent context state across an
+    arbitrary number of rendering operations. They are useful in accumulating
+    context state during test setup when manifest templates need access to state
+    that was established earlier.
+
+    Args:
+        renderer: A callable that renders a templated manifest. Defaults to the
+            module local `render` function which renders using the `__render__`
+            callable.
+        context: A dictionary of runtime values available to the template during
+            rendering. Defaults to an empty dictionary.
+    """
+
+    def __init__(self, renderer: Renderer = render, context: Dict[str, Any] = {}) -> None:
+        self._renderer = renderer
+        self._context = context
+
+    @property
+    def context(self) -> Dict[str, Any]:
+        """The context variables set on the renderer."""
+        return self._context
+
+    def __call__(self, template: Union[str, TextIO], context: Dict[str, Any]) -> Union[str, TextIO]:
+        """Render a manifest template file to a YAML docoment.
+
+        Args:
+            template: The template to render.
+            context: A dictionary of template variables available for use during
+                rendering.
+
+        Returns:
+            The rendered content of the manifest template.
+        """
+        merged_context = {**self.context, **context}
+        return self._renderer(template, merged_context)
+
+
+def load_file(path: str, *, renderer: Renderer = render) -> List[object]:
     """Load an individual Kubernetes manifest YAML file.
 
     This file may contain multiple YAML documents. It will attempt to auto-detect
@@ -20,12 +86,15 @@ def load_file(path: str) -> List[object]:
 
     Args:
         path: The fully qualified path to the file.
+        renderer: The callable responsible for rendering the contents of the
+            manifest file to YAML.
 
     Returns:
         A list of the Kubernetes API objects for this manifest file.
     """
     with open(path, 'r') as f:
-        manifests = yaml.load_all(f, Loader=yaml.SafeLoader)
+        content = renderer(f, dict(path=path))
+        manifests = yaml.load_all(content, Loader=yaml.SafeLoader)
 
         objs = []
         for manifest in manifests:
@@ -39,12 +108,14 @@ def load_file(path: str) -> List[object]:
     return objs
 
 
-def load_path(path: str) -> List[object]:
+def load_path(path: str, *, renderer: Renderer = render) -> List[object]:
     """Load all of the Kubernetes YAML manifest files found in the
     specified directory path.
 
     Args:
         path: The path to the directory of manifest files.
+        renderer: The callable responsible for rendering the contents of the
+            manifest files to YAML.
 
     Returns:
         A list of all the Kubernetes objects loaded from manifest file.
@@ -56,9 +127,11 @@ def load_path(path: str) -> List[object]:
         raise ValueError(f'{path} is not a directory')
 
     objs = []
+    if isinstance(renderer, ContextRenderer):
+        renderer.context["objs"] = objs
     for f in os.listdir(path):
         if os.path.splitext(f)[1].lower() in ['.yaml', '.yml']:
-            objs = objs + load_file(os.path.join(path, f))
+            objs = objs + load_file(os.path.join(path, f), renderer=renderer)
     return objs
 
 
@@ -118,7 +191,7 @@ def get_type(manifest: Dict[str, Any]) -> Union[object, None]:
     return None
 
 
-def load_type(obj_type, path: str):
+def load_type(obj_type, path: str, *, renderer: Renderer = render):
     """Load a Kubernetes YAML manifest file for the specified type.
 
     While Kubernetes manifests can contain multiple object definitions
@@ -130,6 +203,8 @@ def load_type(obj_type, path: str):
         path: The path the manifest YAML to load.
         obj_type: The Kubernetes API object type that the YAML
             contents should be loaded into.
+        renderer: The callable responsible for rendering the contents of the
+            manifest file to YAML.
 
     Returns:
         A Kubernetes API object populated with the YAML contents.
@@ -138,7 +213,8 @@ def load_type(obj_type, path: str):
         FileNotFoundError: The specified file was not found.
     """
     with open(path, 'r') as f:
-        manifest = yaml.full_load(f)
+        content = renderer(f, dict(path=path, obj_type=obj_type))
+        manifest = yaml.full_load(content)
 
     return new_object(obj_type, manifest)
 

@@ -1,17 +1,18 @@
 """Custom pytest markers for kubetest."""
 
 import os
-from typing import List
+from typing import Any, Dict, List, TextIO, Union
 
 import pytest
 from kubernetes import client
 
 from kubetest import manager
-from kubetest.manifest import load_file, load_path
+from kubetest.manifest import (ContextRenderer, Renderer, load_file, load_path,
+                               render)
 from kubetest.objects import ApiObject, ClusterRoleBinding, RoleBinding
 
 APPLYMANIFEST_INI = (
-    'applymanifest(path): '
+    'applymanifest(path, render=None): '
     'load a YAML manifest file from the specified path and create it on the cluster. '
     'This marker is similar to the "kubectl apply -f <path>" command. Loading a '
     'manifest via this marker will not prohibit you from loading other manifests '
@@ -22,7 +23,7 @@ APPLYMANIFEST_INI = (
 )
 
 APPLYMANIFESTS_INI = (
-    'applymanifests(dir, files=None): '
+    'applymanifests(dir, files=None, render=None): '
     'load YAML manifests from the specified path and create them on the cluster. '
     'By default, all YAML files found in the specified path will be loaded and created. '
     'If a list is passed to the files parameter, only the files in the path matching '
@@ -32,6 +33,15 @@ APPLYMANIFESTS_INI = (
     'references to the created objects. Manifests loaded via this marker are registered '
     'with the internal test case metainfo and can be waited upon for creation via the '
     '"kube" fixture\'s "wait_until_created" method.'
+)
+
+RENDER_MANIFESTS_INI = (
+    'render_manifests(render, context={}): '
+    'set a callable for rendering manifest templates. '
+    'The render argument must be a callable that accepts a template file or string'
+    'value and returns a rendered YAML document that can be applied to Kubernetes.'
+    'The optional context argument can be used to set template variables that are made'
+    'available to the template at render time.'
 )
 
 CLUSTERROLEBINDING_INI = (
@@ -83,13 +93,31 @@ def register(config) -> None:
     """
     config.addinivalue_line('markers', APPLYMANIFEST_INI)
     config.addinivalue_line('markers', APPLYMANIFESTS_INI)
+    config.addinivalue_line('markers', RENDER_MANIFESTS_INI)
     config.addinivalue_line('markers', CLUSTERROLEBINDING_INI)
     config.addinivalue_line('markers', ROLEBINDING_INI)
     config.addinivalue_line('markers', NAMESPACE_INI)
 
 
+def get_manifest_renderer_for_item(item: pytest.Item) -> Renderer:
+    """Return the callable for rendering a manifest template.
+
+    Returns the renderer set via the closest
+    `pytest.mark.render_manifests` marker or `kubetest.manifest.render`
+    if no marker is found.
+
+    Args:
+        item: The pytest test item.
+
+    Returns:
+        A callable for rendering manifest templates into YAML documents.
+    """
+    mark = item.get_closest_marker("render_manifests")
+    return mark.args[0] if mark else render
+
+
 def apply_manifest_from_marker(item: pytest.Item, meta: manager.TestMeta) -> None:
-    """Load a manifest and create the API objects for teh specified file.
+    """Load a manifest and create the API objects for the specified file.
 
     This gets called for every `pytest.mark.applymanifest` marker on
     test cases.
@@ -102,15 +130,21 @@ def apply_manifest_from_marker(item: pytest.Item, meta: manager.TestMeta) -> Non
         item: The pytest test item.
         meta: The metainfo object for the marked test case.
     """
+    item_renderer = get_manifest_renderer_for_item(item)
     for mark in item.iter_markers(name='applymanifest'):
         path = mark.args[0]
+        renderer = mark.kwargs.get('renderer', item_renderer)
+        if not callable(renderer):
+            raise TypeError(f"renderer given is not callable")
 
         # Normalize the path to be absolute.
         if not os.path.isabs(path):
             path = os.path.abspath(path)
 
         # Load the manifest
-        objs = load_file(path)
+        context = dict(namespace=meta.ns, test_node_id=meta.node_id, test_name=meta.name)
+        context_renderer = ContextRenderer(renderer, context)
+        objs = load_file(path, renderer=context_renderer)
 
         # For each of the loaded Kubernetes resources, wrap it in the
         # equivalent kubetest wrapper. If the object does not yet have a
@@ -145,9 +179,14 @@ def apply_manifests_from_marker(item: pytest.Item, meta: manager.TestMeta) -> No
         item: The pytest test item.
         meta: The metainfo object for the marked test case.
     """
+    item_renderer = get_manifest_renderer_for_item(item)
     for mark in item.iter_markers(name='applymanifests'):
         dir_path = mark.args[0]
         files = mark.kwargs.get('files')
+        renderer = mark.kwargs.get('renderer', item_renderer)
+
+        if not callable(renderer):
+            raise TypeError(f"renderer given is not callable")
 
         # We expect the path specified to either be absolute or relative
         # from the test file. If the path is relative, add the directory
@@ -157,14 +196,20 @@ def apply_manifests_from_marker(item: pytest.Item, meta: manager.TestMeta) -> No
                 os.path.join(os.path.dirname(item.fspath), dir_path)
             )
 
+        # Setup template rendering context
+        context = dict(dir_path=dir_path, namespace=meta.ns,
+                       test_node_id=meta.node_id, test_name=meta.name)
+        context_renderer = ContextRenderer(renderer, context)
+
         # If there are any files specified, we will only load those files.
         # Otherwise, we'll load everything in the directory.
         if files is None:
-            objs = load_path(dir_path)
+            objs = load_path(dir_path, renderer=context_renderer)
         else:
             objs = []
+            context_renderer.context["objs"] = objs
             for f in files:
-                objs.extend(load_file(os.path.join(dir_path, f)))
+                objs.extend(load_file(os.path.join(dir_path, f), renderer=context_renderer))
 
         # For each of the loaded Kubernetes resources, we'll want to wrap it
         # in the equivalent kubetest wrapper. If the resource does not have

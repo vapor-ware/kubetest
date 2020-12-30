@@ -25,7 +25,7 @@ example-tests:  ## Run the example tests using kubetest
 
 .PHONY: fmt
 fmt:  ## Run formatting checks on the project source code
-	tox -e format
+	pre-commit run --all-files
 
 .PHONY: github-tag
 github-tag:  ## Create and push a tag with the current version

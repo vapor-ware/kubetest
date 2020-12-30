@@ -8,18 +8,17 @@ from kubetest.objects import ConfigMap, Deployment, Service
 
 
 class TestApiObject:
-
     def test_load_obj_from_manifest_one_definition(self, manifest_dir):
         """Load an object from a manifest file which only defines the definition
         for the object.
         """
 
         obj = Deployment.load(
-            os.path.join(manifest_dir, 'simple-deployment.yaml'),
+            os.path.join(manifest_dir, "simple-deployment.yaml"),
         )
 
         assert isinstance(obj, Deployment)
-        assert obj.name == 'nginx-deployment'
+        assert obj.name == "nginx-deployment"
 
     def test_load_obj_from_manifest_many_definitions(self, manifest_dir):
         """Load an object from a manifest file which defines multiple objects.
@@ -29,11 +28,11 @@ class TestApiObject:
         """
 
         obj = Deployment.load(
-            os.path.join(manifest_dir, 'multi-obj-manifest.yaml'),
+            os.path.join(manifest_dir, "multi-obj-manifest.yaml"),
         )
 
         assert isinstance(obj, Deployment)
-        assert obj.name == 'kubetest-test-app'
+        assert obj.name == "kubetest-test-app"
 
     def test_load_obj_from_manifest_many_definitions_no_identifier(self, manifest_dir):
         """Load an object from a manifest file which defines multiple objects.
@@ -45,10 +44,12 @@ class TestApiObject:
 
         with pytest.raises(ValueError):
             Service.load(
-                os.path.join(manifest_dir, 'multi-obj-manifest.yaml'),
+                os.path.join(manifest_dir, "multi-obj-manifest.yaml"),
             )
 
-    def test_load_obj_from_manifest_many_definitions_with_identifier(self, manifest_dir):
+    def test_load_obj_from_manifest_many_definitions_with_identifier(
+        self, manifest_dir
+    ):
         """Load an object from a manifest file which defines multiple objects.
 
         In this case, the manifest contains multiple object definitions for
@@ -57,12 +58,12 @@ class TestApiObject:
         """
 
         obj = Service.load(
-            os.path.join(manifest_dir, 'multi-obj-manifest.yaml'),
-            name='service-b',
+            os.path.join(manifest_dir, "multi-obj-manifest.yaml"),
+            name="service-b",
         )
 
         assert isinstance(obj, Service)
-        assert obj.name == 'service-b'
+        assert obj.name == "service-b"
 
     def test_load_obj_from_manifest_many_definitions_no_match(self, manifest_dir):
         """Load an object from a manifest file which defines multiple objects.
@@ -73,7 +74,7 @@ class TestApiObject:
 
         with pytest.raises(ValueError):
             ConfigMap.load(
-                os.path.join(manifest_dir, 'multi-obj-manifest.yaml'),
+                os.path.join(manifest_dir, "multi-obj-manifest.yaml"),
             )
 
     def test_load_obj_from_manifest_many_definitions_name_no_match(self, manifest_dir):
@@ -86,6 +87,5 @@ class TestApiObject:
 
         with pytest.raises(ValueError):
             Service.load(
-                os.path.join(manifest_dir, 'multi-obj-manifest.yaml'),
-                name='service-c'
+                os.path.join(manifest_dir, "multi-obj-manifest.yaml"), name="service-c"
             )

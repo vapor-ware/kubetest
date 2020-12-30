@@ -6,7 +6,7 @@ from kubernetes import client
 
 from .api_object import ApiObject
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class NetworkPolicy(ApiObject):
@@ -25,8 +25,8 @@ class NetworkPolicy(ApiObject):
     obj_type = client.V1NetworkPolicy
 
     api_clients = {
-        'preffered': client.NetworkingV1Api,
-        'networking.k8s.io/v1': client.NetworkingV1Api,
+        "preffered": client.NetworkingV1Api,
+        "networking.k8s.io/v1": client.NetworkingV1Api,
     }
 
     def __str__(self):
@@ -48,11 +48,9 @@ class NetworkPolicy(ApiObject):
             namespace = self.namespace
 
         log.info(
-            'creating networkpolicy "%s" in namespace "%s"',
-            self.name,
-            self.namespace
+            'creating networkpolicy "%s" in namespace "%s"', self.name, self.namespace
         )
-        log.debug('network_policy: %s', self.obj)
+        log.debug("network_policy: %s", self.obj)
 
         self.obj = self.api_client.create_namespaced_network_policy(
             namespace=namespace,
@@ -76,8 +74,8 @@ class NetworkPolicy(ApiObject):
             options = client.V1DeleteOptions()
 
         log.info('deleting network_policy "%s"', self.name)
-        log.debug('delete options: %s', options)
-        log.debug('network_policy: %s', self.obj)
+        log.debug("delete options: %s", options)
+        log.debug("network_policy: %s", self.obj)
 
         return self.api_client.delete_namespaced_network_policy(
             name=self.name,

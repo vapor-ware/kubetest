@@ -1,10 +1,9 @@
-
 import pytest
 
 
 @pytest.fixture
 def kubeconfig(request):
-    return '~/.kube/config'
+    return "~/.kube/config"
 
 
 def test_154(kube):

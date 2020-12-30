@@ -6,7 +6,7 @@ from kubernetes import client
 
 from .api_object import ApiObject
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class Secret(ApiObject):
@@ -25,8 +25,8 @@ class Secret(ApiObject):
     obj_type = client.V1Secret
 
     api_clients = {
-        'preferred': client.CoreV1Api,
-        'v1': client.CoreV1Api,
+        "preferred": client.CoreV1Api,
+        "v1": client.CoreV1Api,
     }
 
     def create(self, namespace: str = None) -> None:
@@ -42,7 +42,7 @@ class Secret(ApiObject):
             namespace = self.namespace
 
         log.info(f'creating secret "{self.name}" in namespace "{self.namespace}"')
-        log.debug(f'secret: {self.obj}')
+        log.debug(f"secret: {self.obj}")
 
         self.obj = self.api_client.create_namespaced_secret(
             namespace=namespace,
@@ -66,8 +66,8 @@ class Secret(ApiObject):
             options = client.V1DeleteOptions()
 
         log.info(f'deleting secret "{self.name}"')
-        log.debug(f'delete options: {options}')
-        log.debug(f'secret: {self.obj}')
+        log.debug(f"delete options: {options}")
+        log.debug(f"secret: {self.obj}")
 
         return self.api_client.delete_namespaced_secret(
             name=self.name,

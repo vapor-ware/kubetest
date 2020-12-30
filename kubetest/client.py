@@ -13,7 +13,7 @@ from kubernetes import client
 from kubetest import objects, utils
 from kubetest.condition import Condition, Policy, check_and_sort
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class TestClient:
@@ -47,7 +47,9 @@ class TestClient:
 
         obj.create()
 
-    def delete(self, obj: objects.ApiObject, options: client.V1DeleteOptions = None) -> None:
+    def delete(
+        self, obj: objects.ApiObject, options: client.V1DeleteOptions = None
+    ) -> None:
         """Delete the provided ApiObject from the Kubernetes cluster.
 
         If the object does not already have a namespace assigned to it, the client's
@@ -75,8 +77,8 @@ class TestClient:
 
     @staticmethod
     def load_clusterrolebinding(
-            path: str,
-            name: Optional[str] = None,
+        path: str,
+        name: Optional[str] = None,
     ) -> objects.ClusterRoleBinding:
         """Load a manifest YAML into a ClusterRoleBinding object.
 
@@ -92,14 +94,14 @@ class TestClient:
         Returns:
             The ClusterRoleBinding for the specified manifest.
         """
-        log.info(f'loading clusterrolebinding from path: {path}')
+        log.info(f"loading clusterrolebinding from path: {path}")
         return objects.ClusterRoleBinding.load(path, name=name)
 
     def load_configmap(
-            self,
-            path: str,
-            set_namespace: bool = True,
-            name: Optional[str] = None,
+        self,
+        path: str,
+        set_namespace: bool = True,
+        name: Optional[str] = None,
     ) -> objects.ConfigMap:
         """Load a manifest YAML into a ConfigMap object.
 
@@ -121,17 +123,17 @@ class TestClient:
         Returns:
             The ConfigMap for the specified manifest.
         """
-        log.info(f'loading configmap from path: {path}')
+        log.info(f"loading configmap from path: {path}")
         configmap = objects.ConfigMap.load(path, name=name)
         if set_namespace:
             configmap.namespace = self.namespace
         return configmap
 
     def load_daemonset(
-            self,
-            path: str,
-            set_namespace: bool = True,
-            name: Optional[str] = None,
+        self,
+        path: str,
+        set_namespace: bool = True,
+        name: Optional[str] = None,
     ) -> objects.DaemonSet:
         """Load a manifest YAML into a DaemonSet object.
 
@@ -152,17 +154,17 @@ class TestClient:
         Returns:
             The DaemonSet for the specified manifest.
         """
-        log.info(f'loading daemonset from path: {path}')
+        log.info(f"loading daemonset from path: {path}")
         daemonset = objects.DaemonSet.load(path, name=name)
         if set_namespace:
             daemonset.namespace = self.namespace
         return daemonset
 
     def load_deployment(
-            self,
-            path: str,
-            set_namespace: bool = True,
-            name: Optional[str] = None,
+        self,
+        path: str,
+        set_namespace: bool = True,
+        name: Optional[str] = None,
     ) -> objects.Deployment:
         """Load a manifest YAML into a Deployment object.
 
@@ -184,17 +186,17 @@ class TestClient:
         Returns:
             The Deployment for the specified manifest.
         """
-        log.info(f'loading deployment from path: {path}')
+        log.info(f"loading deployment from path: {path}")
         deployment = objects.Deployment.load(path, name=name)
         if set_namespace:
             deployment.namespace = self.namespace
         return deployment
 
     def load_pod(
-            self,
-            path: str,
-            set_namespace: bool = True,
-            name: Optional[str] = None,
+        self,
+        path: str,
+        set_namespace: bool = True,
+        name: Optional[str] = None,
     ) -> objects.Pod:
         """Load a manifest YAML into a Pod object.
 
@@ -215,17 +217,17 @@ class TestClient:
         Returns:
             The Pod for the specified manifest.
         """
-        log.info(f'loading pod from path: {path}')
+        log.info(f"loading pod from path: {path}")
         pod = objects.Pod.load(path, name=name)
         if set_namespace:
             pod.namespace = self.namespace
         return pod
 
     def load_rolebinding(
-            self,
-            path: str,
-            set_namespace: bool = True,
-            name: Optional[str] = None,
+        self,
+        path: str,
+        set_namespace: bool = True,
+        name: Optional[str] = None,
     ) -> objects.RoleBinding:
         """Load a manifest YAML into a RoleBinding object.
 
@@ -247,17 +249,17 @@ class TestClient:
         Returns:
             The RoleBinding for the specified manifest.
         """
-        log.info(f'loading rolebinding from path: {path}')
+        log.info(f"loading rolebinding from path: {path}")
         rolebinding = objects.RoleBinding.load(path, name=name)
         if set_namespace:
             rolebinding.namespace = self.namespace
         return rolebinding
 
     def load_secret(
-            self,
-            path: str,
-            set_namespace: bool = True,
-            name: Optional[str] = None,
+        self,
+        path: str,
+        set_namespace: bool = True,
+        name: Optional[str] = None,
     ) -> objects.Secret:
         """Load a manifest YAML into a Secret object.
 
@@ -279,17 +281,17 @@ class TestClient:
         Returns:
             The Secret for the specified manifest.
         """
-        log.info(f'loading secret from path: {path}')
+        log.info(f"loading secret from path: {path}")
         secret = objects.Secret.load(path, name=name)
         if set_namespace:
             secret.namespace = self.namespace
         return secret
 
     def load_service(
-            self,
-            path: str,
-            set_namespace: bool = True,
-            name: Optional[str] = None,
+        self,
+        path: str,
+        set_namespace: bool = True,
+        name: Optional[str] = None,
     ) -> objects.Service:
         """Load a manifest YAML into a Service object.
 
@@ -311,17 +313,17 @@ class TestClient:
         Returns:
             The Service for the specified manifest.
         """
-        log.info(f'loading service from path: {path}')
+        log.info(f"loading service from path: {path}")
         service = objects.Service.load(path, name=name)
         if set_namespace:
             service.namespace = self.namespace
         return service
 
     def load_persistentvolumeclaim(
-            self,
-            path: str,
-            set_namespace: bool = True,
-            name: Optional[str] = None,
+        self,
+        path: str,
+        set_namespace: bool = True,
+        name: Optional[str] = None,
     ) -> objects.PersistentVolumeClaim:
         """Load a manifest YAML into a PersistentVolumeClaim object.
 
@@ -344,17 +346,17 @@ class TestClient:
             objects.PersistentVolumeClaim: The PersistentVolumeClaim for the specified
             manifest.
         """
-        log.info('loading persistentvolumeclaim from path: %s', path)
+        log.info("loading persistentvolumeclaim from path: %s", path)
         persistentvolumeclaim = objects.PersistentVolumeClaim.load(path, name=name)
         if set_namespace:
             persistentvolumeclaim.namespace = self.namespace
         return persistentvolumeclaim
 
     def load_ingress(
-            self,
-            path: str,
-            set_namespace: bool = True,
-            name: Optional[str] = None,
+        self,
+        path: str,
+        set_namespace: bool = True,
+        name: Optional[str] = None,
     ) -> objects.Ingress:
         """Load a manifest YAML into a Ingress object.
 
@@ -376,16 +378,17 @@ class TestClient:
         Returns:
             objects.Ingress: The ingress for the specified manifest.
         """
-        log.info('loading ingress from path: %s', path)
+        log.info("loading ingress from path: %s", path)
         ingress = objects.Ingress.load(path, name=name)
         if set_namespace:
             ingress.namespace = self.namespace
         return ingress
 
     def load_replicaset(
-            self, path: str,
-            set_namespace: bool = True,
-            name: Optional[str] = None,
+        self,
+        path: str,
+        set_namespace: bool = True,
+        name: Optional[str] = None,
     ) -> objects.ReplicaSet:
         """Load a manifest YAML into a ReplicaSet object.
 
@@ -407,16 +410,17 @@ class TestClient:
         Returns:
             The ReplicaSet for the specified manifest.
         """
-        log.info(f'loading replicaset from path: {path}')
+        log.info(f"loading replicaset from path: {path}")
         replicaset = objects.ReplicaSet.load(path, name=name)
         if set_namespace:
             replicaset.namespace = self.namespace
         return replicaset
 
     def load_statefulset(
-            self, path: str,
-            set_namespace: bool = True,
-            name: Optional[str] = None,
+        self,
+        path: str,
+        set_namespace: bool = True,
+        name: Optional[str] = None,
     ) -> objects.StatefulSet:
         """Load a manifest YAML into a StatefulSet object.
 
@@ -438,17 +442,17 @@ class TestClient:
         Returns:
             The StatefulSet for the specified manifest.
         """
-        log.info(f'loading statefulset from path: {path}')
+        log.info(f"loading statefulset from path: {path}")
         statefulset = objects.StatefulSet.load(path, name=name)
         if set_namespace:
             statefulset.namespace = self.namespace
         return statefulset
 
     def load_serviceaccount(
-            self,
-            path: str,
-            set_namespace: bool = True,
-            name: Optional[str] = None,
+        self,
+        path: str,
+        set_namespace: bool = True,
+        name: Optional[str] = None,
     ) -> objects.ServiceAccount:
         """Load a manifest YAML into a ServiceAccount object.
 
@@ -470,7 +474,7 @@ class TestClient:
         Returns:
             The ServiceAccount for the specified manifest.
         """
-        log.info(f'loading serviceaccount from path: {path}')
+        log.info(f"loading serviceaccount from path: {path}")
         serviceaccount = objects.ServiceAccount.load(path, name=name)
         if set_namespace:
             serviceaccount.namespace = self.namespace
@@ -479,10 +483,10 @@ class TestClient:
     # ****** General Helpers ******
 
     def get_configmaps(
-            self,
-            namespace: str = None,
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
+        self,
+        namespace: str = None,
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
     ) -> Dict[str, objects.ConfigMap]:
         """Get ConfigMaps from the cluster.
 
@@ -518,10 +522,10 @@ class TestClient:
         return configmaps
 
     def get_daemonsets(
-            self,
-            namespace: str = None,
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
+        self,
+        namespace: str = None,
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
     ) -> Dict[str, objects.DaemonSet]:
         """Get DaemonSets from the cluster.
 
@@ -557,10 +561,10 @@ class TestClient:
         return daemonsets
 
     def get_deployments(
-            self,
-            namespace: str = None,
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
+        self,
+        namespace: str = None,
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
     ) -> Dict[str, objects.Deployment]:
         """Get Deployments from the cluster.
 
@@ -596,10 +600,10 @@ class TestClient:
         return deployments
 
     def get_endpoints(
-            self,
-            namespace: str = None,
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
+        self,
+        namespace: str = None,
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
     ) -> Dict[str, objects.Endpoints]:
         """Get Endpoints from the cluster.
 
@@ -635,10 +639,10 @@ class TestClient:
         return endpoints
 
     def get_events(
-            self,
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
-            all_namespaces: bool = False,
+        self,
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
+        all_namespaces: bool = False,
     ) -> Dict[str, objects.Event]:
         """Get the latest Events that occurred in the cluster.
 
@@ -658,13 +662,10 @@ class TestClient:
         selectors = utils.selector_kwargs(fields, labels)
 
         if all_namespaces:
-            results = client.CoreV1Api().list_event_for_all_namespaces(
-                **selectors
-            )
+            results = client.CoreV1Api().list_event_for_all_namespaces(**selectors)
         else:
             results = client.CoreV1Api().list_namespaced_event(
-                namespace=self.namespace,
-                **selectors
+                namespace=self.namespace, **selectors
             )
 
         events = {}
@@ -675,9 +676,9 @@ class TestClient:
         return events
 
     def get_namespaces(
-            self,
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
+        self,
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
     ) -> Dict[str, objects.Namespace]:
         """Get Namespaces from the cluster.
 
@@ -708,8 +709,8 @@ class TestClient:
 
     @staticmethod
     def get_nodes(
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
     ) -> Dict[str, objects.Node]:
         """Get the Nodes that make up the cluster.
 
@@ -739,10 +740,10 @@ class TestClient:
         return nodes
 
     def get_pods(
-            self,
-            namespace: str = None,
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
+        self,
+        namespace: str = None,
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
     ) -> Dict[str, objects.Pod]:
         """Get Pods from the cluster.
 
@@ -778,10 +779,10 @@ class TestClient:
         return pods
 
     def get_secrets(
-            self,
-            namespace: str = None,
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
+        self,
+        namespace: str = None,
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
     ) -> Dict[str, objects.Secret]:
         """Get Secrets from the cluster.
 
@@ -817,10 +818,10 @@ class TestClient:
         return secrets
 
     def get_services(
-            self,
-            namespace: str = None,
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
+        self,
+        namespace: str = None,
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
     ) -> Dict[str, objects.Service]:
         """Get Services under the test case namespace.
 
@@ -856,10 +857,10 @@ class TestClient:
         return services
 
     def get_persistentvolumeclaims(
-            self,
-            namespace: str = None,
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
+        self,
+        namespace: str = None,
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
     ) -> Dict[str, objects.PersistentVolumeClaim]:
         """Get PersistentVolumeClaims from the cluster.
 
@@ -897,10 +898,10 @@ class TestClient:
         return persistentvolumeclaims
 
     def get_ingresses(
-            self,
-            namespace: str = None,
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
+        self,
+        namespace: str = None,
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
     ) -> Dict[str, objects.Ingress]:
         """Get Ingresses from the cluster.
 
@@ -937,10 +938,10 @@ class TestClient:
         return ingresses
 
     def get_replicasets(
-            self,
-            namespace: str = None,
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
+        self,
+        namespace: str = None,
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
     ) -> Dict[str, objects.ReplicaSet]:
         """Get ReplicaSets from the cluster.
 
@@ -976,10 +977,10 @@ class TestClient:
         return replicasets
 
     def get_statefulsets(
-            self,
-            namespace: str = None,
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
+        self,
+        namespace: str = None,
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
     ) -> Dict[str, objects.StatefulSet]:
         """Get StatefulSets from the cluster.
 
@@ -1015,10 +1016,10 @@ class TestClient:
         return statefulsets
 
     def get_serviceaccounts(
-            self,
-            namespace: str = None,
-            fields: Dict[str, str] = None,
-            labels: Dict[str, str] = None,
+        self,
+        namespace: str = None,
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
     ) -> Dict[str, objects.ServiceAccount]:
         """Get ServiceAccounts from the cluster.
 
@@ -1041,9 +1042,11 @@ class TestClient:
 
         selectors = utils.selector_kwargs(fields, labels)
 
-        results = objects.ServiceAccount.preferred_client().list_namespaced_service_account(
-            namespace=namespace,
-            **selectors,
+        results = (
+            objects.ServiceAccount.preferred_client().list_namespaced_service_account(
+                namespace=namespace,
+                **selectors,
+            )
         )
 
         serviceaccount = {}
@@ -1057,11 +1060,11 @@ class TestClient:
 
     @staticmethod
     def wait_for_conditions(
-            *args: Condition,
-            timeout: int = None,
-            interval: Union[float, int] = 1,
-            policy: Policy = Policy.ONCE,
-            fail_on_api_error: bool = True,
+        *args: Condition,
+        timeout: int = None,
+        interval: Union[float, int] = 1,
+        policy: Policy = Policy.ONCE,
+        fail_on_api_error: bool = True,
     ) -> None:
         """Wait for all of the provided Conditions to be met.
 
@@ -1095,7 +1098,7 @@ class TestClient:
 
         # If something was given, make sure they are all Conditions
         if not all(map(lambda c: isinstance(c, Condition), args)):
-            raise ValueError('All arguments must be a Condition')
+            raise ValueError("All arguments must be a Condition")
 
         # make a copy of the conditions
         to_check = list(args)
@@ -1105,7 +1108,7 @@ class TestClient:
             # condition checking policy
             met, unmet = check_and_sort(*conditions)
             if policy == Policy.ONCE:
-                log.info(f'check met: {met}')
+                log.info(f"check met: {met}")
                 conditions[:] = unmet
                 return len(unmet) == 0
 
@@ -1114,11 +1117,11 @@ class TestClient:
 
             else:
                 raise ValueError(
-                    f'Invalid condition policy specified: {policy}',
+                    f"Invalid condition policy specified: {policy}",
                 )
 
         wait_condition = Condition(
-            'wait for conditions',
+            "wait for conditions",
             condition_checker,
             to_check,
         )
@@ -1135,14 +1138,14 @@ class TestClient:
             # that we weren't able to resolve in the error message, not
             # the 'wait for conditions' wrapper.
             raise TimeoutError(
-                f'timed out wile waiting for conditions to be met: {to_check}',
+                f"timed out wile waiting for conditions to be met: {to_check}",
             )
 
     def wait_for_ready_nodes(
-            self,
-            count: int,
-            timeout: int = None,
-            interval: Union[int, float] = 1,
+        self,
+        count: int,
+        timeout: int = None,
+        interval: Union[int, float] = 1,
     ) -> None:
         """Wait until there are at least ``count`` number of nodes available
         in the cluster.
@@ -1157,12 +1160,13 @@ class TestClient:
             interval: The time, in seconds, to sleep before re-checking the
                 number of nodes.
         """
+
         def node_count_match(node_count):
             nodes = self.get_nodes()
             return [n.is_ready() for n in nodes.values()].count(True) >= node_count
 
         wait_condition = Condition(
-            f'wait for {count} nodes',
+            f"wait for {count} nodes",
             node_count_match,
             count,
         )
@@ -1173,7 +1177,9 @@ class TestClient:
             interval=interval,
         )
 
-    def wait_for_registered(self, timeout: int = None, interval: Union[int, float] = 1) -> None:
+    def wait_for_registered(
+        self, timeout: int = None, interval: Union[int, float] = 1
+    ) -> None:
         """Wait for all of the pre-registered objects to be ready on the cluster.
 
         An object is pre-registered with the test client if it is specified
@@ -1187,6 +1193,7 @@ class TestClient:
             interval: The time, in seconds, to sleep before re-checking the ready
                 state for pre-registered objects.
         """
+
         def check_registered():
             for obj in self.pre_registered:
                 if not obj.is_ready():
@@ -1194,7 +1201,7 @@ class TestClient:
             return True
 
         wait_condition = Condition(
-            'wait for pre-registered objects to be ready',
+            "wait for pre-registered objects to be ready",
             check_registered,
         )
 
@@ -1206,9 +1213,9 @@ class TestClient:
 
     @staticmethod
     def wait_until_created(
-            obj: objects.ApiObject,
-            timeout: int = None,
-            interval: Union[int, float] = 1,
+        obj: objects.ApiObject,
+        timeout: int = None,
+        interval: Union[int, float] = 1,
     ) -> None:
         """Wait until the specified object has been created.
 
@@ -1221,6 +1228,7 @@ class TestClient:
             interval: The time, in seconds, to sleep before re-checking the
                 created state of the object.
         """
+
         def check_ready(api_obj):
             try:
                 api_obj.refresh()
@@ -1229,13 +1237,11 @@ class TestClient:
             return True
 
         wait_condition = Condition(
-            f'wait for {type(obj).__name__}:{obj.name} to be created',
+            f"wait for {type(obj).__name__}:{obj.name} to be created",
             check_ready,
             obj,
         )
 
         utils.wait_for_condition(
-            condition=wait_condition,
-            timeout=timeout,
-            interval=interval
+            condition=wait_condition, timeout=timeout, interval=interval
         )

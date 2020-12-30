@@ -6,7 +6,7 @@ from kubernetes import client
 
 from .api_object import ApiObject
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class ConfigMap(ApiObject):
@@ -25,8 +25,8 @@ class ConfigMap(ApiObject):
     obj_type = client.V1ConfigMap
 
     api_clients = {
-        'preferred': client.CoreV1Api,
-        'v1': client.CoreV1Api,
+        "preferred": client.CoreV1Api,
+        "v1": client.CoreV1Api,
     }
 
     def create(self, namespace: str = None) -> None:
@@ -42,7 +42,7 @@ class ConfigMap(ApiObject):
             namespace = self.namespace
 
         log.info(f'creating configmap "{self.name}" in namespace "{self.namespace}"')
-        log.debug(f'configmap: {self.obj}')
+        log.debug(f"configmap: {self.obj}")
 
         self.obj = self.api_client.create_namespaced_config_map(
             namespace=namespace,
@@ -66,8 +66,8 @@ class ConfigMap(ApiObject):
             options = client.V1DeleteOptions()
 
         log.info(f'deleting configmap "{self.name}"')
-        log.debug(f'delete options: {options}')
-        log.debug(f'configmap: {self.obj}')
+        log.debug(f"delete options: {options}")
+        log.debug(f"configmap: {self.obj}")
 
         return self.api_client.delete_namespaced_config_map(
             name=self.name,

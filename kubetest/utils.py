@@ -8,7 +8,7 @@ from kubernetes.client.rest import ApiException
 
 from kubetest.condition import Condition
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 def new_namespace(test_name: str) -> str:
@@ -26,11 +26,11 @@ def new_namespace(test_name: str) -> str:
     Returns:
         The namespace name.
     """
-    prefix = 'kubetest'
+    prefix = "kubetest"
     timestamp = str(int(time.time()))
-    test_name = test_name.replace('_', '-').lower()
-    test_name = test_name.replace('[', '-')
-    test_name = test_name.replace(']', '-')
+    test_name = test_name.replace("_", "-").lower()
+    test_name = test_name.replace("[", "-")
+    test_name = test_name.replace("]", "-")
 
     # The length of a resource name in Kubernetes may not exceed 63
     # characters. Check the length of all components (+2 for the dashes
@@ -39,9 +39,9 @@ def new_namespace(test_name: str) -> str:
     name_len = len(prefix) + len(timestamp) + len(test_name) + 2
 
     if name_len > 63:
-        test_name = test_name[:-(name_len-63)]
+        test_name = test_name[: -(name_len - 63)]
 
-    return '-'.join((prefix, test_name, timestamp))
+    return "-".join((prefix, test_name, timestamp))
 
 
 def selector_string(selectors: Mapping[str, str]) -> str:
@@ -53,12 +53,12 @@ def selector_string(selectors: Mapping[str, str]) -> str:
     Returns:
         The selector string for the given dictionary.
     """
-    return ','.join([f'{k}={v}' for k, v in selectors.items()])
+    return ",".join([f"{k}={v}" for k, v in selectors.items()])
 
 
 def selector_kwargs(
-        fields: Mapping[str, str] = None,
-        labels: Mapping[str, str] = None,
+    fields: Mapping[str, str] = None,
+    labels: Mapping[str, str] = None,
 ) -> Dict[str, str]:
     """Create a dictionary of kwargs for Kubernetes object selectors.
 
@@ -76,18 +76,18 @@ def selector_kwargs(
     """
     kwargs = {}
     if fields is not None:
-        kwargs['field_selector'] = selector_string(fields)
+        kwargs["field_selector"] = selector_string(fields)
     if labels is not None:
-        kwargs['label_selector'] = selector_string(labels)
+        kwargs["label_selector"] = selector_string(labels)
 
     return kwargs
 
 
 def wait_for_condition(
-        condition: Condition,
-        timeout: int = None,
-        interval: Union[int, float] = 1,
-        fail_on_api_error: bool = True,
+    condition: Condition,
+    timeout: int = None,
+    interval: Union[int, float] = 1,
+    fail_on_api_error: bool = True,
 ) -> None:
     """Wait for a condition to be met.
 
@@ -106,7 +106,7 @@ def wait_for_condition(
     Raises:
         TimeoutError: The specified timeout was exceeded.
     """
-    log.info(f'waiting for condition: {condition}')
+    log.info(f"waiting for condition: {condition}")
 
     # define the maximum time to wait. once this is met, we should
     # stop waiting.
@@ -119,7 +119,7 @@ def wait_for_condition(
     while True:
         if max_time and time.time() >= max_time:
             raise TimeoutError(
-                f'timed out ({timeout}s) while waiting for condition {condition}'
+                f"timed out ({timeout}s) while waiting for condition {condition}"
             )
 
         # check if the condition is met and break out if it is
@@ -127,7 +127,7 @@ def wait_for_condition(
             if condition.check():
                 break
         except ApiException as e:
-            log.warning(f'got api exception while waiting: {e}')
+            log.warning(f"got api exception while waiting: {e}")
             if fail_on_api_error:
                 raise
 
@@ -136,4 +136,4 @@ def wait_for_condition(
         time.sleep(interval)
 
     end = time.time()
-    log.info(f'wait completed (total={end-start}s) {condition}')
+    log.info(f"wait completed (total={end-start}s) {condition}")

@@ -11,7 +11,7 @@ from kubetest.utils import selector_string
 from .api_object import ApiObject
 from .pod import Pod
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class StatefulSet(ApiObject):
@@ -30,10 +30,10 @@ class StatefulSet(ApiObject):
     obj_type = client.V1StatefulSet
 
     api_clients = {
-        'preferred': client.AppsV1Api,
-        'apps/v1': client.AppsV1Api,
-        'apps/v1beta1': client.AppsV1beta1Api,
-        'apps/v1beta2': client.AppsV1beta2Api,
+        "preferred": client.AppsV1Api,
+        "apps/v1": client.AppsV1Api,
+        "apps/v1beta1": client.AppsV1beta1Api,
+        "apps/v1beta2": client.AppsV1beta2Api,
     }
 
     def __init__(self, *args, **kwargs) -> None:
@@ -49,7 +49,7 @@ class StatefulSet(ApiObject):
         The kubetest label key is "kubetest/<obj kind>" where the obj kind is
         the lower-cased kind of the obj.
         """
-        self.klabel_key = 'kubetest/statefulset'
+        self.klabel_key = "kubetest/statefulset"
         if self.obj.metadata.labels:
             self.klabel_uid = self.obj.metadata.labels.get(self.klabel_key, None)
         else:
@@ -73,7 +73,7 @@ class StatefulSet(ApiObject):
 
         # If no spec is set, there is nothing to set additional labels on
         if self.obj.spec is None:
-            log.warning('statefulset spec not set - cannot set kubetest label')
+            log.warning("statefulset spec not set - cannot set kubetest label")
             return
 
         # Set the selector label
@@ -109,7 +109,7 @@ class StatefulSet(ApiObject):
             namespace = self.namespace
 
         log.info(f'creating statefulset "{self.name}" in namespace "{self.namespace}"')
-        log.debug(f'statefulset: {self.obj}')
+        log.debug(f"statefulset: {self.obj}")
 
         self.obj = self.api_client.create_namespaced_stateful_set(
             namespace=namespace,
@@ -133,8 +133,8 @@ class StatefulSet(ApiObject):
             options = client.V1DeleteOptions()
 
         log.info(f'deleting statefulset "{self.name}"')
-        log.debug(f'delete options: {options}')
-        log.debug(f'statefulset: {self.obj}')
+        log.debug(f"delete options: {options}")
+        log.debug(f"statefulset: {self.obj}")
 
         return self.api_client.delete_namespaced_stateful_set(
             name=self.name,
@@ -197,9 +197,9 @@ class StatefulSet(ApiObject):
 
         pods = client.CoreV1Api().list_namespaced_pod(
             namespace=self.namespace,
-            label_selector=selector_string({self.klabel_key: self.klabel_uid})
+            label_selector=selector_string({self.klabel_key: self.klabel_uid}),
         )
 
         pods = [Pod(p) for p in pods.items]
-        log.debug(f'pods: {pods}')
+        log.debug(f"pods: {pods}")
         return pods

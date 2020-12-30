@@ -11,7 +11,7 @@ from kubetest import condition, response, utils
 from .api_object import ApiObject
 from .container import Container
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class Pod(ApiObject):
@@ -30,8 +30,8 @@ class Pod(ApiObject):
     obj_type = client.V1Pod
 
     api_clients = {
-        'preferred': client.CoreV1Api,
-        'v1': client.CoreV1Api,
+        "preferred": client.CoreV1Api,
+        "v1": client.CoreV1Api,
     }
 
     def create(self, namespace: str = None) -> None:
@@ -47,7 +47,7 @@ class Pod(ApiObject):
             namespace = self.namespace
 
         log.info(f'creating pod "{self.name}" in namespace "{self.namespace}"')
-        log.debug(f'pod: {self.obj}')
+        log.debug(f"pod: {self.obj}")
 
         self.obj = self.api_client.create_namespaced_pod(
             namespace=namespace,
@@ -71,8 +71,8 @@ class Pod(ApiObject):
             options = client.V1DeleteOptions()
 
         log.info(f'deleting pod "{self.name}"')
-        log.debug(f'delete options: {options}')
-        log.debug(f'pod: {self.obj}')
+        log.debug(f"delete options: {options}")
+        log.debug(f"pod: {self.obj}")
 
         return self.api_client.delete_namespaced_pod(
             name=self.name,
@@ -104,16 +104,16 @@ class Pod(ApiObject):
         # the 'failed' or 'success' state will no longer be running,
         # so we only care if the pod is in the 'running' state.
         phase = status.phase
-        if phase.lower() != 'running':
+        if phase.lower() != "running":
             return False
 
         for cond in status.conditions:
             # we only care about the condition type 'ready'
-            if cond.type.lower() != 'ready':
+            if cond.type.lower() != "ready":
                 continue
 
             # check that the readiness condition is True
-            return cond.status.lower() == 'true'
+            return cond.status.lower() == "true"
 
         # Catchall
         return False
@@ -172,7 +172,9 @@ class Pod(ApiObject):
 
         return total
 
-    def http_proxy_get(self, path: str, query_params: Dict[str, str] = None) -> response.Response:
+    def http_proxy_get(
+        self, path: str, query_params: Dict[str, str] = None
+    ) -> response.Response:
         """Issue a GET request to a proxy for the Pod.
 
         Notes:
@@ -196,32 +198,32 @@ class Pod(ApiObject):
         if query_params is None:
             query_params = {}
 
-        path_params = {
-            'name': self.name,
-            'namespace': self.namespace
-        }
+        path_params = {"name": self.name, "namespace": self.namespace}
         header_params = {
-            'Accept': c.api_client.select_header_accept(['*/*']),
-            'Content-Type': c.api_client.select_header_content_type(['*/*'])
+            "Accept": c.api_client.select_header_accept(["*/*"]),
+            "Content-Type": c.api_client.select_header_content_type(["*/*"]),
         }
-        auth_settings = ['BearerToken']
+        auth_settings = ["BearerToken"]
 
         try:
-            resp = response.Response(*c.api_client.call_api(
-                '/api/v1/namespaces/{namespace}/pods/{name}/proxy/' + path, 'GET',
-                path_params=path_params,
-                query_params=query_params,
-                header_params=header_params,
-                body=None,
-                post_params=[],
-                files={},
-                response_type='str',
-                auth_settings=auth_settings,
-                _return_http_data_only=False,  # we want all info, not just data
-                _preload_content=True,
-                _request_timeout=None,
-                collection_formats={}
-            ))
+            resp = response.Response(
+                *c.api_client.call_api(
+                    "/api/v1/namespaces/{namespace}/pods/{name}/proxy/" + path,
+                    "GET",
+                    path_params=path_params,
+                    query_params=query_params,
+                    header_params=header_params,
+                    body=None,
+                    post_params=[],
+                    files={},
+                    response_type="str",
+                    auth_settings=auth_settings,
+                    _return_http_data_only=False,  # we want all info, not just data
+                    _preload_content=True,
+                    _request_timeout=None,
+                    collection_formats={},
+                )
+            )
         except ApiException as e:
             # if the ApiException does not have a body or headers, that
             # means the raised exception did not get a response (even if
@@ -240,7 +242,10 @@ class Pod(ApiObject):
         return resp
 
     def http_proxy_post(
-            self, path: str, query_params: Dict[str, str] = None, data=None,
+        self,
+        path: str,
+        query_params: Dict[str, str] = None,
+        data=None,
     ) -> response.Response:
         """Issue a POST request to a proxy for the Pod.
 
@@ -266,32 +271,32 @@ class Pod(ApiObject):
         if query_params is None:
             query_params = {}
 
-        path_params = {
-            'name': self.name,
-            'namespace': self.namespace
-        }
+        path_params = {"name": self.name, "namespace": self.namespace}
         header_params = {
-            'Accept': c.api_client.select_header_accept(['*/*']),
-            'Content-Type': c.api_client.select_header_content_type(['*/*'])
+            "Accept": c.api_client.select_header_accept(["*/*"]),
+            "Content-Type": c.api_client.select_header_content_type(["*/*"]),
         }
-        auth_settings = ['BearerToken']
+        auth_settings = ["BearerToken"]
 
         try:
-            resp = response.Response(*c.api_client.call_api(
-                '/api/v1/namespaces/{namespace}/pods/{name}/proxy/' + path, 'POST',
-                path_params=path_params,
-                query_params=query_params,
-                header_params=header_params,
-                body=data,
-                post_params=[],
-                files={},
-                response_type='str',
-                auth_settings=auth_settings,
-                _return_http_data_only=False,  # we want all info, not just data
-                _preload_content=True,
-                _request_timeout=None,
-                collection_formats={}
-            ))
+            resp = response.Response(
+                *c.api_client.call_api(
+                    "/api/v1/namespaces/{namespace}/pods/{name}/proxy/" + path,
+                    "POST",
+                    path_params=path_params,
+                    query_params=query_params,
+                    header_params=header_params,
+                    body=data,
+                    post_params=[],
+                    files={},
+                    response_type="str",
+                    auth_settings=auth_settings,
+                    _return_http_data_only=False,  # we want all info, not just data
+                    _preload_content=True,
+                    _request_timeout=None,
+                    collection_formats={},
+                )
+            )
         except ApiException as e:
             # if the ApiException does not have a body or headers, that
             # means the raised exception did not get a response (even if
@@ -354,7 +359,7 @@ class Pod(ApiObject):
             TimeoutError: The specified timeout was exceeded.
         """
         wait_condition = condition.Condition(
-            'all pod containers started',
+            "all pod containers started",
             self.containers_started,
         )
 

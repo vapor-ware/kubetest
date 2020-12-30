@@ -4,7 +4,7 @@ import logging
 
 from kubernetes import client
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class Node:
@@ -36,7 +36,7 @@ class Node:
             if node.metadata.name == self.name:
                 self.obj = node
                 return
-        log.warning(f'unable to refresh node: no node found with name: {self.name}')
+        log.warning(f"unable to refresh node: no node found with name: {self.name}")
 
     def status(self) -> client.V1NodeStatus:
         """Get the status of the Node.
@@ -66,11 +66,11 @@ class Node:
 
         for cond in status.conditions:
             # we only care about the 'ready' condition
-            if cond.type.lower() != 'ready':
+            if cond.type.lower() != "ready":
                 continue
 
             # check that the readiness condition is true
-            return cond.status.lower() == 'true'
+            return cond.status.lower() == "true"
 
         # Catchall
         return False

@@ -6,7 +6,7 @@ from kubernetes import client
 
 from .api_object import ApiObject
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class RoleBinding(ApiObject):
@@ -25,10 +25,10 @@ class RoleBinding(ApiObject):
     obj_type = client.V1RoleBinding
 
     api_clients = {
-        'preferred': client.RbacAuthorizationV1Api,
-        'rbac.authorization.k8s.io/v1': client.RbacAuthorizationV1Api,
-        'rbac.authorization.k8s.io/v1alpha1': client.RbacAuthorizationV1alpha1Api,
-        'rbac.authorization.k8s.io/v1beta1': client.RbacAuthorizationV1beta1Api,
+        "preferred": client.RbacAuthorizationV1Api,
+        "rbac.authorization.k8s.io/v1": client.RbacAuthorizationV1Api,
+        "rbac.authorization.k8s.io/v1alpha1": client.RbacAuthorizationV1alpha1Api,
+        "rbac.authorization.k8s.io/v1beta1": client.RbacAuthorizationV1beta1Api,
     }
 
     def create(self, namespace: str = None) -> None:
@@ -43,8 +43,10 @@ class RoleBinding(ApiObject):
         if namespace is None:
             namespace = self.namespace
 
-        log.info(f'creating rolebinding "{self.name}" in namespace "{self.namespace}"')  # noqa
-        log.debug(f'rolebinding: {self.obj}')
+        log.info(
+            f'creating rolebinding "{self.name}" in namespace "{self.namespace}"'
+        )  # noqa
+        log.debug(f"rolebinding: {self.obj}")
 
         self.obj = self.api_client.create_namespaced_role_binding(
             namespace=namespace,
@@ -68,8 +70,8 @@ class RoleBinding(ApiObject):
             options = client.V1DeleteOptions()
 
         log.info(f'deleting rolebinding "{self.name}"')
-        log.debug(f'delete options: {options}')
-        log.debug(f'rolebinding: {self.obj}')
+        log.debug(f"delete options: {options}")
+        log.debug(f"rolebinding: {self.obj}")
 
         return self.api_client.delete_namespaced_role_binding(
             namespace=self.namespace,

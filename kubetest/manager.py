@@ -7,7 +7,7 @@ import kubernetes
 
 from kubetest import client, objects, utils
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class ObjectManager:
@@ -27,20 +27,20 @@ class ObjectManager:
     # The ApiObject buckets in the order that that should be
     # applied when creating them on the cluster.
     ordered_buckets = [
-        'namespace',
-        'rolebinding',
-        'clusterrolebinding',
-        'secret',
-        'networkpolicy',
-        'service',
-        'configmap',
-        'persistentvolumeclaim',
-        'ingress',
-        'daemonset',
-        'statefulset',
-        'replicaset',
-        'deployment',
-        'pod',
+        "namespace",
+        "rolebinding",
+        "clusterrolebinding",
+        "secret",
+        "networkpolicy",
+        "service",
+        "configmap",
+        "persistentvolumeclaim",
+        "ingress",
+        "daemonset",
+        "statefulset",
+        "replicaset",
+        "deployment",
+        "pod",
     ]
 
     def __init__(self):
@@ -72,8 +72,8 @@ class ObjectManager:
         for arg in args:
             if not isinstance(arg, objects.ApiObject):
                 raise ValueError(
-                    'Only ApiObject instances can be added to the ObjectManager, '
-                    f'but was given: {arg}'
+                    "Only ApiObject instances can be added to the ObjectManager, "
+                    f"but was given: {arg}"
                 )
 
             # Get the type name of the ApiObject wrapper and lower case it,
@@ -86,7 +86,7 @@ class ObjectManager:
             if name in self.ordered_buckets:
                 self.__getattribute__(name).append(arg)
             else:
-                raise ValueError(f'Unable to determine bucket for ApiObject: {arg}')
+                raise ValueError(f"Unable to determine bucket for ApiObject: {arg}")
 
     def get_objects_in_apply_order(self) -> Generator[objects.ApiObject, None, None]:
         """Get all of the managed objects in the order that they should be
@@ -137,11 +137,11 @@ class TestMeta:
     """
 
     def __init__(
-            self,
-            name: str,
-            node_id: str,
-            namespace_create: bool = True,
-            namespace_name: str = None,
+        self,
+        name: str,
+        node_id: str,
+        namespace_create: bool = True,
+        namespace_name: str = None,
     ) -> None:
 
         self.name = name
@@ -217,7 +217,8 @@ class TestMeta:
         # possibility of things existing on the cluster.
         if self._pt_setup_failed:
             log.info(
-                f'pytest setup failed for {self.name}: not running test case teardown')
+                f"pytest setup failed for {self.name}: not running test case teardown"
+            )
             return
 
         # Delete the test case namespace if we've created it.
@@ -230,7 +231,9 @@ class TestMeta:
         for crb in self.clusterrolebindings:
             self.client.delete(crb)
 
-    def yield_container_logs(self, tail_lines: int = None) -> Generator[str, None, None]:
+    def yield_container_logs(
+        self, tail_lines: int = None
+    ) -> Generator[str, None, None]:
         """Yield the container logs for the test case.
 
         These logs will be printed out if the test was in error to provide
@@ -257,7 +260,7 @@ class TestMeta:
 
         log_kwargs = {}
         if tail_lines is not None and tail_lines > 0:
-            log_kwargs['tail_lines'] = tail_lines
+            log_kwargs["tail_lines"] = tail_lines
 
         for pod in pods_list.items:
             for container in pod.spec.containers:
@@ -273,14 +276,14 @@ class TestMeta:
                     )
                 except Exception as e:
                     log.warning(
-                        f'Unable to cache logs for {pod_name}::{container_name} ({e})',
+                        f"Unable to cache logs for {pod_name}::{container_name} ({e})",
                     )
                     continue
 
-                if logs != '':
-                    _id = f'=== {self.node_id} -> {pod_name}::{container_name} ==='
-                    border = '=' * len(_id)
-                    yield '\n'.join([border, _id, border, logs, '\n'])
+                if logs != "":
+                    _id = f"=== {self.node_id} -> {pod_name}::{container_name} ==="
+                    border = "=" * len(_id)
+                    yield "\n".join([border, _id, border, logs, "\n"])
         return
 
     def register_rolebindings(self, *rolebindings: objects.RoleBinding) -> None:
@@ -292,8 +295,8 @@ class TestMeta:
         self.rolebindings.extend(rolebindings)
 
     def register_clusterrolebindings(
-            self,
-            *clusterrolebindings: objects.ClusterRoleBinding,
+        self,
+        *clusterrolebindings: objects.ClusterRoleBinding,
     ) -> None:
         """Register a ClusterRoleBinding requirement with the test case.
 
@@ -331,11 +334,11 @@ class KubetestManager:
         self.nodes = {}
 
     def new_test(
-            self,
-            node_id: str,
-            test_name: str,
-            namespace_create: bool = True,
-            namespace_name: str = None,
+        self,
+        node_id: str,
+        test_name: str,
+        namespace_create: bool = True,
+        namespace_name: str = None,
     ) -> TestMeta:
         """Create a new TestMeta for a test case.
 
@@ -354,12 +357,12 @@ class KubetestManager:
         Returns:
             The newly created TestMeta for the test case.
         """
-        log.info(f'creating test meta for {node_id}')
+        log.info(f"creating test meta for {node_id}")
         meta = TestMeta(
             node_id=node_id,
             name=test_name,
             namespace_create=namespace_create,
-            namespace_name=namespace_name
+            namespace_name=namespace_name,
         )
 
         self.nodes[node_id] = meta

@@ -7,8 +7,8 @@ def test_cluster_role_binding(kube):
 
     f = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
-        'configs',
-        'clusterrolebinding.yaml'
+        "configs",
+        "clusterrolebinding.yaml",
     )
 
     cm = kube.load_clusterrolebinding(f)

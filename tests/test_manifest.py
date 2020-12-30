@@ -13,34 +13,38 @@ class TestCastValue:
     """Tests for kubetest.manifest.cast_value"""
 
     @pytest.mark.parametrize(
-        'value,t,expected', [
+        "value,t,expected",
+        [
             # builtin types
-            (11, 'int', int(11)),
-            ('11', 'int', int(11)),
-            (11.0, 'int', int(11)),
-            (11, 'float', float(11)),
-            (11, 'str', '11'),
-
+            (11, "int", int(11)),
+            ("11", "int", int(11)),
+            (11.0, "int", int(11)),
+            (11, "float", float(11)),
+            (11, "str", "11"),
             # casting to object should result in no change
-            (11, 'object', 11),
-            ('11', 'object', '11'),
-
+            (11, "object", 11),
+            ("11", "object", "11"),
             # kubernetes types
             (
-                {'apiVersion': 'apps/v1', 'kind': 'Namespace'},
-                'V1Namespace',
-                client.V1Namespace(kind='Namespace', api_version='apps/v1')),
+                {"apiVersion": "apps/v1", "kind": "Namespace"},
+                "V1Namespace",
+                client.V1Namespace(kind="Namespace", api_version="apps/v1"),
+            ),
             (
-                {'fieldRef': {'apiVersion': 'apps/v1beta1', 'fieldPath': 'foobar'}},
-                'V1EnvVarSource',
-                client.V1EnvVarSource(field_ref=client.V1ObjectFieldSelector(
-                    api_version='apps/v1beta1', field_path='foobar'
-                ))),
+                {"fieldRef": {"apiVersion": "apps/v1beta1", "fieldPath": "foobar"}},
+                "V1EnvVarSource",
+                client.V1EnvVarSource(
+                    field_ref=client.V1ObjectFieldSelector(
+                        api_version="apps/v1beta1", field_path="foobar"
+                    )
+                ),
+            ),
             (
-                {'finalizers': ['a', 'b', 'c']},
-                'V1ObjectMeta',
-                client.V1ObjectMeta(finalizers=['a', 'b', 'c'])),
-        ]
+                {"finalizers": ["a", "b", "c"]},
+                "V1ObjectMeta",
+                client.V1ObjectMeta(finalizers=["a", "b", "c"]),
+            ),
+        ],
     )
     def test_ok(self, value, t, expected):
         """Test casting values to the specified type successfully."""
@@ -50,21 +54,20 @@ class TestCastValue:
         assert actual == expected
 
     @pytest.mark.parametrize(
-        'value,t,error', [
+        "value,t,error",
+        [
             # builtin types
-            ({'foo': 'bar'}, 'int', TypeError),
-            ([1, 3, 5], 'float', TypeError),
-            (1.0, 'set', TypeError),
-
+            ({"foo": "bar"}, "int", TypeError),
+            ([1, 3, 5], "float", TypeError),
+            (1.0, "set", TypeError),
             # kubernetes types
-            (11, 'V1Namespace', AttributeError),
-            ('foo', 'V1Deployment', AttributeError),
-            (['a', 'b', 'c'], 'V1Service', AttributeError),
-            ({1, 2, 3, 4}, 'V1Pod', AttributeError),
-
+            (11, "V1Namespace", AttributeError),
+            ("foo", "V1Deployment", AttributeError),
+            (["a", "b", "c"], "V1Service", AttributeError),
+            ({1, 2, 3, 4}, "V1Pod", AttributeError),
             # unknown type
-            (11, 'NotARealType', ValueError),
-        ]
+            (11, "NotARealType", ValueError),
+        ],
     )
     def test_error(self, value, t, error):
         """Test casting values to the specified type unsuccessfully."""
@@ -86,8 +89,7 @@ class TestLoadType:
     def test_simple_deployment_ok(self, manifest_dir, simple_deployment):
         """Test loading the simple deployment successfully."""
         obj = manifest.load_type(
-            client.V1Deployment,
-            os.path.join(manifest_dir, 'simple-deployment.yaml')
+            client.V1Deployment, os.path.join(manifest_dir, "simple-deployment.yaml")
         )
         assert obj == simple_deployment
 
@@ -97,15 +99,13 @@ class TestLoadType:
             # The V1Container requires a name -- since the manifest has no name,
             # it will cause V1Container construction to fail with ValueError.
             manifest.load_type(
-                client.V1Container,
-                os.path.join(manifest_dir, 'simple-deployment.yaml')
+                client.V1Container, os.path.join(manifest_dir, "simple-deployment.yaml")
             )
 
     def test_simple_statefulset_ok(self, manifest_dir, simple_statefulset):
         """Test loading the simple statefulset successfully."""
         obj = manifest.load_type(
-            client.V1StatefulSet,
-            os.path.join(manifest_dir, 'simple-statefulset.yaml')
+            client.V1StatefulSet, os.path.join(manifest_dir, "simple-statefulset.yaml")
         )
         assert obj == simple_statefulset
 
@@ -116,14 +116,13 @@ class TestLoadType:
             # it will cause V1Container construction to fail with ValueError.
             manifest.load_type(
                 client.V1Container,
-                os.path.join(manifest_dir, 'simple-statefulset.yaml')
+                os.path.join(manifest_dir, "simple-statefulset.yaml"),
             )
 
     def test_simple_daemonset_ok(self, manifest_dir, simple_daemonset):
         """Test loading the simple daemonset successfully."""
         obj = manifest.load_type(
-            client.V1DaemonSet,
-            os.path.join(manifest_dir, 'simple-daemonset.yaml')
+            client.V1DaemonSet, os.path.join(manifest_dir, "simple-daemonset.yaml")
         )
         assert obj == simple_daemonset
 
@@ -133,15 +132,13 @@ class TestLoadType:
             # The V1Container requires a name -- since the manifest has no name,
             # it will cause V1Container construction to fail with ValueError.
             manifest.load_type(
-                client.V1Container,
-                os.path.join(manifest_dir, 'simple-daemonset.yaml')
+                client.V1Container, os.path.join(manifest_dir, "simple-daemonset.yaml")
             )
 
     def test_simple_service_ok(self, manifest_dir, simple_service):
         """Test loading the simple service successfully."""
         obj = manifest.load_type(
-            client.V1Service,
-            os.path.join(manifest_dir, 'simple-service.yaml')
+            client.V1Service, os.path.join(manifest_dir, "simple-service.yaml")
         )
         assert obj == simple_service
 
@@ -151,15 +148,14 @@ class TestLoadType:
             # The V1Container requires a name -- since the manifest has no name,
             # it will cause V1Container construction to fail with ValueError.
             manifest.load_type(
-                client.V1Container,
-                os.path.join(manifest_dir, 'simple-service.yaml')
+                client.V1Container, os.path.join(manifest_dir, "simple-service.yaml")
             )
 
     def test_simple_ingress_ok(self, manifest_dir, simple_ingress):
         """Test loading the simple service successfully."""
         obj = manifest.load_type(
             client.ExtensionsV1beta1Ingress,
-            os.path.join(manifest_dir, 'simple-ingress.yaml')
+            os.path.join(manifest_dir, "simple-ingress.yaml"),
         )
         assert obj == simple_ingress
 
@@ -169,15 +165,13 @@ class TestLoadType:
             # The V1Container requires a name -- since the manifest has no name,
             # it will cause V1Container construction to fail with ValueError.
             manifest.load_type(
-                client.V1Container,
-                os.path.join(manifest_dir, 'simple-ingress.yaml')
+                client.V1Container, os.path.join(manifest_dir, "simple-ingress.yaml")
             )
 
     def test_simple_replicaset_ok(self, manifest_dir, simple_replicaset):
         """Test loading the simple ReplicaSet successfully."""
         obj = manifest.load_type(
-            client.V1ReplicaSet,
-            os.path.join(manifest_dir, 'simple-replicaset.yaml')
+            client.V1ReplicaSet, os.path.join(manifest_dir, "simple-replicaset.yaml")
         )
         assert obj == simple_replicaset
 
@@ -187,19 +181,16 @@ class TestLoadType:
             # The V1Container requires a name -- since the manifest has no name,
             # it will cause V1Container construction to fail with ValueError.
             manifest.load_type(
-                client.V1Container,
-                os.path.join(manifest_dir, 'simple-replicaset.yaml')
+                client.V1Container, os.path.join(manifest_dir, "simple-replicaset.yaml")
             )
 
     def test_simple_persistentvolumeclaim_ok(
-        self,
-        manifest_dir,
-        simple_persistentvolumeclaim
+        self, manifest_dir, simple_persistentvolumeclaim
     ):
         """Test loading the simple persistentvolumeclaim successfully."""
         obj = manifest.load_type(
             client.V1PersistentVolumeClaim,
-            os.path.join(manifest_dir, 'simple-persistentvolumeclaim.yaml')
+            os.path.join(manifest_dir, "simple-persistentvolumeclaim.yaml"),
         )
         assert obj == simple_persistentvolumeclaim
 
@@ -210,18 +201,14 @@ class TestLoadType:
             # it will cause V1Container construction to fail with ValueError.
             manifest.load_type(
                 client.V1Container,
-                os.path.join(manifest_dir, 'simple-persistentvolumeclaim.yaml')
+                os.path.join(manifest_dir, "simple-persistentvolumeclaim.yaml"),
             )
 
-    def test_simple_serviceaccount_ok(
-        self,
-        manifest_dir,
-        simple_serviceaccount
-    ):
+    def test_simple_serviceaccount_ok(self, manifest_dir, simple_serviceaccount):
         """Test loading the simple serviceaccount successfully."""
         obj = manifest.load_type(
             client.V1ServiceAccount,
-            os.path.join(manifest_dir, 'simple-serviceaccount.yaml')
+            os.path.join(manifest_dir, "simple-serviceaccount.yaml"),
         )
         assert obj == simple_serviceaccount
 
@@ -229,7 +216,7 @@ class TestLoadType:
         """Test loading the simple networkpolicy successfully."""
         obj = manifest.load_type(
             client.V1NetworkPolicy,
-            os.path.join(manifest_dir, 'simple-networkpolicy.yaml')
+            os.path.join(manifest_dir, "simple-networkpolicy.yaml"),
         )
         assert obj == simple_networkpolicy
 
@@ -240,23 +227,21 @@ class TestLoadType:
             # it will cause V1Container construction to fail with ValueError.
             manifest.load_type(
                 client.V1Container,
-                os.path.join(manifest_dir, 'simple-networkpolicy.yaml')
+                os.path.join(manifest_dir, "simple-networkpolicy.yaml"),
             )
 
     def test_bad_path(self, manifest_dir):
         """Test specifying an invalid manifest path."""
         with pytest.raises(FileNotFoundError):
             manifest.load_type(
-                client.V1Container,
-                os.path.join(manifest_dir, 'foo', 'bar', 'baz.yaml')
+                client.V1Container, os.path.join(manifest_dir, "foo", "bar", "baz.yaml")
             )
 
     def test_bad_yaml(self, manifest_dir):
         """Test specifying a file that is not valid YAML."""
         with pytest.raises(yaml.YAMLError):
             manifest.load_type(
-                client.V1Container,
-                os.path.join(manifest_dir, 'invalid.yaml')
+                client.V1Container, os.path.join(manifest_dir, "invalid.yaml")
             )
 
 
@@ -264,46 +249,38 @@ class TestGetType:
     """Tests for kubetest.manifest.get_type"""
 
     @pytest.mark.parametrize(
-        'data,expected', [
+        "data,expected",
+        [
+            ({"apiVersion": "v1", "kind": "Secret"}, client.V1Secret),
+            ({"apiVersion": "v1", "kind": "Deployment"}, client.V1Deployment),
+            ({"apiVersion": "apps/v1", "kind": "Deployment"}, client.V1Deployment),
             (
-                {'apiVersion': 'v1', 'kind': 'Secret'},
-                client.V1Secret
+                {"apiVersion": "apps/v1beta1", "kind": "Deployment"},
+                client.AppsV1beta1Deployment,
             ),
             (
-                {'apiVersion': 'v1', 'kind': 'Deployment'},
-                client.V1Deployment
+                {"apiVersion": "apps/v1beta2", "kind": "Deployment"},
+                client.V1beta2Deployment,
             ),
             (
-                {'apiVersion': 'apps/v1', 'kind': 'Deployment'},
-                client.V1Deployment
-            ),
-            (
-                {'apiVersion': 'apps/v1beta1', 'kind': 'Deployment'},
-                client.AppsV1beta1Deployment
-            ),
-            (
-                {'apiVersion': 'apps/v1beta2', 'kind': 'Deployment'},
-                client.V1beta2Deployment
-            ),
-            (
-                {'apiVersion': 'extensions/v1beta1', 'kind': 'Deployment'},
-                client.ExtensionsV1beta1Deployment
+                {"apiVersion": "extensions/v1beta1", "kind": "Deployment"},
+                client.ExtensionsV1beta1Deployment,
             ),
             (
                 {
-                    'apiVersion': 'rbac.authorization.k8s.io/v1',
-                    'kind': 'ClusterRoleBinding'
+                    "apiVersion": "rbac.authorization.k8s.io/v1",
+                    "kind": "ClusterRoleBinding",
                 },
-                client.V1ClusterRoleBinding
+                client.V1ClusterRoleBinding,
             ),
             (
                 {
-                    'apiVersion': 'rbac.authorization.k8s.io/v1beta1',
-                    'kind': 'ClusterRoleBinding'
+                    "apiVersion": "rbac.authorization.k8s.io/v1beta1",
+                    "kind": "ClusterRoleBinding",
                 },
-                client.V1beta1ClusterRoleBinding
+                client.V1beta1ClusterRoleBinding,
             ),
-        ]
+        ],
     )
     def test_ok(self, data, expected):
         """Test getting Kubernetes object types correctly."""
@@ -314,23 +291,20 @@ class TestGetType:
     def test_nonexistent_type(self):
         """Test getting a type that Kubernetes does not have."""
 
-        t = manifest.get_type({
-            'apiVersion': 'v1',
-            'kind': 'foobar'
-        })
+        t = manifest.get_type({"apiVersion": "v1", "kind": "foobar"})
         assert t is None
 
     def test_no_version(self):
         """Test getting a type when no version is given."""
 
         with pytest.raises(ValueError):
-            manifest.get_type({'kind': 'Deployment'})
+            manifest.get_type({"kind": "Deployment"})
 
     def test_no_kind(self):
         """Test getting a type when no kind is given."""
 
         with pytest.raises(ValueError):
-            manifest.get_type({'version': 'v1'})
+            manifest.get_type({"version": "v1"})
 
 
 class TestLoadPath:
@@ -339,22 +313,22 @@ class TestLoadPath:
     def test_ok(self, manifest_dir):
         """Test loading the manifests into API objects successfully."""
 
-        objs = manifest.load_path(os.path.join(manifest_dir, 'manifests'))
+        objs = manifest.load_path(os.path.join(manifest_dir, "manifests"))
         assert len(objs) == 3
 
         for obj in objs:
-            assert obj.kind in ['Deployment', 'ConfigMap', 'Service']
+            assert obj.kind in ["Deployment", "ConfigMap", "Service"]
 
     def test_no_dir(self):
         """Test loading manifests when the specified path is not a directory."""
 
         with pytest.raises(ValueError):
-            manifest.load_path('foobar')
+            manifest.load_path("foobar")
 
     def test_empty_dir(self, tmpdir):
         """Test loading manifests from an empty directory."""
 
-        d = tmpdir.mkdir('foo')
+        d = tmpdir.mkdir("foo")
         objs = manifest.load_path(d)
         assert len(objs) == 0
 
@@ -371,9 +345,7 @@ class TestLoadFile:
     def test_ok_single(self, manifest_dir):
         """Load manifest file with single object definition."""
 
-        objs = manifest.load_file(
-            os.path.join(manifest_dir, 'simple-deployment.yaml')
-        )
+        objs = manifest.load_file(os.path.join(manifest_dir, "simple-deployment.yaml"))
 
         assert len(objs) == 1
         assert isinstance(objs[0], client.models.v1_deployment.V1Deployment)
@@ -381,9 +353,7 @@ class TestLoadFile:
     def test_ok_multi(self, manifest_dir):
         """Load manifest file with multiple object definitions."""
 
-        objs = manifest.load_file(
-            os.path.join(manifest_dir, 'multi-obj-manifest.yaml')
-        )
+        objs = manifest.load_file(os.path.join(manifest_dir, "multi-obj-manifest.yaml"))
 
         assert len(objs) == 3
         assert isinstance(objs[0], client.models.v1_service.V1Service)
@@ -394,10 +364,10 @@ class TestLoadFile:
         """Load manifest file which does not exist."""
 
         with pytest.raises(FileNotFoundError):
-            manifest.load_file(os.path.join(manifest_dir, 'file-does-not-exist.yaml'))
+            manifest.load_file(os.path.join(manifest_dir, "file-does-not-exist.yaml"))
 
     def test_invalid_yaml(self, manifest_dir):
         """Load manifest file with invalid YAML."""
 
         with pytest.raises(yaml.YAMLError):
-            manifest.load_file(os.path.join(manifest_dir, 'invalid.yaml'))
+            manifest.load_file(os.path.join(manifest_dir, "invalid.yaml"))

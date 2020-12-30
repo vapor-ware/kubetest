@@ -54,7 +54,9 @@ class ContextRenderer:
             rendering. Defaults to an empty dictionary.
     """
 
-    def __init__(self, renderer: Renderer = render, context: Dict[str, Any] = {}) -> None:
+    def __init__(
+        self, renderer: Renderer = render, context: Dict[str, Any] = {}
+    ) -> None:
         self._renderer = renderer
         self._context = context
 
@@ -63,7 +65,9 @@ class ContextRenderer:
         """The context variables set on the renderer."""
         return self._context
 
-    def __call__(self, template: Union[str, TextIO], context: Dict[str, Any]) -> Union[str, TextIO]:
+    def __call__(
+        self, template: Union[str, TextIO], context: Dict[str, Any]
+    ) -> Union[str, TextIO]:
         """Render a manifest template file to a YAML docoment.
 
         Args:
@@ -92,7 +96,7 @@ def load_file(path: str, *, renderer: Renderer = render) -> List[object]:
     Returns:
         A list of the Kubernetes API objects for this manifest file.
     """
-    with open(path, 'r') as f:
+    with open(path, "r") as f:
         content = renderer(f, dict(path=path))
         manifests = yaml.load_all(content, Loader=yaml.SafeLoader)
 
@@ -101,7 +105,7 @@ def load_file(path: str, *, renderer: Renderer = render) -> List[object]:
             obj_type = get_type(manifest)
             if obj_type is None:
                 raise ValueError(
-                    f'Unable to determine object type for manifest: {manifest}',
+                    f"Unable to determine object type for manifest: {manifest}",
                 )
             objs.append(new_object(obj_type, manifest))
 
@@ -124,13 +128,13 @@ def load_path(path: str, *, renderer: Renderer = render) -> List[object]:
         ValueError: The provided path is not a directory.
     """
     if not os.path.isdir(path):
-        raise ValueError(f'{path} is not a directory')
+        raise ValueError(f"{path} is not a directory")
 
     objs = []
     if isinstance(renderer, ContextRenderer):
         renderer.context["objs"] = objs
     for f in os.listdir(path):
-        if os.path.splitext(f)[1].lower() in ['.yaml', '.yml']:
+        if os.path.splitext(f)[1].lower() in [".yaml", ".yml"]:
             objs = objs + load_file(os.path.join(path, f), renderer=renderer)
     return objs
 
@@ -154,11 +158,11 @@ def get_type(manifest: Dict[str, Any]) -> Union[object, None]:
         ValueError: The manifest dictionary does not have a
             `version` or `kind` specified.
     """
-    version = manifest.get('apiVersion')
+    version = manifest.get("apiVersion")
     if version is None:
         raise ValueError('manifest has no "version" field specified')
 
-    kind = manifest.get('kind')
+    kind = manifest.get("kind")
     if kind is None:
         raise ValueError('manifest has no "kind" field specified')
 
@@ -176,12 +180,13 @@ def get_type(manifest: Dict[str, Any]) -> Union[object, None]:
     # yields nothing.
     possibilities = [
         # add the default case
-        version.replace('/', '').replace('.', '') + kind
+        version.replace("/", "").replace(".", "")
+        + kind
     ]
 
     # if the prefix exists, add the non-prefixed version as a secondary check
-    if version.count('/') == 1:
-        possibilities.append(version.split('/')[1] + kind)
+    if version.count("/") == 1:
+        possibilities.append(version.split("/")[1] + kind)
 
     for to_check in possibilities:
         type_name = lookup.get(to_check.lower())
@@ -212,7 +217,7 @@ def load_type(obj_type, path: str, *, renderer: Renderer = render):
     Raises:
         FileNotFoundError: The specified file was not found.
     """
-    with open(path, 'r') as f:
+    with open(path, "r") as f:
         content = renderer(f, dict(path=path, obj_type=obj_type))
         manifest = yaml.full_load(content)
 
@@ -257,7 +262,7 @@ def new_object(root_type, config):
             # The config value matches an expected key in the attribute dict.
             # Now, we want to cast that config to the appropriate type based
             # on the contents of the 'swagger_types'/'openapi_types' dict.
-            if hasattr(root_type, 'swagger_types'):
+            if hasattr(root_type, "swagger_types"):
                 t = root_type.swagger_types[k]
             else:
                 t = root_type.openapi_types[k]
@@ -273,7 +278,7 @@ def new_object(root_type, config):
             # Check if the type is a list of some other type.
             # This should match to something like: 'list[str]', where the
             # element type (in this case 'str') will be isolated as a group.
-            list_match = re.match(r'^list\[(.*)\]$', t)
+            list_match = re.match(r"^list\[(.*)\]$", t)
             if list_match is not None:
                 element_type = list_match.group(1)
                 list_value = [cast_value(i, element_type) for i in cfg_value]
@@ -284,7 +289,7 @@ def new_object(root_type, config):
             # This should match to something lint: 'dict(str, str)', where
             # the element types (in this case, both 'str') will be isolated
             # as separate groups.
-            dict_match = re.match(r'^dict\((.*), (.*)\)$', t)
+            dict_match = re.match(r"^dict\((.*), (.*)\)$", t)
             if dict_match is not None:
                 key_type = dict_match.group(1)
                 val_type = dict_match.group(2)
@@ -337,4 +342,4 @@ def cast_value(value: Any, t: str) -> Any:
     if k_type is not None:
         return new_object(k_type, value)
 
-    raise ValueError(f'Unable to determine cast type behavior: {t}')
+    raise ValueError(f"Unable to determine cast type behavior: {t}")

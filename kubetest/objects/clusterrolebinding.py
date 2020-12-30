@@ -6,7 +6,7 @@ from kubernetes import client
 
 from .api_object import ApiObject
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class ClusterRoleBinding(ApiObject):
@@ -25,10 +25,10 @@ class ClusterRoleBinding(ApiObject):
     obj_type = client.V1ClusterRoleBinding
 
     api_clients = {
-        'preferred': client.RbacAuthorizationV1Api,
-        'rbac.authorization.k8s.io/v1': client.RbacAuthorizationV1Api,
-        'rbac.authorization.k8s.io/v1alpha1': client.RbacAuthorizationV1alpha1Api,
-        'rbac.authorization.k8s.io/v1beta1': client.RbacAuthorizationV1beta1Api,
+        "preferred": client.RbacAuthorizationV1Api,
+        "rbac.authorization.k8s.io/v1": client.RbacAuthorizationV1Api,
+        "rbac.authorization.k8s.io/v1alpha1": client.RbacAuthorizationV1alpha1Api,
+        "rbac.authorization.k8s.io/v1beta1": client.RbacAuthorizationV1beta1Api,
     }
 
     def create(self, namespace: str = None) -> None:
@@ -38,8 +38,9 @@ class ClusterRoleBinding(ApiObject):
             namespace: This argument is ignored for ClusterRoleBindings.
         """
         log.info(
-            f'creating clusterrolebinding "{self.name}" in namespace "{self.namespace}"')
-        log.debug(f'clusterrolebinding: {self.obj}')
+            f'creating clusterrolebinding "{self.name}" in namespace "{self.namespace}"'
+        )
+        log.debug(f"clusterrolebinding: {self.obj}")
 
         self.obj = self.api_client.create_cluster_role_binding(
             body=self.obj,
@@ -62,8 +63,8 @@ class ClusterRoleBinding(ApiObject):
             options = client.V1DeleteOptions()
 
         log.info(f'deleting clusterrolebinding "{self.name}"')
-        log.debug(f'delete options: {options}')
-        log.debug(f'clusterrolebinding: {self.obj}')
+        log.debug(f"delete options: {options}")
+        log.debug(f"clusterrolebinding: {self.obj}")
 
         return self.api_client.delete_cluster_role_binding(
             name=self.name,
@@ -72,9 +73,7 @@ class ClusterRoleBinding(ApiObject):
 
     def refresh(self) -> None:
         """Refresh the underlying Kubernetes ClusterRoleBinding resource."""
-        self.obj = self.api_client.read_cluster_role_binding(
-            name=self.name
-        )
+        self.obj = self.api_client.read_cluster_role_binding(name=self.name)
 
     def is_ready(self) -> bool:
         """Check if the ClusterRoleBinding is in the ready state.

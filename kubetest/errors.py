@@ -1,5 +1,3 @@
-
-
 class KubetestError(Exception):
     """Base class for all kubetest exceptions."""
 

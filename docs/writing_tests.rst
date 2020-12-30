@@ -11,18 +11,18 @@ you can access it from wherever the tests are being run.
 Cluster Configuration
 ---------------------
 
-By default, kubetest will look for a config file at ``~/.kube/config`` and the 
-current context -- this is the same behavior that ``kubectl`` utilizes for the 
-resolving cluster config. Generally, if you can reach your cluster via. 
+By default, kubetest will look for a config file at ``~/.kube/config`` and the
+current context -- this is the same behavior that ``kubectl`` utilizes for the
+resolving cluster config. Generally, if you can reach your cluster via.
 ``kubectl``, you should be able to use it with kubetest.
 
-If you wish to specify a different config file and/or context, you can pass it 
+If you wish to specify a different config file and/or context, you can pass it
 in via the ``--kube-config`` and ``--kube-context`` flags.
 See :ref:`command_line_usage` for more details.
 
 You can also write a ``kubeconfig`` fixture which provides the path to the
-config file and/or a ``kubecontext`` fixture which provides the name of the 
-context to be used.  This may be useful in case your cluster is generated as 
+config file and/or a ``kubecontext`` fixture which provides the name of the
+context to be used.  This may be useful in case your cluster is generated as
 part of the tests or you wish to use specific contexts in different parts of
 the suite.
 
@@ -39,7 +39,7 @@ the suite.
         # at somepath
         subprocess.check_call(['terraform', 'apply'])
         return 'somepath/kubeconfig'
-    
+
 
     @pytest.fixture
     def kubecontext() -> Optional[str]:
@@ -247,4 +247,3 @@ Wait until a Pod's containers have all started.
         pods = kube.get_pods()
         for pod in pods.values():
             pod.wait_until_containers_start(timeout=60)
-

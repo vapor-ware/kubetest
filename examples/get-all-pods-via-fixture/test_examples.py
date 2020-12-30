@@ -1,11 +1,12 @@
+import os
+import time
 
 import pytest
-import time
-import os
 
 
-@pytest.mark.applymanifest(os.path.join(os.path.dirname(__file__),
-                                        'manifests/deployment-redis.yaml'))
+@pytest.mark.applymanifest(
+    os.path.join(os.path.dirname(__file__), "manifests/deployment-redis.yaml")
+)
 def test_pods_from_deployment_loaded_from_marker(kube):
     """Get the Pods for a Deployment which is loaded via the kubetest
     'applymanifest' marker.
@@ -26,8 +27,8 @@ def test_pods_from_deployment_loaded_from_marker(kube):
     # Get the redis-master deployment. The `deployments` response is a
     # dict where the key is the name for the object (e.g. as defined in
     # the manifest), and the value is the corresponding Deployment object.
-    assert 'redis-master' in deployments
-    redis_master = deployments['redis-master']
+    assert "redis-master" in deployments
+    redis_master = deployments["redis-master"]
 
     # Get the pods for the deployment. Since the deployment is defined
     # as having one replica, we expect to only get back one pod.
@@ -44,8 +45,9 @@ def test_pods_from_deployment_loaded_in_test_case(kube):
     use that to get the pods for the deployment.
     """
 
-    deployment = kube.load_deployment(os.path.join(
-        os.path.dirname(__file__), 'manifests/deployment-redis.yaml'))
+    deployment = kube.load_deployment(
+        os.path.join(os.path.dirname(__file__), "manifests/deployment-redis.yaml")
+    )
     deployment.create()
     deployment.wait_until_ready(timeout=30)
 
@@ -56,10 +58,13 @@ def test_pods_from_deployment_loaded_in_test_case(kube):
     assert len(pods) == 1
 
 
-@pytest.mark.applymanifests('manifests', files=[
-    'deployment-redis.yaml',
-    'deployment-frontend.yaml',
-])
+@pytest.mark.applymanifests(
+    "manifests",
+    files=[
+        "deployment-redis.yaml",
+        "deployment-frontend.yaml",
+    ],
+)
 def test_all_pods_for_test_namespace(kube):
     """Get all of the Pods within the test namespace.
 
@@ -93,14 +98,17 @@ def test_all_pods_for_other_namespace(kube):
     # Get the pods belonging to the kube-system namespace. Since this
     # is running on a Kubernetes cluster, there should be some pods in
     # this namespace.
-    pods = kube.get_pods(namespace='kube-system')
+    pods = kube.get_pods(namespace="kube-system")
     assert len(pods) > 0
 
 
-@pytest.mark.applymanifests('manifests', files=[
-    'deployment-redis.yaml',
-    'deployment-frontend.yaml',
-])
+@pytest.mark.applymanifests(
+    "manifests",
+    files=[
+        "deployment-redis.yaml",
+        "deployment-frontend.yaml",
+    ],
+)
 def test_all_pods_via_custom_fixture(kube, custom_pods):
     """Get all of the Pods with a custom fixture.
 
@@ -127,9 +135,9 @@ def test_all_pods_via_custom_fixture(kube, custom_pods):
     count_master = 0
 
     for pod_name in custom_pods:
-        if 'frontend' in pod_name:
+        if "frontend" in pod_name:
             count_frontend += 1
-        if 'redis-master' in pod_name:
+        if "redis-master" in pod_name:
             count_master += 1
 
     assert count_frontend == 3

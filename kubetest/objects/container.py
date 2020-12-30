@@ -4,7 +4,7 @@ import logging
 
 from kubernetes import client
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class Container:
@@ -48,9 +48,7 @@ class Container:
             if status.name == container_name:
                 return status.restart_count
 
-        raise RuntimeError(
-            f'Unable to determine container status for {container_name}'
-        )
+        raise RuntimeError(f"Unable to determine container status for {container_name}")
 
     def get_logs(self) -> str:
         """Get all the logs for the Container.

@@ -10,7 +10,7 @@ from kubernetes.client.rest import ApiException
 from kubetest import condition, utils
 from kubetest.manifest import load_file
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class ApiObject(abc.ABC):
@@ -36,18 +36,18 @@ class ApiObject(abc.ABC):
     # The Kubernetes API object type. Each subclass should
     # define its own obj_type.
     obj_type = None
-    '''The default Kubernetes API object type for the class.
+    """The default Kubernetes API object type for the class.
     Each subclass should define its own ``obj_type``.
-    '''
+    """
 
     api_clients = None
-    '''A mapping of all the supported api clients for the API
+    """A mapping of all the supported api clients for the API
     object type. Various resources can have multiple versions,
     e.g. "apps/v1", "apps/v1beta1", etc. The preferred version
     for each resource type should be defined under the "preferred"
     key. The preferred API client will be used when the apiVersion
     is not specified for the resource.
-    '''
+    """
 
     def __init__(self, api_object) -> None:
         # The underlying Kubernetes Api Object
@@ -93,7 +93,9 @@ class ApiObject(abc.ABC):
         if self.obj.metadata.namespace is None:
             self.obj.metadata.namespace = name
         else:
-            raise AttributeError('Cannot set namespace - object already has a namespace')
+            raise AttributeError(
+                "Cannot set namespace - object already has a namespace"
+            )
 
     @property
     def api_client(self):
@@ -109,13 +111,13 @@ class ApiObject(abc.ABC):
             # preferred version.
             if c is None:
                 log.warning(
-                    f'unknown version ({self.version}), falling back to preferred version'
+                    f"unknown version ({self.version}), falling back to preferred version"
                 )
-                c = self.api_clients.get('preferred')
+                c = self.api_clients.get("preferred")
                 if c is None:
                     raise ValueError(
-                        'unknown version specified and no preferred version '
-                        f'defined for resource ({self.version})'
+                        "unknown version specified and no preferred version "
+                        f"defined for resource ({self.version})"
                     )
             # If we did find it, initialize that client version.
             self._api_client = c()
@@ -129,18 +131,18 @@ class ApiObject(abc.ABC):
         Raises:
              ValueError: No preferred client is defined for the object.
         """
-        c = cls.api_clients.get('preferred')
+        c = cls.api_clients.get("preferred")
         if c is None:
             raise ValueError(
-                f'no preferred api client defined for object {cls.__name__}',
+                f"no preferred api client defined for object {cls.__name__}",
             )
         return c()
 
     def wait_until_ready(
-            self,
-            timeout: int = None,
-            interval: Union[int, float] = 1,
-            fail_on_api_error: bool = False,
+        self,
+        timeout: int = None,
+        interval: Union[int, float] = 1,
+        fail_on_api_error: bool = False,
     ) -> None:
         """Wait until the resource is in the ready state.
 
@@ -161,7 +163,7 @@ class ApiObject(abc.ABC):
              TimeoutError: The specified timeout was exceeded.
         """
         ready_condition = condition.Condition(
-            'api object ready',
+            "api object ready",
             self.is_ready,
         )
 
@@ -172,7 +174,9 @@ class ApiObject(abc.ABC):
             fail_on_api_error=fail_on_api_error,
         )
 
-    def wait_until_deleted(self, timeout: int = None, interval: Union[int, float] = 1) -> None:
+    def wait_until_deleted(
+        self, timeout: int = None, interval: Union[int, float] = 1
+    ) -> None:
         """Wait until the resource is deleted from the cluster.
 
         Args:
@@ -186,25 +190,23 @@ class ApiObject(abc.ABC):
         Raises:
             TimeoutError: The specified timeout was exceeded.
         """
+
         def deleted_fn():
             try:
                 self.refresh()
             except ApiException as e:
                 # If we can no longer find the deployment, it is deleted.
                 # If we get any other exception, raise it.
-                if e.status == 404 and e.reason == 'Not Found':
+                if e.status == 404 and e.reason == "Not Found":
                     return True
                 else:
-                    log.error('error refreshing object state')
+                    log.error("error refreshing object state")
                     raise e
             else:
                 # The object was still found, so it has not been deleted
                 return False
 
-        delete_condition = condition.Condition(
-            'api object deleted',
-            deleted_fn
-        )
+        delete_condition = condition.Condition("api object deleted", deleted_fn)
 
         utils.wait_for_condition(
             condition=delete_condition,
@@ -213,7 +215,7 @@ class ApiObject(abc.ABC):
         )
 
     @classmethod
-    def load(cls, path: str, name: Optional[str] = None) -> 'ApiObject':
+    def load(cls, path: str, name: Optional[str] = None) -> "ApiObject":
         """Load the Kubernetes resource from file.
 
         Generally, this is used to load the Kubernetes manifest files
@@ -256,8 +258,8 @@ class ApiObject(abc.ABC):
 
         if len(filtered) == 0:
             raise ValueError(
-                'Unable to load resource from file - no resource definitions found '
-                f'with type {cls.obj_type}.'
+                "Unable to load resource from file - no resource definitions found "
+                f"with type {cls.obj_type}."
             )
 
         if len(filtered) == 1:
@@ -268,8 +270,8 @@ class ApiObject(abc.ABC):
         # matches.
         if not name:
             raise ValueError(
-                'Unable to load resource from file - multiple resource definitions '
-                f'found for {cls.obj_type}, but no name specified to select which one.'
+                "Unable to load resource from file - multiple resource definitions "
+                f"found for {cls.obj_type}, but no name specified to select which one."
             )
 
         for o in filtered:
@@ -278,8 +280,8 @@ class ApiObject(abc.ABC):
                 return api_obj
 
         raise ValueError(
-            'Unable to load resource from file - multiple resource definitions found '
-            f'for {cls.obj_type}, but none match specified name: {name}'
+            "Unable to load resource from file - multiple resource definitions found "
+            f"for {cls.obj_type}, but none match specified name: {name}"
         )
 
     @abc.abstractmethod

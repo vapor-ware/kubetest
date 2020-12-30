@@ -6,7 +6,7 @@ from kubernetes import client
 
 from kubetest.objects import ApiObject
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class Namespace(ApiObject):
@@ -25,12 +25,12 @@ class Namespace(ApiObject):
     obj_type = client.V1Namespace
 
     api_clients = {
-        'preferred': client.CoreV1Api,
-        'v1': client.CoreV1Api,
+        "preferred": client.CoreV1Api,
+        "v1": client.CoreV1Api,
     }
 
     @classmethod
-    def new(cls, name: str) -> 'Namespace':
+    def new(cls, name: str) -> "Namespace":
         """Create a new Namespace with object backing.
 
         Args:
@@ -39,11 +39,7 @@ class Namespace(ApiObject):
         Returns:
             A new Namespace instance.
         """
-        return cls(client.V1Namespace(
-            metadata=client.V1ObjectMeta(
-                name=name
-            )
-        ))
+        return cls(client.V1Namespace(metadata=client.V1ObjectMeta(name=name)))
 
     def create(self, name: str = None) -> None:
         """Create the Namespace under the given name.
@@ -58,7 +54,7 @@ class Namespace(ApiObject):
             self.name = name
 
         log.info(f'creating namespace "{self.name}"')
-        log.debug(f'namespace: {self.obj}')
+        log.debug(f"namespace: {self.obj}")
 
         self.obj = self.api_client.create_namespace(
             body=self.obj,
@@ -77,8 +73,8 @@ class Namespace(ApiObject):
             options = client.V1DeleteOptions()
 
         log.info(f'deleting namespace "{self.name}"')
-        log.debug(f'delete options: {options}')
-        log.debug(f'namespace: {self.obj}')
+        log.debug(f"delete options: {options}")
+        log.debug(f"namespace: {self.obj}")
 
         return self.api_client.delete_namespace(
             name=self.name,
@@ -103,4 +99,4 @@ class Namespace(ApiObject):
         if status is None:
             return False
 
-        return status.phase.lower() == 'active'
+        return status.phase.lower() == "active"

@@ -1,21 +1,17 @@
 """An example of using kubetest to manage a service."""
 
-import os
 import ast
+import os
 
 
 def test_service(kube):
 
     f = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        'configs',
-        'service.yaml'
+        os.path.dirname(os.path.realpath(__file__)), "configs", "service.yaml"
     )
 
     d = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        'configs',
-        'deployment.yaml'
+        os.path.dirname(os.path.realpath(__file__)), "configs", "deployment.yaml"
     )
 
     svc = kube.load_service(f)

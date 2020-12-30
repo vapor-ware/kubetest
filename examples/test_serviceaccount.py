@@ -7,9 +7,7 @@ from time import sleep
 def test_serviceaccount(kube):
 
     f = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        'configs',
-        'serviceaccount.yaml'
+        os.path.dirname(os.path.realpath(__file__)), "configs", "serviceaccount.yaml"
     )
 
     sa = kube.load_serviceaccount(f)

@@ -4,7 +4,7 @@ import logging
 
 from kubernetes import client
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class Event:
@@ -25,8 +25,8 @@ class Event:
     obj_type = client.V1Event
 
     api_clients = {
-        'preferred': client.CoreV1Api,
-        'v1': client.CoreV1Api,
+        "preferred": client.CoreV1Api,
+        "v1": client.CoreV1Api,
     }
 
     def __init__(self, api_object) -> None:

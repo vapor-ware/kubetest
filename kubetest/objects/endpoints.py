@@ -6,7 +6,7 @@ from kubernetes import client
 
 from .api_object import ApiObject
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class Endpoints(ApiObject):
@@ -25,8 +25,8 @@ class Endpoints(ApiObject):
     obj_type = client.V1Endpoints
 
     api_clients = {
-        'preferred': client.CoreV1Api,
-        'v1': client.CoreV1Api,
+        "preferred": client.CoreV1Api,
+        "v1": client.CoreV1Api,
     }
 
     def create(self, namespace: str = None) -> None:
@@ -39,7 +39,7 @@ class Endpoints(ApiObject):
             namespace = self.namespace
 
         log.info(f'creating endpoints "{self.name}" in namespace "{self.namespace}"')
-        log.debug(f'endpoints: {self.obj}')
+        log.debug(f"endpoints: {self.obj}")
 
         self.obj = self.api_client.create_namespaced_endpoints(
             namespace=namespace,
@@ -63,8 +63,8 @@ class Endpoints(ApiObject):
             options = client.V1DeleteOptions()
 
         log.info(f'deleting endpoints "{self.name}"')
-        log.debug(f'delete options: {options}')
-        log.debug(f'endpoints: {self.obj}')
+        log.debug(f"delete options: {options}")
+        log.debug(f"endpoints: {self.obj}")
 
         return self.api_client.delete_namespaced_endpoints(
             name=self.name,
@@ -96,6 +96,9 @@ class Endpoints(ApiObject):
             return False
 
         for subset in self.obj.subsets:
-            if subset.not_ready_addresses is not None and len(subset.not_ready_addresses) > 0:
+            if (
+                subset.not_ready_addresses is not None
+                and len(subset.not_ready_addresses) > 0
+            ):
                 return False
         return True

@@ -6,7 +6,7 @@ from kubernetes import client
 
 from kubetest.objects import ApiObject
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class ServiceAccount(ApiObject):
@@ -22,8 +22,8 @@ class ServiceAccount(ApiObject):
     obj_type = client.V1ServiceAccount
 
     api_clients = {
-        'preferred': client.CoreV1Api,
-        'v1': client.CoreV1Api,
+        "preferred": client.CoreV1Api,
+        "v1": client.CoreV1Api,
     }
 
     def create(self, name: str = None) -> None:
@@ -38,7 +38,7 @@ class ServiceAccount(ApiObject):
             self.name = name
 
         log.info(f'creating serviceaccount "{self.name}"')
-        log.debug(f'serviceaccount: {self.obj}')
+        log.debug(f"serviceaccount: {self.obj}")
 
         self.obj = self.api_client.create_namespaced_service_account(
             body=self.obj,
@@ -56,13 +56,11 @@ class ServiceAccount(ApiObject):
             options = client.V1DeleteOptions()
 
         log.info(f'deleting ServiceAccount "{self.name}"')
-        log.debug(f'delete options: {options}')
-        log.debug(f'service account: {self.obj}')
+        log.debug(f"delete options: {options}")
+        log.debug(f"service account: {self.obj}")
 
         return self.api_client.delete_namespaced_service_account(
-            name=self.name,
-            namespace=self.namespace,
-            body=options
+            name=self.name, namespace=self.namespace, body=options
         )
 
     def refresh(self) -> None:

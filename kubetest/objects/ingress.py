@@ -8,7 +8,7 @@ from kubetest import condition, utils
 
 from .api_object import ApiObject
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class Ingress(ApiObject):
@@ -27,8 +27,8 @@ class Ingress(ApiObject):
     obj_type = client.ExtensionsV1beta1Api
 
     api_clients = {
-        'preferred': client.ExtensionsV1beta1Api,
-        'extensions/v1beta1': client.ExtensionsV1beta1Api,
+        "preferred": client.ExtensionsV1beta1Api,
+        "extensions/v1beta1": client.ExtensionsV1beta1Api,
     }
 
     def __str__(self):
@@ -49,12 +49,8 @@ class Ingress(ApiObject):
         if namespace is None:
             namespace = self.namespace
 
-        log.info(
-            'creating ingress "%s" in namespace "%s"',
-            self.name,
-            self.namespace
-        )
-        log.debug('ingress: %s', self.obj)
+        log.info('creating ingress "%s" in namespace "%s"', self.name, self.namespace)
+        log.debug("ingress: %s", self.obj)
 
         self.obj = self.api_client.create_namespaced_ingress(
             namespace=namespace,
@@ -78,8 +74,8 @@ class Ingress(ApiObject):
             options = client.V1DeleteOptions()
 
         log.info('deleting ingress "%s"', self.name)
-        log.debug('delete options: %s', options)
-        log.debug('ingress: %s', self.obj)
+        log.debug("delete options: %s", options)
+        log.debug("ingress: %s", self.obj)
 
         return self.api_client.delete_namespaced_ingress(
             name=self.name,
@@ -129,10 +125,7 @@ class Ingress(ApiObject):
             TimeoutError: The specified timeout was exceeded.
         """
         wait_condition = condition.Condition(
-            'Ingress has been assigned an ingress',
-            self.has_load_balancer_ingress)
+            "Ingress has been assigned an ingress", self.has_load_balancer_ingress
+        )
 
-        utils.wait_for_condition(
-            condition=wait_condition,
-            timeout=timeout,
-            interval=1)
+        utils.wait_for_condition(condition=wait_condition, timeout=timeout, interval=1)

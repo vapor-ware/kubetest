@@ -6,9 +6,7 @@ import os
 def test_configmap(kube):
 
     f = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        'configs',
-        'configmap.yaml'
+        os.path.dirname(os.path.realpath(__file__)), "configs", "configmap.yaml"
     )
 
     cm = kube.load_configmap(f)

@@ -7,7 +7,7 @@ from kubernetes import client
 
 from .api_object import ApiObject
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class Service(ApiObject):
@@ -26,8 +26,8 @@ class Service(ApiObject):
     obj_type = client.V1Service
 
     api_clients = {
-        'preferred': client.CoreV1Api,
-        'v1': client.CoreV1Api,
+        "preferred": client.CoreV1Api,
+        "v1": client.CoreV1Api,
     }
 
     def create(self, namespace: str = None) -> None:
@@ -43,7 +43,7 @@ class Service(ApiObject):
             namespace = self.namespace
 
         log.info(f'creating service "{self.name}" in namespace "{self.namespace}"')
-        log.debug(f'service: {self.obj}')
+        log.debug(f"service: {self.obj}")
 
         self.obj = self.api_client.create_namespaced_service(
             namespace=namespace,
@@ -67,8 +67,8 @@ class Service(ApiObject):
             options = client.V1DeleteOptions()
 
         log.info(f'deleting service "{self.name}"')
-        log.debug(f'delete options: {options}')
-        log.debug(f'service: {self.obj}')
+        log.debug(f"delete options: {options}")
+        log.debug(f"service: {self.obj}")
 
         return self.api_client.delete_namespaced_service(
             name=self.name,
@@ -167,7 +167,7 @@ class Service(ApiObject):
             if endpoint.metadata.name == self.name:
                 svc_endpoints.append(endpoint)
 
-        log.debug(f'endpoints: {svc_endpoints}')
+        log.debug(f"endpoints: {svc_endpoints}")
         return svc_endpoints
 
     def _proxy_http_request(self, method, path, **kwargs) -> tuple:
@@ -182,15 +182,15 @@ class Service(ApiObject):
             The response data
         """
         path_params = {
-            "name": f'{self.name}:{self.obj.spec.ports[0].port}',
+            "name": f"{self.name}:{self.obj.spec.ports[0].port}",
             "namespace": self.namespace,
-            "path": path
+            "path": path,
         }
         return client.CoreV1Api().api_client.call_api(
-            '/api/v1/namespaces/{namespace}/services/{name}/proxy/{path}',
+            "/api/v1/namespaces/{namespace}/services/{name}/proxy/{path}",
             method,
             path_params=path_params,
-            **kwargs
+            **kwargs,
         )
 
     def proxy_http_get(self, path: str, **kwargs) -> tuple:
@@ -203,7 +203,7 @@ class Service(ApiObject):
         Returns:
             The response data
         """
-        return self._proxy_http_request('GET', path, **kwargs)
+        return self._proxy_http_request("GET", path, **kwargs)
 
     def proxy_http_post(self, path: str, **kwargs) -> tuple:
         """Issue a POST request to proxy of a Service.
@@ -215,4 +215,4 @@ class Service(ApiObject):
         Returns:
             The response data
         """
-        return self._proxy_http_request('POST', path, **kwargs)
+        return self._proxy_http_request("POST", path, **kwargs)

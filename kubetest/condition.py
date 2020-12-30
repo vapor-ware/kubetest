@@ -48,7 +48,7 @@ class Condition:
 
     def __init__(self, name: str, fn: Callable, *args, **kwargs) -> None:
         if not callable(fn):
-            raise ValueError('The Condition function must be callable')
+            raise ValueError("The Condition function must be callable")
 
         self.name = name
         self.fn = fn
@@ -59,7 +59,7 @@ class Condition:
         self.last_check = False
 
     def __str__(self) -> str:
-        return f'<Condition (name: {self.name}, met: {self.last_check})>'
+        return f"<Condition (name: {self.name}, met: {self.last_check})>"
 
     def __repr__(self) -> str:
         return self.__str__()

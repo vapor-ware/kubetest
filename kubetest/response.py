@@ -7,7 +7,7 @@ from typing import Any, Dict
 
 import urllib3
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class Response:
@@ -62,7 +62,7 @@ class Response:
         try:
             data = ast.literal_eval(self.data)
         except Exception as e:
-            log.debug(f'failed literal eval of data {self.data} ({e})')
+            log.debug(f"failed literal eval of data {self.data} ({e})")
             data = json.loads(self.data)
 
         return data

@@ -26,7 +26,7 @@ kubetest config file: default
 kubetest context: current context
 rootdir: /Users/edaniszewski/dev/vaporio/kubetest
 plugins: requests-mock-1.6.0, grpc-0.7.0, asyncio-0.10.0, kubetest-0.5.0
-collected 1 item                                                              
+collected 1 item
 
 test_154.py .
 

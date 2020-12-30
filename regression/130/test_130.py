@@ -1,11 +1,11 @@
+import os
 
 import pytest
-import os
 
 
 @pytest.fixture
 def kubeconfig(request):
-    x = os.path.join(os.path.dirname(__file__), 'test.kubeconfig')
+    x = os.path.join(os.path.dirname(__file__), "test.kubeconfig")
     return x
 
 

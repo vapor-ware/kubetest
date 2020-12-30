@@ -27,7 +27,7 @@ kubetest config file: ./config
 kubetest context: current context
 rootdir: /Users/edaniszewski/dev/vaporio/kubetest
 plugins: asyncio-0.10.0, kubetest-0.1.0
-collected 5 items                                                                                                        
+collected 5 items
 
 test_examples.py .....                                                                                             [100%]
 

@@ -6,17 +6,21 @@ from kubetest import utils
 
 
 @pytest.mark.parametrize(
-    'name,expected', [
-        ('', 'kubetest--1536849367'),
-        ('TestName', 'kubetest-testname-1536849367'),
-        ('TESTNAME', 'kubetest-testname-1536849367'),
-        ('Test-Name', 'kubetest-test-name-1536849367'),
-        ('Test1_FOO-BAR_2', 'kubetest-test1-foo-bar-2-1536849367'),
-        ('123456', 'kubetest-123456-1536849367'),
-        ('___', 'kubetest-----1536849367'),
-        ('test-'*14, 'kubetest-test-test-test-test-test-test-test-test-tes-1536849367'),
-        ('test[a]-foo', 'kubetest-test-a--foo-1536849367'),
-    ]
+    "name,expected",
+    [
+        ("", "kubetest--1536849367"),
+        ("TestName", "kubetest-testname-1536849367"),
+        ("TESTNAME", "kubetest-testname-1536849367"),
+        ("Test-Name", "kubetest-test-name-1536849367"),
+        ("Test1_FOO-BAR_2", "kubetest-test1-foo-bar-2-1536849367"),
+        ("123456", "kubetest-123456-1536849367"),
+        ("___", "kubetest-----1536849367"),
+        (
+            "test-" * 14,
+            "kubetest-test-test-test-test-test-test-test-test-tes-1536849367",
+        ),
+        ("test[a]-foo", "kubetest-test-a--foo-1536849367"),
+    ],
 )
 def test_new_namespace(name, expected):
     """Test creating a new namespace for the given function name."""
@@ -29,14 +33,15 @@ def test_new_namespace(name, expected):
 
 
 @pytest.mark.parametrize(
-    'labels,expected', [
-        ({}, ''),
-        ({'foo': 'bar'}, 'foo=bar'),
-        ({'foo': 2}, 'foo=2'),
-        ({'foo': 2.024}, 'foo=2.024'),
-        ({'foo': 'bar', 'abc': 'xyz'}, 'foo=bar,abc=xyz'),
-        ({'foo': 'bar', 'abc': 'xyz', 'app': 'synse'}, 'foo=bar,abc=xyz,app=synse'),
-    ]
+    "labels,expected",
+    [
+        ({}, ""),
+        ({"foo": "bar"}, "foo=bar"),
+        ({"foo": 2}, "foo=2"),
+        ({"foo": 2.024}, "foo=2.024"),
+        ({"foo": "bar", "abc": "xyz"}, "foo=bar,abc=xyz"),
+        ({"foo": "bar", "abc": "xyz", "app": "synse"}, "foo=bar,abc=xyz,app=synse"),
+    ],
 )
 def test_selector_string(labels, expected):
     """Test creating a string for a dictionary of selectors."""

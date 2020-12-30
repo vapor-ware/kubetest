@@ -352,4 +352,3 @@ Examples
       @pytest.mark.namespace(create=True, name='specific-name')
       def test_something(kube):
           ...
-

@@ -6,9 +6,7 @@ import os
 def test_ingress(kube):
 
     f = os.path.join(
-        os.path.dirname(os.path.realpath(__file__)),
-        'configs',
-        'ingress.yaml'
+        os.path.dirname(os.path.realpath(__file__)), "configs", "ingress.yaml"
     )
 
     ing = kube.load_ingress(f)

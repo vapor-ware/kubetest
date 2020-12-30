@@ -6,7 +6,7 @@ from kubernetes import client
 
 from .api_object import ApiObject
 
-log = logging.getLogger('kubetest')
+log = logging.getLogger("kubetest")
 
 
 class PersistentVolumeClaim(ApiObject):
@@ -25,8 +25,8 @@ class PersistentVolumeClaim(ApiObject):
     obj_type = client.V1PersistentVolumeClaim
 
     api_clients = {
-        'preferred': client.CoreV1Api,
-        'v1': client.CoreV1Api,
+        "preferred": client.CoreV1Api,
+        "v1": client.CoreV1Api,
     }
 
     def __str__(self):
@@ -50,9 +50,9 @@ class PersistentVolumeClaim(ApiObject):
         log.info(
             'creating persistentvolumeclaim "%s" in namespace "%s"',
             self.name,
-            self.namespace
+            self.namespace,
         )
-        log.debug('persistentvolumeclaim: %s', self.obj)
+        log.debug("persistentvolumeclaim: %s", self.obj)
 
         self.obj = self.api_client.create_namespaced_persistent_volume_claim(
             namespace=namespace,
@@ -76,8 +76,8 @@ class PersistentVolumeClaim(ApiObject):
             options = client.V1DeleteOptions()
 
         log.info('deleting persistentvolumeclaim "%s"', self.name)
-        log.debug('delete options: %s', options)
-        log.debug('persistentvolumeclaim: %s', self.obj)
+        log.debug("delete options: %s", options)
+        log.debug("persistentvolumeclaim: %s", self.obj)
 
         return self.api_client.delete_namespaced_persistent_volume_claim(
             name=self.name,

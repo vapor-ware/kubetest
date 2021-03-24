@@ -4,33 +4,78 @@
 #
 #    pip-compile --output-file=requirements.txt setup.py
 #
-attrs==19.3.0             # via pytest
-cachetools==4.0.0         # via google-auth
-certifi==2019.11.28       # via kubernetes, requests
-chardet==3.0.4            # via requests
-google-auth==1.10.0       # via kubernetes
-idna==2.8                 # via requests
-importlib-metadata==1.3.0  # via pluggy, pytest
-kubernetes==10.0.1
-more-itertools==8.0.2     # via pytest, zipp
-oauthlib==3.1.0           # via requests-oauthlib
-packaging==19.2           # via pytest
-pluggy==0.13.1            # via pytest
-py==1.8.1                 # via pytest
-pyasn1-modules==0.2.7     # via google-auth
-pyasn1==0.4.8             # via pyasn1-modules, rsa
-pyparsing==2.4.6          # via packaging
-pytest==5.3.2
-python-dateutil==2.8.1    # via kubernetes
-pyyaml==5.3b1
-requests-oauthlib==1.3.0  # via kubernetes
-requests==2.22.0          # via kubernetes, requests-oauthlib
-rsa==4.0                  # via google-auth
-six==1.13.0               # via google-auth, kubernetes, packaging, python-dateutil, websocket-client
-urllib3==1.25.7           # via kubernetes, requests
-wcwidth==0.1.7            # via pytest
-websocket-client==0.57.0  # via kubernetes
-zipp==0.6.0               # via importlib-metadata
+attrs==20.3.0
+    # via pytest
+cachetools==4.2.1
+    # via google-auth
+certifi==2020.12.5
+    # via
+    #   kubernetes
+    #   requests
+chardet==4.0.0
+    # via requests
+google-auth==1.28.0
+    # via kubernetes
+idna==2.10
+    # via requests
+importlib-metadata==3.7.3
+    # via
+    #   pluggy
+    #   pytest
+iniconfig==1.1.1
+    # via pytest
+kubernetes==12.0.1
+    # via kubetest (setup.py)
+oauthlib==3.1.0
+    # via requests-oauthlib
+packaging==20.9
+    # via pytest
+pluggy==0.13.1
+    # via pytest
+py==1.10.0
+    # via pytest
+pyasn1-modules==0.2.8
+    # via google-auth
+pyasn1==0.4.8
+    # via
+    #   pyasn1-modules
+    #   rsa
+pyparsing==2.4.7
+    # via packaging
+pytest==6.2.2
+    # via kubetest (setup.py)
+python-dateutil==2.8.1
+    # via kubernetes
+pyyaml==5.4.1
+    # via
+    #   kubernetes
+    #   kubetest (setup.py)
+requests-oauthlib==1.3.0
+    # via kubernetes
+requests==2.25.1
+    # via
+    #   kubernetes
+    #   requests-oauthlib
+rsa==4.7.2
+    # via google-auth
+six==1.15.0
+    # via
+    #   google-auth
+    #   kubernetes
+    #   python-dateutil
+    #   websocket-client
+toml==0.10.2
+    # via pytest
+typing-extensions==3.7.4.3
+    # via importlib-metadata
+urllib3==1.26.4
+    # via
+    #   kubernetes
+    #   requests
+websocket-client==0.58.0
+    # via kubernetes
+zipp==3.4.1
+    # via importlib-metadata
 
 # The following packages are considered to be unsafe in a requirements file:
-# setuptools==42.0.2        # via google-auth, kubernetes
+# setuptools

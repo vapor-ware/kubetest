@@ -8,18 +8,18 @@ from kubetest import utils
 @pytest.mark.parametrize(
     "name,expected",
     [
-        ("", "kubetest--1536849367"),
-        ("TestName", "kubetest-testname-1536849367"),
-        ("TESTNAME", "kubetest-testname-1536849367"),
-        ("Test-Name", "kubetest-test-name-1536849367"),
-        ("Test1_FOO-BAR_2", "kubetest-test1-foo-bar-2-1536849367"),
-        ("123456", "kubetest-123456-1536849367"),
-        ("___", "kubetest-----1536849367"),
+        ("", "kubetest--7639486351"),
+        ("TestName", "kubetest-testname-7639486351"),
+        ("TESTNAME", "kubetest-testname-7639486351"),
+        ("Test-Name", "kubetest-test-name-7639486351"),
+        ("Test1_FOO-BAR_2", "kubetest-test1-foo-bar-2-7639486351"),
+        ("123456", "kubetest-123456-7639486351"),
+        ("___", "kubetest-----7639486351"),
         (
             "test-" * 14,
-            "kubetest-test-test-test-test-test-test-test-test-tes-1536849367",
+            "kubetest-test-test-test-test-test-test-test-test-tes-7639486351",
         ),
-        ("test[a]-foo", "kubetest-test-a--foo-1536849367"),
+        ("test[a]-foo", "kubetest-test-a--foo-7639486351"),
     ],
 )
 def test_new_namespace(name, expected):

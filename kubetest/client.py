@@ -972,7 +972,7 @@ class TestClient:
         replicasets = {}
         for obj in results.items:
             rs = objects.ReplicaSet(obj)
-            replicasets[replicasets.name] = rs
+            replicasets[rs.name] = rs
 
         return replicasets
 

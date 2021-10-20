@@ -154,7 +154,7 @@ class TestLoadType:
     def test_simple_ingress_ok(self, manifest_dir, simple_ingress):
         """Test loading the simple service successfully."""
         obj = manifest.load_type(
-            client.ExtensionsV1beta1Ingress,
+            client.NetworkingV1beta1Ingress,
             os.path.join(manifest_dir, "simple-ingress.yaml"),
         )
         assert obj == simple_ingress
@@ -254,18 +254,6 @@ class TestGetType:
             ({"apiVersion": "v1", "kind": "Secret"}, client.V1Secret),
             ({"apiVersion": "v1", "kind": "Deployment"}, client.V1Deployment),
             ({"apiVersion": "apps/v1", "kind": "Deployment"}, client.V1Deployment),
-            (
-                {"apiVersion": "apps/v1beta1", "kind": "Deployment"},
-                client.AppsV1beta1Deployment,
-            ),
-            (
-                {"apiVersion": "apps/v1beta2", "kind": "Deployment"},
-                client.V1beta2Deployment,
-            ),
-            (
-                {"apiVersion": "extensions/v1beta1", "kind": "Deployment"},
-                client.ExtensionsV1beta1Deployment,
-            ),
             (
                 {
                     "apiVersion": "rbac.authorization.k8s.io/v1",

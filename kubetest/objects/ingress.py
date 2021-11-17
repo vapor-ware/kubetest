@@ -24,11 +24,11 @@ class Ingress(ApiObject):
         https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#ingress-v1beta1-extensions
     """
 
-    obj_type = client.ExtensionsV1beta1Api
+    obj_type = client.NetworkingV1beta1Api
 
     api_clients = {
-        "preferred": client.ExtensionsV1beta1Api,
-        "extensions/v1beta1": client.ExtensionsV1beta1Api,
+        "preferred": client.NetworkingV1beta1Api,
+        "networking.k8s.io/v1beta1": client.NetworkingV1beta1Api,
     }
 
     def __str__(self):

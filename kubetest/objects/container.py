@@ -23,7 +23,7 @@ class Container:
     easier.
 
     .. _Container:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#container-v1-core
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#container-v1-core
     """
 
     def __init__(self, api_object, pod) -> None:

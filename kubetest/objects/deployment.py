@@ -24,7 +24,7 @@ class Deployment(ApiObject):
     API Object and provides some state management for the `Deployment`_.
 
     .. _Deployment:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#deployment-v1-apps
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#deployment-v1-apps
     """
 
     obj_type = client.V1Deployment

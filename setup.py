@@ -34,7 +34,7 @@ setup(
         "": ["LICENSE"],
     },
     install_requires=[
-        "kubernetes>=19.15.0",
+        "kubernetes>=21.7.0",
         "pyyaml>=5.4",
         "pytest",
     ],

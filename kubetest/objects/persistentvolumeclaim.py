@@ -19,7 +19,7 @@ class PersistentVolumeClaim(ApiObject):
     API Object and provides some state management for the `PersistentVolumeClaim`_.
 
     .. _PersistentVolumeClaim:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#persistentvolumeclaim-v1-core
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#persistentvolumeclaim-v1-core
     """
 
     obj_type = client.V1PersistentVolumeClaim

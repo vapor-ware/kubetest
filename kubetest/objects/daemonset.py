@@ -24,7 +24,7 @@ class DaemonSet(ApiObject):
     API Object and provides some state management for the `DaemonSet`_.
 
     .. DaemonSet:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#daemonset-v1-apps
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#daemonset-v1-apps
     """
 
     obj_type = client.V1DaemonSet

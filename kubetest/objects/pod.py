@@ -24,7 +24,7 @@ class Pod(ApiObject):
     API Object and provides some state management for the `Pod`_.
 
     .. _Pod:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#pod-v1-core
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#pod-v1-core
     """
 
     obj_type = client.V1Pod

@@ -1,6 +1,7 @@
 """Kubetest wrapper for the Kubernetes ``version`` API Object."""
 
 from kubernetes import client
+
 from kubetest.objects import ApiObject
 
 
@@ -25,7 +26,7 @@ class Version(ApiObject):
     }
 
     def __init__(self):
-        super().__init__(get_version())
+        super().__init__(self.get_version_code())
 
     def create(self, namespace: str = None) -> None:
         pass
@@ -34,7 +35,7 @@ class Version(ApiObject):
         pass
 
     def refresh(self) -> None:
-        self.obj = get_version()
+        self.obj = self.get_version_code()
 
     def is_ready(self) -> bool:
         pass
@@ -45,6 +46,5 @@ class Version(ApiObject):
     def major_minor_version(self):
         return self.obj.major, self.obj.minor
 
-
-def get_version():
-    return Version.preferred_client().get_code()
+    def get_version_code(self):
+        return Version.preferred_client().get_code()

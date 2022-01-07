@@ -27,6 +27,7 @@ class StorageClass(ApiObject):
     api_clients = {
         'preferred': client.StorageV1Api,
         'v1': client.StorageV1Api,
+        'storage.k8s.io/v1beta1': client.StorageV1beta1Api
     }
 
     def refresh(self) -> None:
@@ -51,12 +52,3 @@ class StorageClass(ApiObject):
         # "metadata" "annotations" "storageclass.kubernetes.io/is-default-class": "true"
         flag = self.obj.metadata.annotations.get("storageclass.kubernetes.io/is-default-class", "0")
         return bool(strtobool(flag.lower()))
-
-
-def get_storage_classes(**kwargs):
-    results = StorageClass.preferred_client().list_storage_class(**kwargs)
-    storage_classes = {}
-    for obj in results.items:
-        storage_class = StorageClass(obj)
-        storage_classes[storage_class.name] = storage_class
-    return storage_classes

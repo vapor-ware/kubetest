@@ -91,12 +91,3 @@ class ClusterRole(ApiObject):
             return False
         else:
             return True
-
-
-def get_cluster_roles(**kwargs):
-    results = ClusterRole.preferred_client().list_cluster_role(**kwargs)
-    cluster_roles = {}
-    for obj in results.items:
-        cluster_role = ClusterRole(obj)
-        cluster_roles[cluster_role.name] = cluster_role
-    return cluster_roles

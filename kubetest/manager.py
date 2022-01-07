@@ -28,12 +28,15 @@ class ObjectManager:
     # applied when creating them on the cluster.
     ordered_buckets = [
         "namespace",
+        "clusterrole",
         "rolebinding",
         "clusterrolebinding",
         "secret",
+        "storageclass",
         "networkpolicy",
         "service",
         "configmap",
+        "persistentvolume",
         "persistentvolumeclaim",
         "ingress",
         "daemonset",
@@ -41,6 +44,7 @@ class ObjectManager:
         "replicaset",
         "deployment",
         "pod",
+        "job",
     ]
 
     def __init__(self):
@@ -101,12 +105,15 @@ class ObjectManager:
 
         The bucket order in which objects are yielded are:
           - Namespace
+          - ClusterRole
           - RoleBinding
           - ClusterRoleBinding
           - Secret
+          - StorageClass
           - NetworkPolicy
           - Service
           - ConfigMap
+          - PersistentVolume
           - PersistentVolumeClaim
           - Ingress
           - DaemonSet
@@ -114,6 +121,7 @@ class ObjectManager:
           - ReplicaSet
           - Deployment
           - Pod
+          - Job
 
         Yields:
             The kubetest ApiObject wrapper to be created on the cluster.
@@ -162,6 +170,7 @@ class TestMeta:
         self._namespace = None
 
         self.namespace_create = namespace_create
+        self.clusterroles = []
         self.rolebindings = []
         self.clusterrolebindings = []
 
@@ -190,6 +199,10 @@ class TestMeta:
         # create the test case namespace
         if self.namespace_create:
             self.namespace.create()
+
+        # if there are any cluster roles, create them.
+        for cr in self.clusterroles:
+            self.client.create(cr)
 
         # if there are any role bindings, create them.
         for rb in self.rolebindings:
@@ -225,6 +238,11 @@ class TestMeta:
         # This will also delete anything in the namespace, which includes RoleBindings.
         if self._namespace and self.namespace_create:
             self.namespace.delete()
+
+        # ClusterRoles are not bound to a namespace, so we will need
+        # to delete them ourselves.
+        for cr in self.clusterroles:
+            self.client.delete(cr)
 
         # ClusterRoleBindings are not bound to a namespace, so we will need
         # to delete them ourselves.
@@ -285,6 +303,14 @@ class TestMeta:
                     border = "=" * len(_id)
                     yield "\n".join([border, _id, border, logs, "\n"])
         return
+
+    def register_clusterrole(self, *clusterroles: objects.ClusterRole) -> None:
+        """Register a ClusterRole requirement with the test case.
+
+        Args:
+            clusterroles: The ClusterRoles that are needed for the test case.
+        """
+        self.clusterroles.extend(clusterroles)
 
     def register_rolebindings(self, *rolebindings: objects.RoleBinding) -> None:
         """Register a RoleBinding requirement with the test case.

@@ -110,7 +110,7 @@ class ApiObject(abc.ABC):
             # If we didn't find the client in the api_clients dict, use the
             # preferred version.
             if c is None:
-                log.warning(
+                log.debug(
                     f"unknown version ({self.version}), falling back to preferred version"
                 )
                 c = self.api_clients.get("preferred")

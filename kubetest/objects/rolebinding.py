@@ -19,7 +19,7 @@ class RoleBinding(ApiObject):
     API Object and provides some state management for the `RoleBinding`_.
 
     .. _RoleBinding:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#rolebinding-v1-rbac-authorization-k8s-io
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#rolebinding-v1-rbac-authorization-k8s-io
     """
 
     obj_type = client.V1RoleBinding
@@ -28,7 +28,6 @@ class RoleBinding(ApiObject):
         "preferred": client.RbacAuthorizationV1Api,
         "rbac.authorization.k8s.io/v1": client.RbacAuthorizationV1Api,
         "rbac.authorization.k8s.io/v1alpha1": client.RbacAuthorizationV1alpha1Api,
-        "rbac.authorization.k8s.io/v1beta1": client.RbacAuthorizationV1beta1Api,
     }
 
     def create(self, namespace: str = None) -> None:

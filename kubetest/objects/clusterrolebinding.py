@@ -19,7 +19,7 @@ class ClusterRoleBinding(ApiObject):
     API Object and provides some state management for the `ClusterRoleBinding`_.
 
     .. _ClusterRoleBinding:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#clusterrolebinding-v1-rbac-authorization-k8s-io
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#clusterrolebinding-v1-rbac-authorization-k8s-io
     """
 
     obj_type = client.V1ClusterRoleBinding
@@ -28,7 +28,6 @@ class ClusterRoleBinding(ApiObject):
         "preferred": client.RbacAuthorizationV1Api,
         "rbac.authorization.k8s.io/v1": client.RbacAuthorizationV1Api,
         "rbac.authorization.k8s.io/v1alpha1": client.RbacAuthorizationV1alpha1Api,
-        "rbac.authorization.k8s.io/v1beta1": client.RbacAuthorizationV1beta1Api,
     }
 
     def create(self, namespace: str = None) -> None:

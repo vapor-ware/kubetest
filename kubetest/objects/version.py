@@ -15,7 +15,7 @@ class Version(ApiObject):
     API Object and provides some state management for the `VersionInfo`_.
 
     .. _VersionInfo:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#
     """
 
     obj_type = client.VersionInfo

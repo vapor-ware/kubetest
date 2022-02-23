@@ -21,7 +21,7 @@ class Ingress(ApiObject):
     API Object and provides some state management for the `Ingress`_.
 
     .. _Ingress:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#ingress-v1-networking-k8s-io
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#ingress-v1-networking-k8s-io
     """
 
     obj_type = client.V1Ingress
@@ -29,8 +29,6 @@ class Ingress(ApiObject):
     api_clients = {
         "preferred": client.NetworkingV1Api,
         "networking.k8s.io/v1": client.NetworkingV1Api,
-        "networking.k8s.io/v1beta1": client.NetworkingV1beta1Api,
-        "extensions/v1beta1": client.ExtensionsV1beta1Api,
     }
 
     def __str__(self):

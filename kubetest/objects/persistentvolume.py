@@ -21,7 +21,7 @@ class PersistentVolume(ApiObject):
     API Object and provides some state management for the `V1PersistentVolume`_.
 
     .. _PersistentVolume:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#persistentvolume-v1-core
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#persistentvolume-v1-core
     """
     obj_type = client.V1PersistentVolume
 

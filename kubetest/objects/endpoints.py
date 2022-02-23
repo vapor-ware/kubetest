@@ -19,7 +19,7 @@ class Endpoints(ApiObject):
     API Object and provides some state management for the `Endpoints`_.
 
     .. _Endpoints:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#endpoints-v1-core
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#endpoints-v1-core
     """
 
     obj_type = client.V1Endpoints

@@ -19,7 +19,7 @@ class NetworkPolicy(ApiObject):
     API Object and provides some state management for the `NetworkPolicy`_.
 
     .. _NetworkPolicy:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#networkpolicy-v1-networking-k8s-io
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#networkpolicy-v1-networking-k8s-io
     """
 
     obj_type = client.V1NetworkPolicy

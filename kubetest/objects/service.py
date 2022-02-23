@@ -20,7 +20,7 @@ class Service(ApiObject):
     API Object and provides some state management for the `Service`_.
 
     .. _Service:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.21/#service-v1-core
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#service-v1-core
     """
 
     obj_type = client.V1Service

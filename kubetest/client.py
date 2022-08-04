@@ -6,12 +6,13 @@ fixture provides the ``TestClient`` instance to the test case.
 """
 
 import logging
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Union, Any
 
 from kubernetes import client
 
 from kubetest import objects, utils
 from kubetest.condition import Condition, Policy, check_and_sort
+from kubetest.objects import CustomResourceDefinition, CustomObject
 
 log = logging.getLogger("kubetest")
 
@@ -520,6 +521,93 @@ class TestClient:
             configmaps[cm.name] = cm
 
         return configmaps
+
+    @staticmethod
+    def get_custom_objects(
+            crd: CustomResourceDefinition = None,
+            group: str = None,
+            version: str = None,
+            plural: str = None,
+            namespace: str = None,
+            fields: Dict[str, str] = None,
+            labels: Dict[str, str] = None,
+            classs=CustomObject
+    ) -> Dict[str, Any]:
+        selectors = utils.selector_kwargs(fields, labels)
+
+        if namespace:
+            results = CustomObject.preferred_client().list_namespaced_custom_object(
+                crd.obj.spec.group if crd else group,
+                crd.obj.spec.versions[-1].name if crd else version,
+                namespace,
+                crd.obj.spec.names.plural if crd else plural,
+                **selectors
+            )
+        else:
+            results = CustomObject.preferred_client().list_cluster_custom_object(
+                crd.obj.spec.group if crd else group,
+                crd.obj.spec.versions[-1].name if crd else version,
+                crd.obj.spec.names.plural if crd else plural,
+                **selectors
+            )
+        _custom_objects = {}
+        for obj in results['items']:
+            custom_object = classs(obj, crd=crd, group=group, version=version, plural=plural)
+            _custom_objects[custom_object.name] = custom_object
+        return _custom_objects
+
+    @staticmethod
+    def get_custom_object(
+            name: str,
+            crd: CustomResourceDefinition = None,
+            group: str = None,
+            version: str = None,
+            plural: str = None,
+            namespace: str = None,
+            fields: Dict[str, str] = None,
+            labels: Dict[str, str] = None,
+            classs=CustomObject
+    ) -> Dict[str, Any]:
+        selectors = utils.selector_kwargs(fields, labels)
+
+        if namespace:
+            obj = CustomObject.preferred_client().get_namespaced_custom_object(
+                crd.obj.spec.group if crd else group,
+                crd.obj.spec.versions[-1].name if crd else version,
+                namespace,
+                crd.obj.spec.names.plural if crd else plural,
+                name,
+                **selectors
+            )
+        else:
+            obj = CustomObject.preferred_client().get_cluster_custom_object(
+                crd.obj.spec.group if crd else group,
+                crd.obj.spec.versions[-1].name if crd else version,
+                crd.obj.spec.names.plural if crd else plural,
+                name,
+                **selectors
+            )
+        return classs(obj, crd=crd, group=group, version=version, plural=plural)
+
+    @staticmethod
+    def get_custom_resource_definitions(
+            fields: Dict[str, str] = None,
+            labels: Dict[str, str] = None,
+            by_kind: bool = True
+    ) -> Dict[str, CustomResourceDefinition]:
+
+        selectors = utils.selector_kwargs(fields, labels)
+
+        results = CustomResourceDefinition.preferred_client().list_custom_resource_definition(**selectors)
+
+        crds = {}
+        for obj in results.items:
+            crd = CustomResourceDefinition(obj)
+            if by_kind:
+                crds[crd.kind] = crd
+            else:
+                crds[crd.name] = crd
+        return crds
 
     def get_daemonsets(
         self,

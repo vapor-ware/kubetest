@@ -6,6 +6,8 @@ from .api_object import ApiObject
 from .clusterrolebinding import ClusterRoleBinding
 from .configmap import ConfigMap
 from .container import Container
+from .custom_objects import CustomObject
+from .customresourcedefinition import CustomResourceDefinition
 from .daemonset import DaemonSet
 from .deployment import Deployment
 from .endpoints import Endpoints

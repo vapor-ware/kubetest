@@ -19,7 +19,7 @@ class Secret(ApiObject):
     API Object and provides some state management for the `Secret`_.
 
     .. _Secret:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#secret-v1-core
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#secret-v1-core
     """
 
     obj_type = client.V1Secret

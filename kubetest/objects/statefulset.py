@@ -24,7 +24,7 @@ class StatefulSet(ApiObject):
     API Object and provides some state management for the `StatefulSet`_.
 
     .. StatefulSet:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#statefulset-v1-apps
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#statefulset-v1-apps
     """
 
     obj_type = client.V1StatefulSet
@@ -32,8 +32,6 @@ class StatefulSet(ApiObject):
     api_clients = {
         "preferred": client.AppsV1Api,
         "apps/v1": client.AppsV1Api,
-        "apps/v1beta1": client.AppsV1beta1Api,
-        "apps/v1beta2": client.AppsV1beta2Api,
     }
 
     def __init__(self, *args, **kwargs) -> None:

@@ -16,7 +16,7 @@ class ServiceAccount(ApiObject):
     This wrapper provides some convenient functionality around the
     API Object and provides some state management for the `ServiceAccount`_.
     .. _ServiceAccount:
-        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.18/#serviceaccount-v1-core
+        https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.22/#serviceaccount-v1-core
     """
 
     obj_type = client.V1ServiceAccount

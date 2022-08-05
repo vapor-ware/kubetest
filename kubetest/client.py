@@ -77,6 +77,29 @@ class TestClient:
     # ****** Manifest Loaders ******
 
     @staticmethod
+    def load_clusterrole(
+        path: str,
+        name: Optional[str] = None,
+    ) -> objects.ClusterRole:
+        """Load a manifest YAML into a ClusterRole object.
+
+        Args:
+            path: The path to the ClusterRole manifest.
+            name: The name of the resource to load. If the manifest file
+                contains a single object definition for the type being
+                loaded, it is not necessary to specify the name. If the
+                manifest has multiple definitions containing the same
+                type, a name is required to differentiate between them.
+                If no name is specified in such case, an error is raised.
+
+        Returns:
+            The ClusterRole for the specified manifest.
+        """
+        log.info(f"loading clusterrole from path: {path}")
+        clusterrole = objects.ClusterRole.load(path, name=name)
+        return clusterrole
+
+    @staticmethod
     def load_clusterrolebinding(
         path: str,
         name: Optional[str] = None,
@@ -192,6 +215,38 @@ class TestClient:
         if set_namespace:
             deployment.namespace = self.namespace
         return deployment
+    
+    def load_job(
+        self,
+        path: str,
+        set_namespace: bool = True,
+        name: Optional[str] = None,
+    ) -> objects.Job:
+        """Load a manifest YAML into a Job object.
+
+        By default, this will augment the Job object with the generated test
+        case namespace. This behavior can be disabled with the ``set_namespace`` flag.
+
+        Args:
+            path: The path to the Job manifest.
+            set_namespace: Enable/disable the automatic augmentation of the
+                Job namespace.
+            name: The name of the resource to load. If the manifest file
+                contains a single object definition for the type being
+                loaded, it is not necessary to specify the name. If the
+                manifest has multiple definitions containing the same
+                type, a name is required to differentiate between them.
+                If no name is specified in such case, an error is raised.
+
+        Returns:
+            The Job for the specified manifest.
+        """
+        log.info(f"loading jobs from path: {path}")
+        jobs = objects.Job.load(path, name=name)
+        if set_namespace:
+            jobs.namespace = self.namespace
+        return jobs
+
 
     def load_pod(
         self,
@@ -320,6 +375,29 @@ class TestClient:
             service.namespace = self.namespace
         return service
 
+    @staticmethod
+    def load_persistentvolumes(
+        path: str,
+        name: Optional[str] = None,
+    ) -> objects.PersistentVolume:
+        """Load a manifest YAML into a PersistentVolume object.
+
+        Args:
+            path: The path to the PersistentVolume manifest.
+            name: The name of the resource to load. If the manifest file
+                contains a single object definition for the type being
+                loaded, it is not necessary to specify the name. If the
+                manifest has multiple definitions containing the same
+                type, a name is required to differentiate between them.
+                If no name is specified in such case, an error is raised.
+
+        Returns:
+            The PersistentVolume for the specified manifest.
+        """
+        log.info(f"loading persistentvolumes from path: {path}")
+        persistentvolumes = objects.PersistentVolume.load(path, name=name)
+        return persistentvolumes
+
     def load_persistentvolumeclaim(
         self,
         path: str,
@@ -417,6 +495,32 @@ class TestClient:
             replicaset.namespace = self.namespace
         return replicaset
 
+    @staticmethod
+    def load_storageclass(
+        path: str,
+        name: Optional[str] = None,
+    ) -> objects.StorageClass:
+        """Load a manifest YAML into a StorageClass object.
+
+        By default, this will augment the StorageClass object with the generated test
+        case namespace. This behavior can be disabled with the ``set_namespace`` flag.
+
+        Args:
+            path: The path to the StorageClass manifest.
+            name: The name of the resource to load. If the manifest file
+                contains a single object definition for the type being
+                loaded, it is not necessary to specify the name. If the
+                manifest has multiple definitions containing the same
+                type, a name is required to differentiate between them.
+                If no name is specified in such case, an error is raised.
+
+        Returns:
+            The StorageClass for the specified manifest.
+        """
+        log.info(f"loading storageclasses from path: {path}")
+        storageclasses = objects.StorageClass.load(path, name=name)
+        return storageclasses
+
     def load_statefulset(
         self,
         path: str,
@@ -482,6 +586,40 @@ class TestClient:
         return serviceaccount
 
     # ****** General Helpers ******
+
+    @staticmethod
+    def get_clusterroles(
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
+    ) -> Dict[str, objects.ClusterRole]:
+        """Get ClusterRoles from the cluster.
+
+        Args:
+            fields: A dictionary of fields used to restrict the returned collection
+                of ClusterRole to only those which match these field selectors. By
+                default, no restricting is done.
+            labels: A dictionary of labels used to restrict the returned collection
+                of ClusterRole to only those which match these label selectors. By
+                default, no restricting is done.
+
+        Returns:
+            A dictionary where the key is the ClusterRole name and the value is the
+            ClusterRole itself.
+        """
+        selectors = utils.selector_kwargs(fields, labels)
+
+        results = (
+            objects.ClusterRole.preferred_client().list_cluster_role(
+                **selectors,
+            )
+        )
+
+        clusterroles = {}
+        for obj in results.items:
+            cr = objects.ClusterRole(obj)
+            clusterroles[cr.name] = cr
+
+        return clusterroles
 
     def get_configmaps(
         self,
@@ -763,6 +901,49 @@ class TestClient:
 
         return events
 
+    def get_jobs(
+        self,
+        namespace: str = None,
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
+        all_namespaces: bool = False,
+    ) -> Dict[str, objects.Job]:
+        """Get the latest Jobs that occurred in the cluster.
+
+        Args:
+            namespace: The namespace to get the Jobs from. If not specified,
+                it will use the auto-generated test case namespace by default.
+            fields: A dictionary of fields used to restrict the returned collection
+                of Jobs to only those which match these field selectors. By
+                default, no restricting is done.
+            labels: A dictionary of labels used to restrict the returned collection
+                of Jobs to only those which match these label selectors. By
+                default, no restricting is done.
+            all_namespaces: If True, get the jobs across all namespaces.
+
+        Returns:
+            A dictionary where the key is the Job name and the value is the
+            Job itself.
+        """
+        if namespace is None:
+            namespace = self.namespace
+
+        selectors = utils.selector_kwargs(fields, labels)
+
+        if all_namespaces:
+            results = client.BatchV1Api().list_job_for_all_namespaces(**selectors)
+        else:
+            results = client.BatchV1Api().list_namespaced_job(
+                namespace=namespace, **selectors
+            )
+
+        jobs = {}
+        for obj in results.items:
+            job = objects.Job(obj)
+            jobs[job.name] = job
+
+        return jobs
+
     def get_namespaces(
         self,
         fields: Dict[str, str] = None,
@@ -943,6 +1124,39 @@ class TestClient:
             services[service.name] = service
 
         return services
+
+    @staticmethod
+    def get_persistentvolumes(
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
+    ) -> Dict[str, objects.PersistentVolume]:
+        """Get PersistentVolumes from the cluster.
+
+        Args:
+            fields: A dictionary of fields used to restrict the returned collection
+                of PersistentVolume to only those which match these field
+                selectors. By default, no restricting is done.
+            labels: A dictionary of labels used to restrict the returned collection
+                of PersistentVolume to only those which match these label
+                selectors. By default, no restricting is done.
+
+        Returns:
+            A dictionary where the key is the PersistentVolume name and the
+            value is the PersistentVolume itself.
+        """
+        selectors = utils.selector_kwargs(fields, labels)
+
+        c = objects.PersistentVolume.preferred_client()
+        results = c.list_persistent_volume(
+            **selectors,
+        )
+
+        persistentvolumes = {}
+        for obj in results.items:
+            persistentvolume = objects.PersistentVolume(obj)
+            persistentvolumes[persistentvolume.name] = persistentvolume
+
+        return persistentvolumes
 
     def get_persistentvolumeclaims(
         self,
@@ -1143,6 +1357,52 @@ class TestClient:
             serviceaccount[cm.name] = cm
 
         return serviceaccount
+
+    @staticmethod
+    def get_storageclasses(
+        fields: Dict[str, str] = None,
+        labels: Dict[str, str] = None,
+    ) -> Dict[str, objects.StorageClass]:
+        """Get StorageClasses from the cluster.
+
+        Args:
+            fields: A dictionary of fields used to restrict the returned collection
+                of StorageClass to only those which match these field selectors. By
+                default, no restricting is done.
+            labels: A dictionary of labels used to restrict the returned collection
+                of StorageClass to only those which match these label selectors. By
+                default, no restricting is done.
+
+        Returns:
+            A dictionary where the key is the StorageClass name and the value is the
+            StorageClass itself.
+        """
+
+        selectors = utils.selector_kwargs(fields, labels)
+
+        results = (
+            objects.StorageClass.preferred_client().list_storage_class(
+                **selectors,
+            )
+        )
+
+        storageclasses = {}
+        for obj in results.items:
+            sc = objects.StorageClass(obj)
+            storageclasses[sc.name] = sc
+
+        return storageclasses
+
+    @staticmethod
+    def get_k8s_version_code(
+    ) -> objects.Version:
+        """Get Version from the cluster.
+
+        Returns:
+            Cluster Version obj
+        """
+        return objects.Version()
+
 
     # ****** Test Helpers ******
 

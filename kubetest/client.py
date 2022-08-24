@@ -609,6 +609,13 @@ class TestClient:
                 crds[crd.name] = crd
         return crds
 
+    @staticmethod
+    def get_custom_resource_definition(
+            name: str
+    ) -> CustomResourceDefinition:
+        obj = CustomResourceDefinition.preferred_client().read_custom_resource_definition(name)
+        return CustomResourceDefinition(obj)
+
     def get_daemonsets(
         self,
         namespace: str = None,

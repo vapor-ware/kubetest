@@ -54,9 +54,15 @@ class CustomObject(ApiObject):
             )
 
     def create(self, namespace: str = None) -> None:
+        # TODO
+        # self.obj = self.api_client.create_namespaced_custom_object(self, group, version, namespace, plural, body, **kwargs)
+        # self.obj = self.api_client.create_cluster_custom_object(self, group, version, plural, body, **kwargs)
         pass
 
     def delete(self, options: client.V1DeleteOptions) -> client.V1Status:
+        # TODO
+        # delete_namespaced_custom_object(self, group, version, namespace, plural, name, **kwargs)
+        # delete_cluster_custom_object(self, group, version, plural, name, **kwargs)
         pass
 
     def refresh(self) -> None:
@@ -100,5 +106,5 @@ class CustomObject(ApiObject):
                 **kwargs
             )
 
-    def annotate(self, annotations):
-        self.patch(body={"metadata": {"annotations": annotations}})
+    def annotate(self, annotations, **kwargs):
+        self.patch(body={"metadata": {"annotations": annotations}}, **kwargs)

@@ -28,7 +28,7 @@ importlib-metadata==4.8.1
     #   pytest
 iniconfig==1.1.1
     # via pytest
-kubernetes==22.6.0
+kubernetes==23.6.0
     # via kubetest (setup.py)
 oauthlib==3.1.1
     # via requests-oauthlib

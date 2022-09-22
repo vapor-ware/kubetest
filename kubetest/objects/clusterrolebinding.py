@@ -27,7 +27,6 @@ class ClusterRoleBinding(ApiObject):
     api_clients = {
         "preferred": client.RbacAuthorizationV1Api,
         "rbac.authorization.k8s.io/v1": client.RbacAuthorizationV1Api,
-        "rbac.authorization.k8s.io/v1alpha1": client.RbacAuthorizationV1alpha1Api,
     }
 
     def create(self, namespace: str = None) -> None:

@@ -154,7 +154,7 @@ class TestLoadType:
     def test_simple_ingress_ok(self, manifest_dir, simple_ingress):
         """Test loading the simple service successfully."""
         obj = manifest.load_type(
-            client.NetworkingV1beta1Ingress,
+            client.V1Ingress,
             os.path.join(manifest_dir, "simple-ingress.yaml"),
         )
         assert obj == simple_ingress
@@ -260,14 +260,7 @@ class TestGetType:
                     "kind": "ClusterRoleBinding",
                 },
                 client.V1ClusterRoleBinding,
-            ),
-            (
-                {
-                    "apiVersion": "rbac.authorization.k8s.io/v1beta1",
-                    "kind": "ClusterRoleBinding",
-                },
-                client.V1beta1ClusterRoleBinding,
-            ),
+            )
         ],
     )
     def test_ok(self, data, expected):

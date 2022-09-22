@@ -1,7 +1,7 @@
 # kubetest
 
 [![Build Status](https://build.vio.sh/buildStatus/icon?job=vapor-ware/kubetest/master)](https://build.vio.sh/blue/organizations/jenkins/vapor-ware%2Fkubetest/activity)
-[![PyPI](https://img.shields.io/pypi/v/kubetest.svg)](https://pypi.org/project/kubetest/)
+<img alt="PyPI" src="https://img.shields.io/badge/pypi-v0.9.9+cnis-orange.svg?cacheSeconds=2592000" />
 [![Documentation Status](https://readthedocs.org/projects/kubetest/badge/?version=latest)](https://kubetest.readthedocs.io/en/latest/?badge=latest)
 
 Kubetest is a [pytest][pytest] plugin that makes it easier to manage a Kubernetes
